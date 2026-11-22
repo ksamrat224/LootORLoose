@@ -1,69 +1,40 @@
-import Image from "next/image";
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { PhaserBoard } from "@/game/PhaserBoard";
+import { OnchainGame } from "@/game/OnchainGame";
+import { CHESTS, EXIT, INITIAL_DEMO, extract, move, openNearbyChest, pendingGold, type DemoState, type Direction } from "@/game/model";
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+  const [run, setRun] = useState<DemoState | null>(null);
+  const [diagnostics, setDiagnostics] = useState(false);
+  const [mode, setMode] = useState<"local" | "onchain">("local");
+  const onMove = useCallback((direction: Direction) => setRun((current) => current ? move(current, direction) : current), []);
+  const onInteract = useCallback(() => setRun((current) => current ? openNearbyChest(current) : current), []);
+  useEffect(() => {
+    if (run?.outcome !== "active") return;
+    const interval = window.setInterval(() => setRun((current) => {
+      if (!current || current.outcome !== "active") return current;
+      const secondsLeft = Math.max(0, current.secondsLeft - 1);
+      return secondsLeft ? { ...current, secondsLeft } : { ...current, secondsLeft, outcome: "timed_out", message: "Local demo timer expired. Pending loot was lost." };
+    }), 1000);
+    return () => window.clearInterval(interval);
+  }, [run?.outcome]);
+  const gold = run ? pendingGold(run.opened) : 0;
+  const atExit = run?.outcome === "active" && run.x === EXIT.x && run.y === EXIT.y;
+  const time = run ? `${Math.floor(run.secondsLeft / 60).toString().padStart(2, "0")}:${(run.secondsLeft % 60).toString().padStart(2, "0")}` : "03:00";
+  return <main className="shell">
+    <header className="topbar"><Link className="wordmark" href="/"><span aria-hidden="true">◆</span> LOOT <em>OR</em> LOSE</Link><div className="badges"><span>DEVNET TARGET</span><strong>{mode === "local" ? "LOCAL DEMO" : "DEVNET MODE"}</strong></div></header>
+    <div className="content"><nav className="mode-nav" aria-label="Game mode"><button className={mode === "local" ? "selected" : ""} onClick={() => setMode("local")}>Local demo</button><button className={mode === "onchain" ? "selected" : ""} onClick={() => setMode("onchain")}>Devnet run</button></nav>{mode === "onchain" ? <OnchainGame /> : !run ? <section className="landing">
+      <div><p className="eyebrow">A three-minute dungeon extraction game</p><h1>One more room.<br /><em>Or get out alive.</em></h1><p className="intro">Find three chests, watch your health, and decide when to escape. This playable preview runs locally while wallet and MagicBlock integration are being built.</p><button className="button primary" onClick={() => setRun({ ...INITIAL_DEMO })}>Start local run →</button><p className="fineprint">Free demo · Fictional gold · No blockchain transaction</p></div>
+      <aside className="card rules"><p className="eyebrow">How to play</p><ol><li><b>01</b> Move with WASD or arrow keys.</li><li><b>02</b> Press E beside a chest.</li><li><b>03</b> Avoid the guardian and reach the exit.</li></ol><p>In the onchain version, loot is secured only after extraction.</p></aside>
+    </section> : <section className="run-layout">
+      <div className="game-area"><div className="section-title"><div><p className="eyebrow">Dungeon / chamber 01</p><h1>{run.outcome === "active" ? "The vault" : run.outcome === "escaped" ? "You escaped" : "Run ended"}</h1></div><span className="demo-label">LOCAL DEMO</span></div><div className="board-frame"><PhaserBoard state={run} onMove={onMove} onInteract={onInteract} /></div><p className="message" role="status" aria-live="polite">{run.message}</p><div className="controls"><span><kbd>W A S D</kbd> or arrows — move</span><span><kbd>E</kbd> — open chest</span><span>Turquoise tile — exit</span></div></div>
+      <aside className="sidebar"><div className="card"><p className="eyebrow">Run status</p><div className="stat"><span>Health</span><strong>{run.hp} / 100</strong></div><div className="meter"><span style={{ width: `${run.hp}%` }} /></div><div className="stat"><span>Time remaining</span><strong className="mono">{time}</strong></div><div className="stat"><span>Chests opened</span><strong>{CHESTS.filter((_, id) => run.opened & (1 << id)).length} / 3</strong></div></div>
+      <div className="card"><p className="eyebrow">Unextracted loot</p><p className="gold">{gold} <small>fictional gold</small></p><p className="muted">Fixed demo sequence: 10, 40, 100. No verified randomness.</p></div>
+      {run.outcome === "active" ? <button className="button primary full" disabled={!atExit} onClick={() => setRun((current) => current ? extract(current) : current)}>Extract at exit ↗</button> : <div className="card result"><p className="eyebrow">Local result</p><strong>{run.outcome === "escaped" ? "Escaped" : run.outcome === "dead" ? "Defeated" : "Timed out"}</strong><p>{run.outcome === "escaped" ? `${gold} fictional gold in this demo only.` : "Unextracted loot was lost."}</p><button className="button secondary full" onClick={() => setRun({ ...INITIAL_DEMO })}>New local run</button></div>}
+      <button className="text-button" onClick={() => setDiagnostics((value) => !value)} aria-expanded={diagnostics}>Developer diagnostics {diagnostics ? "−" : "+"}</button>{diagnostics && <div className="diagnostics"><p>Mode: local simulation</p><p>Run account: none</p><p>ER endpoint: not connected</p><p>Base receipt: none</p><p>Position: {run.x}, {run.y}</p></div>}</aside>
+    </section>}</div><footer className="footer"><span>LOOT OR LOSE / MVP</span><span>All scores are fictional. Onchain gameplay is under construction.</span></footer>
+  </main>;
 }

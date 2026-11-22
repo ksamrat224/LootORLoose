@@ -1,0 +1,973 @@
+{
+  "address": "BenkDp3MuSNQshYqTC7PyiWvpBsCQTT5LX6EGYWCQhvj",
+  "metadata": {
+    "name": "loot_or_lose",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
+  },
+  "instructions": [
+    {
+      "name": "activate_run",
+      "discriminator": [
+        33,
+        122,
+        195,
+        151,
+        171,
+        147,
+        195,
+        39
+      ],
+      "accounts": [
+        {
+          "name": "run",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  117,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "run"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "_index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "advance",
+      "discriminator": [
+        7,
+        56,
+        108,
+        201,
+        36,
+        20,
+        57,
+        89
+      ],
+      "accounts": [
+        {
+          "name": "run",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  117,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "run"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "_index",
+          "type": "u64"
+        },
+        {
+          "name": "expected_nonce",
+          "type": "u64"
+        },
+        {
+          "name": "path",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "create_run",
+      "discriminator": [
+        195,
+        241,
+        245,
+        139,
+        101,
+        109,
+        209,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "run",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  117,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "profile"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "delegate_run",
+      "discriminator": [
+        20,
+        67,
+        38,
+        40,
+        32,
+        211,
+        235,
+        131
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "buffer_run",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "run"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                158,
+                67,
+                21,
+                92,
+                213,
+                220,
+                197,
+                226,
+                45,
+                186,
+                206,
+                124,
+                212,
+                30,
+                88,
+                19,
+                187,
+                204,
+                110,
+                130,
+                97,
+                8,
+                134,
+                210,
+                8,
+                107,
+                12,
+                229,
+                213,
+                46,
+                244,
+                116
+              ]
+            }
+          }
+        },
+        {
+          "name": "delegation_record_run",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "run"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "delegation_metadata_run",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "run"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "run",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  117,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner_program",
+          "address": "BenkDp3MuSNQshYqTC7PyiWvpBsCQTT5LX6EGYWCQhvj"
+        },
+        {
+          "name": "delegation_program",
+          "address": "DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "expire_run",
+      "discriminator": [
+        160,
+        141,
+        30,
+        87,
+        128,
+        12,
+        35,
+        35
+      ],
+      "accounts": [
+        {
+          "name": "run",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  117,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "run.authority",
+                "account": "RunState"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "_index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "finalize_run",
+      "discriminator": [
+        79,
+        6,
+        112,
+        246,
+        170,
+        39,
+        103,
+        158
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "run"
+          ]
+        },
+        {
+          "name": "run",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  117,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "magic_context",
+          "writable": true,
+          "address": "MagicContext1111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "_index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize_profile",
+      "discriminator": [
+        32,
+        145,
+        77,
+        213,
+        58,
+        39,
+        251,
+        234
+      ],
+      "accounts": [
+        {
+          "name": "profile",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  114,
+                  111,
+                  102,
+                  105,
+                  108,
+                  101
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "open_chest",
+      "discriminator": [
+        143,
+        8,
+        253,
+        123,
+        197,
+        30,
+        173,
+        15
+      ],
+      "accounts": [
+        {
+          "name": "run",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  117,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "run"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "_index",
+          "type": "u64"
+        },
+        {
+          "name": "expected_nonce",
+          "type": "u64"
+        },
+        {
+          "name": "chest_id",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "process_undelegation",
+      "discriminator": [
+        196,
+        28,
+        41,
+        206,
+        48,
+        37,
+        51,
+        167
+      ],
+      "accounts": [
+        {
+          "name": "base_account",
+          "writable": true
+        },
+        {
+          "name": "buffer",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  117,
+                  110,
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  101,
+                  45,
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "base_account"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                181,
+                183,
+                0,
+                225,
+                242,
+                87,
+                58,
+                192,
+                204,
+                6,
+                34,
+                1,
+                52,
+                74,
+                207,
+                151,
+                184,
+                53,
+                6,
+                235,
+                140,
+                229,
+                25,
+                152,
+                204,
+                98,
+                126,
+                24,
+                147,
+                128,
+                167,
+                62
+              ]
+            }
+          }
+        },
+        {
+          "name": "payer",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "account_seeds",
+          "type": {
+            "vec": "bytes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "request_extraction",
+      "discriminator": [
+        170,
+        86,
+        23,
+        194,
+        146,
+        3,
+        10,
+        235
+      ],
+      "accounts": [
+        {
+          "name": "run",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  114,
+                  117,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "run"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "_index",
+          "type": "u64"
+        },
+        {
+          "name": "expected_nonce",
+          "type": "u64"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "PlayerProfile",
+      "discriminator": [
+        82,
+        226,
+        99,
+        87,
+        164,
+        130,
+        181,
+        80
+      ]
+    },
+    {
+      "name": "RunState",
+      "discriminator": [
+        196,
+        228,
+        198,
+        184,
+        77,
+        229,
+        44,
+        21
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "WrongRunIndex",
+      "msg": "Wrong run index"
+    },
+    {
+      "code": 6001,
+      "name": "WrongPhase",
+      "msg": "Wrong run phase"
+    },
+    {
+      "code": 6002,
+      "name": "StaleAction",
+      "msg": "Action nonce is stale"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidPath",
+      "msg": "Path must contain one to twelve cardinal steps"
+    },
+    {
+      "code": 6004,
+      "name": "Wall",
+      "msg": "Wall blocks path"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidChest",
+      "msg": "Invalid chest"
+    },
+    {
+      "code": 6006,
+      "name": "ChestOpened",
+      "msg": "Chest already opened"
+    },
+    {
+      "code": 6007,
+      "name": "ChestTooFar",
+      "msg": "Chest is too far away"
+    },
+    {
+      "code": 6008,
+      "name": "NotAtExit",
+      "msg": "Player is not at the exit"
+    },
+    {
+      "code": 6009,
+      "name": "NotExpired",
+      "msg": "Run has not expired"
+    },
+    {
+      "code": 6010,
+      "name": "Overflow",
+      "msg": "Arithmetic overflow"
+    }
+  ],
+  "types": [
+    {
+      "name": "Phase",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Created"
+          },
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Extracting"
+          },
+          {
+            "name": "Extracted"
+          },
+          {
+            "name": "Dead"
+          },
+          {
+            "name": "TimedOut"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PlayerProfile",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "next_run_index",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RunState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "index",
+            "type": "u64"
+          },
+          {
+            "name": "phase",
+            "type": {
+              "defined": {
+                "name": "Phase"
+              }
+            }
+          },
+          {
+            "name": "x",
+            "type": "u8"
+          },
+          {
+            "name": "y",
+            "type": "u8"
+          },
+          {
+            "name": "hp",
+            "type": "u8"
+          },
+          {
+            "name": "deadline",
+            "type": "i64"
+          },
+          {
+            "name": "chest_mask",
+            "type": "u8"
+          },
+          {
+            "name": "pending",
+            "type": {
+              "array": [
+                "u8",
+                3
+              ]
+            }
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "final_score",
+            "type": "u16"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -9,3 +9,5 @@ test-ledger
 .brand-preview/
 .env.local
 app/.env.local
+.next/
+app/.next/

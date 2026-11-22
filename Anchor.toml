@@ -6,7 +6,7 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-loot_or_lose = "4YqSeDXgqgmCDuRKMdyQhgU1cBHiRJEbktKD2TmhQ6tt"
+loot_or_lose = "BenkDp3MuSNQshYqTC7PyiWvpBsCQTT5LX6EGYWCQhvj"
 
 [provider]
 cluster = "localnet"
