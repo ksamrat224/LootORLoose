@@ -2,15 +2,18 @@ use anchor_lang::prelude::*;
 use ephemeral_rollups_sdk::anchor::{commit, delegate, ephemeral};
 use ephemeral_rollups_sdk::cpi::DelegateConfig;
 use ephemeral_rollups_sdk::ephem::MagicIntentBundleBuilder;
+use session_keys::{session_auth_or, Session, SessionError, SessionTokenV2};
 
 declare_id!("BenkDp3MuSNQshYqTC7PyiWvpBsCQTT5LX6EGYWCQhvj");
 pub const PROFILE_SEED: &[u8] = b"profile";
 pub const RUN_SEED: &[u8] = b"run";
 pub const START: (u8, u8) = (1, 1);
 pub const EXIT: (u8, u8) = (14, 8);
+pub const EARLY_EXIT: (u8, u8) = (1, 8);
 pub const CHESTS: [(u8, u8); 3] = [(3, 2), (8, 7), (12, 8)];
 pub const ENEMY: (u8, u8) = (8, 5);
 pub const GOLD: [u16; 3] = [10, 40, 100];
+pub const CHEST_TRAP_DAMAGE: [u8; 3] = [0, 15, 35];
 pub const MAP: [&[u8; 16]; 10] = [
     b"################",
     b"#..............#",
@@ -114,6 +117,10 @@ pub mod loot_or_lose {
         Ok(())
     }
 
+    #[session_auth_or(
+        ctx.accounts.run.authority == ctx.accounts.signer.key(),
+        SessionError::InvalidToken
+    )]
     pub fn activate_run(ctx: Context<UpdateRun>, _index: u64) -> Result<()> {
         let run = &mut ctx.accounts.run;
         require!(run.phase == Phase::Created, GameError::WrongPhase);
@@ -125,6 +132,10 @@ pub mod loot_or_lose {
         Ok(())
     }
 
+    #[session_auth_or(
+        ctx.accounts.run.authority == ctx.accounts.signer.key(),
+        SessionError::InvalidToken
+    )]
     pub fn advance(
         ctx: Context<UpdateRun>,
         _index: u64,
@@ -164,6 +175,10 @@ pub mod loot_or_lose {
         Ok(())
     }
 
+    #[session_auth_or(
+        ctx.accounts.run.authority == ctx.accounts.signer.key(),
+        SessionError::InvalidToken
+    )]
     pub fn open_chest(
         ctx: Context<UpdateRun>,
         _index: u64,
@@ -186,10 +201,18 @@ pub mod loot_or_lose {
         );
         run.chest_mask |= bit;
         run.pending[chest_id as usize] = 1;
+        run.hp = run.hp.saturating_sub(CHEST_TRAP_DAMAGE[chest_id as usize]);
+        if run.hp == 0 {
+            run.phase = Phase::Dead;
+        }
         run.nonce = run.nonce.checked_add(1).ok_or(GameError::Overflow)?;
         Ok(())
     }
 
+    #[session_auth_or(
+        ctx.accounts.run.authority == ctx.accounts.signer.key(),
+        SessionError::InvalidToken
+    )]
     pub fn request_extraction(
         ctx: Context<UpdateRun>,
         _index: u64,
@@ -204,7 +227,10 @@ pub mod loot_or_lose {
             GameError::WrongPhase
         );
         require_eq!(run.nonce, expected_nonce, GameError::StaleAction);
-        require!(run.x == EXIT.0 && run.y == EXIT.1, GameError::NotAtExit);
+        require!(
+            (run.x, run.y) == EXIT || (run.x, run.y) == EARLY_EXIT,
+            GameError::NotAtExit
+        );
         run.final_score = run
             .pending
             .iter()
@@ -280,12 +306,14 @@ pub struct DelegateRun<'info> {
     pub run: UncheckedAccount<'info>,
 }
 
-#[derive(Accounts)]
+#[derive(Accounts, Session)]
 #[instruction(index: u64)]
 pub struct UpdateRun<'info> {
-    #[account(mut, seeds = [RUN_SEED, authority.key().as_ref(), &index.to_le_bytes()], bump = run.bump, has_one = authority)]
+    #[account(mut, seeds = [RUN_SEED, run.authority.as_ref(), &index.to_le_bytes()], bump = run.bump)]
     pub run: Account<'info, RunState>,
-    pub authority: Signer<'info>,
+    #[session(signer = signer, authority = run.authority)]
+    pub session_token: Option<Account<'info, SessionTokenV2>>,
+    pub signer: Signer<'info>,
 }
 
 #[derive(Accounts)]

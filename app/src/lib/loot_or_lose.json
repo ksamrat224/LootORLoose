@@ -35,7 +35,8 @@
               },
               {
                 "kind": "account",
-                "path": "authority"
+                "path": "run.authority",
+                "account": "RunState"
               },
               {
                 "kind": "arg",
@@ -45,11 +46,12 @@
           }
         },
         {
-          "name": "authority",
-          "signer": true,
-          "relations": [
-            "run"
-          ]
+          "name": "session_token",
+          "optional": true
+        },
+        {
+          "name": "signer",
+          "signer": true
         }
       ],
       "args": [
@@ -87,7 +89,8 @@
               },
               {
                 "kind": "account",
-                "path": "authority"
+                "path": "run.authority",
+                "account": "RunState"
               },
               {
                 "kind": "arg",
@@ -97,11 +100,12 @@
           }
         },
         {
-          "name": "authority",
-          "signer": true,
-          "relations": [
-            "run"
-          ]
+          "name": "session_token",
+          "optional": true
+        },
+        {
+          "name": "signer",
+          "signer": true
         }
       ],
       "args": [
@@ -578,7 +582,8 @@
               },
               {
                 "kind": "account",
-                "path": "authority"
+                "path": "run.authority",
+                "account": "RunState"
               },
               {
                 "kind": "arg",
@@ -588,11 +593,12 @@
           }
         },
         {
-          "name": "authority",
-          "signer": true,
-          "relations": [
-            "run"
-          ]
+          "name": "session_token",
+          "optional": true
+        },
+        {
+          "name": "signer",
+          "signer": true
         }
       ],
       "args": [
@@ -743,7 +749,8 @@
               },
               {
                 "kind": "account",
-                "path": "authority"
+                "path": "run.authority",
+                "account": "RunState"
               },
               {
                 "kind": "arg",
@@ -753,11 +760,12 @@
           }
         },
         {
-          "name": "authority",
-          "signer": true,
-          "relations": [
-            "run"
-          ]
+          "name": "session_token",
+          "optional": true
+        },
+        {
+          "name": "signer",
+          "signer": true
         }
       ],
       "args": [
@@ -965,6 +973,34 @@
           {
             "name": "bump",
             "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "SessionTokenV2",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "target_program",
+            "type": "pubkey"
+          },
+          {
+            "name": "session_signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "fee_payer",
+            "type": "pubkey"
+          },
+          {
+            "name": "valid_until",
+            "type": "i64"
           }
         ]
       }

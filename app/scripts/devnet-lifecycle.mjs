@@ -2,9 +2,11 @@ import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import anchor from "@coral-xyz/anchor";
 import { ConnectionMagicRouter, GetCommitmentSignature } from "@magicblock-labs/ephemeral-rollups-sdk";
+import { SessionTokenManager } from "@magicblock-labs/gum-sdk";
 import { Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 
 const { AnchorProvider, BN, Program } = anchor;
+const useSession = process.argv.includes("--session");
 
 const idl = JSON.parse(readFileSync(new URL("../src/lib/loot_or_lose.json", import.meta.url), "utf8"));
 const configuredKeypair = execFileSync("solana", ["config", "get"], { encoding: "utf8" }).match(/^Keypair Path:\s*(.+)$/m)?.[1];
@@ -27,11 +29,11 @@ async function account(connection, key, name) {
   if (!info || !info.owner.equals(programId)) return null;
   return client(connection).coder.accounts.decode(name, info.data);
 }
-async function send(connection, label, tx) {
-  tx.feePayer = payer.publicKey;
+async function send(connection, label, tx, signer = payer, extraSigners = []) {
+  tx.feePayer = signer.publicKey;
   const block = await connection.getLatestBlockhash("confirmed");
   tx.recentBlockhash = block.blockhash;
-  tx.sign(payer);
+  tx.sign(signer, ...extraSigners);
   const simulated = await connection.simulateTransaction(tx);
   if (simulated.value.err) {
     console.error(`${label} simulation failed:`, JSON.stringify(simulated.value.err));
@@ -60,13 +62,29 @@ async function route(run) {
 }
 async function state(connection, run) { return account(connection, run, "runState"); }
 function phase(run) { return Object.keys(run.phase)[0]; }
-async function action(connection, run, index, label, build) {
+async function action(connection, run, index, label, build, signer = payer) {
   const current = await state(connection, run);
   if (!current) throw new Error(`${label}: ER state missing`);
-  await send(connection, label, await build(client(connection), new BN(current.nonce)));
+  await send(connection, label, await build(client(connection), new BN(current.nonce)), signer);
   const updated = await state(connection, run);
   console.log(`${label} state: ${phase(updated)} at (${updated.x},${updated.y}), HP ${updated.hp}, pending ${updated.pending}, score ${updated.finalScore}`);
   return updated;
+}
+async function makeSession() {
+  const manager = new SessionTokenManager(wallet, base);
+  const signer = Keypair.generate();
+  const token = PublicKey.findProgramAddressSync(
+    [Buffer.from("session_token_v2"), programId.toBuffer(), signer.publicKey.toBuffer(), payer.publicKey.toBuffer()],
+    manager.program.programId,
+  )[0];
+  const tx = await manager.program.methods
+    .createSessionV2(true, new BN(Math.floor(Date.now() / 1000) + 240), new BN(2_000_000))
+    .accounts({ targetProgram: programId, sessionSigner: signer.publicKey, feePayer: payer.publicKey, authority: payer.publicKey })
+    .transaction();
+  await send(base, "create four-minute session (0.002 devnet SOL top-up)", tx, payer, [signer]);
+  if (!(await base.getAccountInfo(token))?.owner.equals(manager.program.programId)) throw new Error("Session token not readable on devnet");
+  console.log(`Session token ${token}; signer ${signer.publicKey}`);
+  return { signer, token };
 }
 async function main() {
   const onchain = await base.getAccountInfo(programId);
@@ -91,16 +109,19 @@ async function main() {
     });
     const baseAccount = await base.getAccountInfo(run);
     console.log(`Delegated: base owner ${baseAccount?.owner}; ER owner ${(await er.getAccountInfo(run))?.owner}; ER ${er.rpcEndpoint}`);
-    await action(er, run, index, "activate", (p) => p.methods.activateRun(new BN(index)).accountsPartial({ run, authority: payer.publicKey }).transaction());
-    await action(er, run, index, "advance to chest", (p, nonce) => p.methods.advance(new BN(index), nonce, Buffer.from([1, 1, 2])).accountsPartial({ run, authority: payer.publicKey }).transaction());
-    await action(er, run, index, "open chest 0", (p, nonce) => p.methods.openChest(new BN(index), nonce, 0).accountsPartial({ run, authority: payer.publicKey }).transaction());
-    await action(er, run, index, "advance through enemy zone", (p, nonce) => p.methods.advance(new BN(index), nonce, Buffer.from([1, 1, 1, 1, 1, 2, 2])).accountsPartial({ run, authority: payer.publicKey }).transaction());
+    const session = useSession ? await makeSession() : null;
+    const gameplaySigner = session?.signer || payer;
+    const gameplayAccounts = { run, sessionToken: session?.token || programId, signer: gameplaySigner.publicKey };
+    await action(er, run, index, "activate", (p) => p.methods.activateRun(new BN(index)).accountsPartial(gameplayAccounts).transaction(), gameplaySigner);
+    await action(er, run, index, "advance to chest", (p, nonce) => p.methods.advance(new BN(index), nonce, Buffer.from([1, 1, 2])).accountsPartial(gameplayAccounts).transaction(), gameplaySigner);
+    await action(er, run, index, "open chest 0", (p, nonce) => p.methods.openChest(new BN(index), nonce, 0).accountsPartial(gameplayAccounts).transaction(), gameplaySigner);
+    await action(er, run, index, "advance through enemy zone", (p, nonce) => p.methods.advance(new BN(index), nonce, Buffer.from([1, 1, 1, 1, 1, 2, 2])).accountsPartial(gameplayAccounts).transaction(), gameplaySigner);
     if (outcome === "success") {
-      await action(er, run, index, "advance to top-right", (p, nonce) => p.methods.advance(new BN(index), nonce, Buffer.from([0, 0, 1, 1, 1, 1, 1, 1])).accountsPartial({ run, authority: payer.publicKey }).transaction());
-      await action(er, run, index, "advance to exit", (p, nonce) => p.methods.advance(new BN(index), nonce, Buffer.from([2, 2, 2, 2, 2, 2])).accountsPartial({ run, authority: payer.publicKey }).transaction());
-      await action(er, run, index, "request extraction", (p, nonce) => p.methods.requestExtraction(new BN(index), nonce).accountsPartial({ run, authority: payer.publicKey }).transaction());
+      await action(er, run, index, "advance to top-right", (p, nonce) => p.methods.advance(new BN(index), nonce, Buffer.from([0, 0, 1, 1, 1, 1, 1, 1])).accountsPartial(gameplayAccounts).transaction(), gameplaySigner);
+      await action(er, run, index, "advance to exit", (p, nonce) => p.methods.advance(new BN(index), nonce, Buffer.from([2, 2, 2, 2, 2, 2])).accountsPartial(gameplayAccounts).transaction(), gameplaySigner);
+      await action(er, run, index, "request extraction", (p, nonce) => p.methods.requestExtraction(new BN(index), nonce).accountsPartial(gameplayAccounts).transaction(), gameplaySigner);
     } else {
-      const dead = await action(er, run, index, "take fatal damage", (p, nonce) => p.methods.advance(new BN(index), nonce, Buffer.from([2, 0, 2])).accountsPartial({ run, authority: payer.publicKey }).transaction());
+      const dead = await action(er, run, index, "take fatal damage", (p, nonce) => p.methods.advance(new BN(index), nonce, Buffer.from([2, 0, 2])).accountsPartial(gameplayAccounts).transaction(), gameplaySigner);
       if (phase(dead) !== "dead") throw new Error("Failure run did not die");
     }
     const erSignature = await send(er, "finalize", await client(er).methods.finalizeRun(new BN(index)).accountsPartial({ authority: payer.publicKey, run }).transaction());

@@ -2,7 +2,7 @@
 
 _Status: deferred_
 
-The palette selection is awaiting a user choice. The project is currently using the default neutral theme; the six dungeon-inspired candidates remain in `.brand-preview/index.html`.
+The palette selection is awaiting a user choice. The game now uses a restrained dark-stone dungeon treatment with treasure-gold actions and mint exits, plus procedural tile details and compact HUD cards. This is an interim visual direction, not a selected brand palette; the six dungeon-inspired candidates remain in `.brand-preview/index.html`.
 
 To apply a real palette, pick `1–6` from the preview or say `more like 3` in the project chat.
 

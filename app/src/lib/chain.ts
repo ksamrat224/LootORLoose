@@ -2,14 +2,15 @@ import { AnchorProvider, BN, Idl, Program } from "@coral-xyz/anchor";
 import { Buffer } from "buffer";
 import { ConnectionMagicRouter, GetCommitmentSignature } from "@magicblock-labs/ephemeral-rollups-sdk";
 import type { AnchorWallet } from "@solana/wallet-adapter-react";
-import { Connection, PublicKey, SystemProgram, Transaction, type TransactionSignature } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, SystemProgram, Transaction, type TransactionSignature } from "@solana/web3.js";
 import idl from "./loot_or_lose.json";
 
 export const BASE_URL = process.env.NEXT_PUBLIC_SOLANA_RPC_URL || "https://rpc.magicblock.app/devnet";
 export const ROUTER_URL = process.env.NEXT_PUBLIC_MAGICBLOCK_ROUTER_URL || "https://devnet-router.magicblock.app/";
 export const PROGRAM_ID = new PublicKey(idl.address);
 export const DEPLOYED_ID = process.env.NEXT_PUBLIC_GAME_PROGRAM_ID;
-export const isConfigured = Boolean(DEPLOYED_ID && DEPLOYED_ID === PROGRAM_ID.toBase58());
+// The checked-in IDL is newer than the currently deployed devnet program until an explicit upgrade.
+export const isConfigured = Boolean(process.env.NEXT_PUBLIC_GAME_V2_ENABLED === "true" && DEPLOYED_ID && DEPLOYED_ID === PROGRAM_ID.toBase58());
 export const base = new Connection(BASE_URL, "confirmed");
 export const router = new ConnectionMagicRouter(ROUTER_URL, "confirmed");
 
@@ -17,6 +18,9 @@ export type ChainPhase = "created" | "active" | "extracting" | "extracted" | "de
 export type ChainRun = { authority: PublicKey; index: BN; phase: Record<ChainPhase, object>; x: number; y: number; hp: number; deadline: BN; chestMask: number; pending: number[]; nonce: BN; finalScore: number };
 export type ChainProfile = { authority: PublicKey; nextRunIndex: BN };
 export type RunSnapshot = { address: PublicKey; index: number; phase: ChainPhase; x: number; y: number; hp: number; deadline: number; chestMask: number; nonce: number; finalScore: number; source: "base" | "er"; endpoint?: string; delegated: boolean };
+export type GameSession = { signer: Keypair; token: PublicKey; expiresAt: number; authority: PublicKey };
+const SESSION_TOP_UP_LAMPORTS = 2_000_000;
+const SESSION_LIFETIME_SECONDS = 240;
 
 function provider(connection: Connection, wallet: AnchorWallet) {
   return new AnchorProvider(connection, wallet, { commitment: "confirmed" });
@@ -25,7 +29,7 @@ function program(connection: Connection, wallet: AnchorWallet) {
   return new Program(idl as Idl, provider(connection, wallet));
 }
 function ensureConfigured() {
-  if (!isConfigured) throw new Error("Deploy this program to devnet and set NEXT_PUBLIC_GAME_PROGRAM_ID to the deployed address before starting an onchain run.");
+  if (!isConfigured) throw new Error("Deploy and verify the session-aware program, then set NEXT_PUBLIC_GAME_V2_ENABLED=true before starting an onchain run.");
 }
 export function profileAddress(authority: PublicKey) {
   return PublicKey.findProgramAddressSync([Buffer.from("profile"), authority.toBuffer()], PROGRAM_ID)[0];
@@ -38,15 +42,56 @@ async function readAccount<T>(connection: Connection, wallet: AnchorWallet, addr
   if (!info || !info.owner.equals(PROGRAM_ID)) return null;
   return program(connection, wallet).coder.accounts.decode(name, info.data) as T;
 }
-async function submit(connection: Connection, wallet: AnchorWallet, transaction: Transaction): Promise<TransactionSignature> {
+async function submit(connection: Connection, wallet: AnchorWallet, transaction: Transaction, extraSigners: Keypair[] = []): Promise<TransactionSignature> {
   transaction.feePayer = wallet.publicKey;
   const latest = await connection.getLatestBlockhash("confirmed");
   transaction.recentBlockhash = latest.blockhash;
+  const simulation = await connection.simulateTransaction(transaction);
+  if (simulation.value.err) throw new Error(`Preflight simulation failed: ${JSON.stringify(simulation.value.err)}`);
+  if (extraSigners.length) transaction.partialSign(...extraSigners);
   const signed = await wallet.signTransaction(transaction);
   const signature = await connection.sendRawTransaction(signed.serialize());
   const confirmation = await connection.confirmTransaction({ signature, ...latest }, "confirmed");
   if (confirmation.value.err) throw new Error(`Transaction ${signature} failed: ${JSON.stringify(confirmation.value.err)}`);
   return signature;
+}
+async function submitSession(connection: Connection, session: GameSession, transaction: Transaction): Promise<TransactionSignature> {
+  if (Math.floor(Date.now() / 1000) >= session.expiresAt) throw new Error("Game session expired. Authorize a new session to continue.");
+  transaction.feePayer = session.signer.publicKey;
+  const latest = await connection.getLatestBlockhash("confirmed");
+  transaction.recentBlockhash = latest.blockhash;
+  transaction.sign(session.signer);
+  const simulation = await connection.simulateTransaction(transaction);
+  if (simulation.value.err) throw new Error(`ER action simulation failed: ${JSON.stringify(simulation.value.err)}`);
+  const signature = await connection.sendRawTransaction(transaction.serialize(), { skipPreflight: false });
+  const confirmation = await connection.confirmTransaction({ signature, ...latest }, "confirmed");
+  if (confirmation.value.err) throw new Error(`ER action ${signature} failed: ${JSON.stringify(confirmation.value.err)}`);
+  return signature;
+}
+export async function createGameSession(wallet: AnchorWallet): Promise<{ session: GameSession; signature: string }> {
+  ensureConfigured();
+  const { SessionTokenManager } = await import("@magicblock-labs/gum-sdk");
+  const manager = new SessionTokenManager(wallet, base);
+  const signer = Keypair.generate();
+  const expiresAt = Math.floor(Date.now() / 1000) + SESSION_LIFETIME_SECONDS;
+  const token = PublicKey.findProgramAddressSync(
+    [Buffer.from("session_token_v2"), PROGRAM_ID.toBuffer(), signer.publicKey.toBuffer(), wallet.publicKey.toBuffer()],
+    manager.program.programId,
+  )[0];
+  const transaction = await manager.program.methods
+    .createSessionV2(true, new BN(expiresAt), new BN(SESSION_TOP_UP_LAMPORTS))
+    .accounts({ targetProgram: PROGRAM_ID, sessionSigner: signer.publicKey, feePayer: wallet.publicKey, authority: wallet.publicKey })
+    .transaction();
+  const signature = await submit(base, wallet, transaction, [signer]);
+  const info = await base.getAccountInfo(token, "confirmed");
+  if (!info?.owner.equals(manager.program.programId)) throw new Error("Session creation confirmed, but the session token is not readable yet. Refresh before retrying.");
+  return { session: { signer, token, expiresAt, authority: wallet.publicKey }, signature };
+}
+export async function revokeGameSession(wallet: AnchorWallet, token: PublicKey): Promise<string> {
+  const { SessionTokenManager } = await import("@magicblock-labs/gum-sdk");
+  const manager = new SessionTokenManager(wallet, base);
+  const transaction = await manager.program.methods.revokeSessionV2().accounts({ sessionToken: token, feePayer: wallet.publicKey, authority: wallet.publicKey }).transaction();
+  return submit(base, wallet, transaction);
 }
 export async function createRun(wallet: AnchorWallet): Promise<{ index: number; address: PublicKey; signatures: string[] }> {
   ensureConfigured();
@@ -54,12 +99,17 @@ export async function createRun(wallet: AnchorWallet): Promise<{ index: number; 
   const profile = profileAddress(authority);
   const client = program(base, wallet);
   const signatures: string[] = [];
-  let record = await readAccount<ChainProfile>(base, wallet, profile, "playerProfile");
+  const record = await readAccount<ChainProfile>(base, wallet, profile, "playerProfile");
   if (!record) {
-    signatures.push(await submit(base, wallet, await client.methods.initializeProfile().accountsPartial({ profile, authority, systemProgram: SystemProgram.programId }).transaction()));
-    record = await readAccount<ChainProfile>(base, wallet, profile, "playerProfile");
+    const index = 0;
+    const address = runAddress(authority, index);
+    const transaction = new Transaction().add(
+      await client.methods.initializeProfile().accountsPartial({ profile, authority, systemProgram: SystemProgram.programId }).instruction(),
+      await client.methods.createRun(new BN(index)).accountsPartial({ profile, run: address, authority, systemProgram: SystemProgram.programId }).instruction(),
+    );
+    signatures.push(await submit(base, wallet, transaction));
+    return { index, address, signatures };
   }
-  if (!record) throw new Error("Profile was not found after creation. Refresh before retrying.");
   const index = record.nextRunIndex.toNumber();
   const address = runAddress(authority, index);
   signatures.push(await submit(base, wallet, await client.methods.createRun(new BN(index)).accountsPartial({ profile, run: address, authority, systemProgram: SystemProgram.programId }).transaction()));
@@ -92,23 +142,28 @@ export async function findLatestRun(wallet: AnchorWallet): Promise<RunSnapshot |
   if (!profile || profile.nextRunIndex.isZero()) return null;
   return readRun(wallet, profile.nextRunIndex.subn(1).toNumber());
 }
-async function submitEr(wallet: AnchorWallet, index: number, build: (client: Program<Idl>, run: PublicKey) => Promise<Transaction>): Promise<string> {
+async function submitEr(wallet: AnchorWallet, index: number, build: (client: Program<Idl>, run: PublicKey) => Promise<Transaction>, session?: GameSession): Promise<string> {
   const address = runAddress(wallet.publicKey, index);
   const route = await resolveEr(address);
   if (!route.connection) throw new Error("Run is not delegated to an Ephemeral Rollup.");
-  return submit(route.connection, wallet, await build(program(route.connection, wallet), address));
+  const transaction = await build(program(route.connection, wallet), address);
+  return session ? submitSession(route.connection, session, transaction) : submit(route.connection, wallet, transaction);
 }
-export async function activateRun(wallet: AnchorWallet, index: number) {
-  return submitEr(wallet, index, (client, run) => client.methods.activateRun(new BN(index)).accountsPartial({ run, authority: wallet.publicKey }).transaction());
+function actionAccounts(wallet: AnchorWallet, run: PublicKey, session?: GameSession) {
+  if (session && !session.authority.equals(wallet.publicKey)) throw new Error("Session belongs to a different wallet.");
+  return { run, sessionToken: session?.token || PROGRAM_ID, signer: session?.signer.publicKey || wallet.publicKey };
 }
-export async function advanceRun(wallet: AnchorWallet, state: RunSnapshot, path: number[]) {
-  return submitEr(wallet, state.index, (client, run) => client.methods.advance(new BN(state.index), new BN(state.nonce), Buffer.from(path)).accountsPartial({ run, authority: wallet.publicKey }).transaction());
+export async function activateRun(wallet: AnchorWallet, index: number, session?: GameSession) {
+  return submitEr(wallet, index, (client, run) => client.methods.activateRun(new BN(index)).accountsPartial(actionAccounts(wallet, run, session)).transaction(), session);
 }
-export async function openChest(wallet: AnchorWallet, state: RunSnapshot, chestId: number) {
-  return submitEr(wallet, state.index, (client, run) => client.methods.openChest(new BN(state.index), new BN(state.nonce), chestId).accountsPartial({ run, authority: wallet.publicKey }).transaction());
+export async function advanceRun(wallet: AnchorWallet, state: RunSnapshot, path: number[], session: GameSession) {
+  return submitEr(wallet, state.index, (client, run) => client.methods.advance(new BN(state.index), new BN(state.nonce), Buffer.from(path)).accountsPartial(actionAccounts(wallet, run, session)).transaction(), session);
 }
-export async function requestExtraction(wallet: AnchorWallet, state: RunSnapshot) {
-  return submitEr(wallet, state.index, (client, run) => client.methods.requestExtraction(new BN(state.index), new BN(state.nonce)).accountsPartial({ run, authority: wallet.publicKey }).transaction());
+export async function openChest(wallet: AnchorWallet, state: RunSnapshot, chestId: number, session: GameSession) {
+  return submitEr(wallet, state.index, (client, run) => client.methods.openChest(new BN(state.index), new BN(state.nonce), chestId).accountsPartial(actionAccounts(wallet, run, session)).transaction(), session);
+}
+export async function requestExtraction(wallet: AnchorWallet, state: RunSnapshot, session: GameSession) {
+  return submitEr(wallet, state.index, (client, run) => client.methods.requestExtraction(new BN(state.index), new BN(state.nonce)).accountsPartial(actionAccounts(wallet, run, session)).transaction(), session);
 }
 export async function expireRun(wallet: AnchorWallet, index: number) {
   return submitEr(wallet, index, (client, run) => client.methods.expireRun(new BN(index)).accountsPartial({ run }).transaction());
