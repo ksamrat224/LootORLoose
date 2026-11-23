@@ -103,9 +103,27 @@ async function main() {
   await initializeLedger(wallet);
   let session: GameSession | undefined;
   const observed = new Set<string>();
-  for (let attempt = 0; attempt < 12 && observed.size < 2; attempt++) {
+  // Preserve completed evidence across interrupted invocations, not just the
+  // unresolved wager. Otherwise recovery unnecessarily repeats a passed path.
+  const existing = await readPlayer(wallet);
+  for (let index = 0; index < (existing?.nextIndex.toNumber() ?? 0); index++) {
+    const receipt = await readWager(wallet, index, true);
+    if (!receipt?.settled || receipt.rulesVersion !== 1 || receipt.stake !== 200)
+      continue;
+    if (receipt.phase === "lost" && receipt.payout === 0)
+      observed.add("failure");
+    if (
+      receipt.phase === "extracting" &&
+      receipt.gate > 0 &&
+      receipt.payout === Math.floor(receipt.stake * [1, 1.25, 2, 3][receipt.gate])
+    )
+      observed.add("success");
+    console.log(`Existing settled evidence: run ${index} · ${receipt.phase}`);
+  }
+  for (let attempt = 0; attempt < 12; attempt++) {
     const player = await readPlayer(wallet);
     if (!player) throw new Error("Missing demo player");
+    if (observed.size === 2 && !player.active) break;
     const index = player.active
       ? player.activeIndex.toNumber()
       : await createWager(wallet, 200);

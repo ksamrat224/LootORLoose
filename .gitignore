@@ -15,3 +15,4 @@ app/.next/
 app/test-results/
 app/playwright-report/
 app/.next-wager-tests/
+app/.next-practice-tests/

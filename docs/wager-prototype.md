@@ -1,6 +1,6 @@
 # V3 demo wager prototype
 
-Status: implemented and locally verified; live deployment/VRF verification blocked by devnet funding. The production-facing V3 flag remains false. The previously deployed free game is unchanged onchain.
+Status: upgraded on devnet and live VRF success/failure settlements verified on Nov 23, 2026. This workspace's ignored `app/.env.local` enables V3; the example environment stays disabled by default. Original free-game receipt layouts remain unchanged. This is a demo-credit prototype, not a production or real-money release.
 
 ## Rules
 
@@ -38,9 +38,29 @@ The client separates confirmed position, submitted movement, and unsent inputs. 
 
 - `NO_DNA=1 anchor build --ignore-keys` then `NO_DNA=1 cargo test -p loot_or_lose --tests`.
 - In `app/`: `npm run lint`, `npm run build`, `npx playwright install chromium`, `npm test`.
-- Browser tests start an isolated `.next-wager-tests` dev build with V3 enabled for intercepted RPC fixtures only. This does not enable the user's ordinary dev server. Their disposable fixture wallet never sends to devnet.
+- Browser tests start isolated `.next-practice-tests` (port 3200, V3 disabled) and `.next-wager-tests` (port 3100, V3 enabled) dev builds. They do not depend on the user's ordinary server or local feature flag. Devnet tests use intercepted RPC fixtures; their disposable fixture wallet never sends to devnet.
 - Program tests cover all payout tiers, exact RTP, flooring, cancellation, failure, insufficient balances/reserves, concurrent wallets, callback spoofing/mismatch/replay, walls/nonces, expiry/revocation and run-bound sessions. Fixture callbacks are not oracle integration evidence.
 - Browser tests cover narrow/tablet/desktop layouts, stake entry, refund/extraction/loss, wallet disconnect/reload/rejection, ER outage, and uncertain submission retained across reload without resending. Transport tests separately verify pending/applied/failed/expired signature handling.
-- After sufficient funding and an upgrade, run `npm run verify:devnet-wager`. It refuses to send if deployed program bytes differ from the local ELF. Record every run address and base balance credit, including unsuccessful sampling or service failures. Existing free-game CLI evidence does not establish V3 browser or VRF reliability.
+- Run `npm run verify:devnet-wager` for the live lifecycle check. It refuses to send if deployed program bytes differ from the local ELF. It recognizes settled V1-rules $2 receipts across interruptions and resumes any unresolved wager before creating another. Once both outcomes exist with no active wager, no new wagers are created. Existing free-game CLI evidence does not establish V3 browser or VRF reliability.
+
+### Live V3 evidence — Nov 23, 2026
+
+Program `BenkDp3MuSNQshYqTC7PyiWvpBsCQTT5LX6EGYWCQhvj` upgraded at slot **525323703**; [upgrade transaction](https://explorer.solana.com/tx/3CKwV6qmWZ3fPqpwMLcdcXm81YYHW1RGJE7AtoTnsqaymd7Z9GJjby55mvZD9xDSgzMyQ7huZKFGX5PWYdkB47Mr?cluster=devnet). Independently read ProgramData matched the local 551,272-byte ELF, SHA-256 `32326ab3aaab75db90ef761155cb5c2d507203973e2fcc26012c779f0f931804`.
+
+Transactions used base `https://rpc.magicblock.app/devnet`, router `https://devnet-router.magicblock.app/`, and the router-resolved ER `https://devnet-as.magicblock.app/`. Initial session authorization preflight returned Custom101 immediately after upgrade; a later read-only simulation recognized `AuthorizeWagerSession` and passed. This is consistent with delayed ER program propagation, not proof of an infrastructure outage. Recovery reused wager 0 rather than charging another stake.
+
+| Outcome | Wager address | Stake / total payout (demo cents) | Finalized base settlement |
+| --- | --- | --- | --- |
+| Gate 1 success, extracted | `EGF1ZnNMQzvVb3VqbyHAx9KSc97ays67XpRrBsYm3sJH` | 200 / 250 | [transaction](https://explorer.solana.com/tx/3KPj3dhsXu6zoQP6WVnKfAjLT3MXLexwx9pNfg2btz6U6hVFmFcXfLSxenvbvmEeEYDMYpbh4RwiL2BJiWGkRUWR?cluster=devnet) |
+| Gate 1 failure | `EqSX6FZdnt3XL1SqdtAZt8zJLZfftGZeHgbiXXPF4Ugb` | 200 / 0 | [transaction](https://explorer.solana.com/tx/nkK1motETzXKZjiwPTY8HuxmJHkMKDKRd5aazoJ5Zb6byafaBYKAr9NSoRCdwF87mbmAHSRieSbkbWGXXHqfd3J?cluster=devnet) |
+
+Actual authenticated `ResolveGate` callbacks were observed inside successful `Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz` CPI transactions on that ER:
+
+- Success callback: `5oNE1Z986uTXG2AiqyjF11NZLB5WRWExzT9rM6rYQMvMHnPVuESmpt5xMjYJi78EjvShtrZKf7mGr4kvWvDbvTSJ`; persisted randomness `fbbf203d559ec610611d51a5bc56be1a5d5c6f8201ef1be027cdaa2aa7c72156`.
+- Failure callback: `4WysFUFUzT3EGjApySnzcoKUPGaazLJkrbCVwyqxEnxNH1JkSqvWhgbQymVey92qWeKcYAiSJKiC2Kq86NpfrdHn`; persisted randomness `12cc756d34165d392a873e04f74c18072136c00809be50f49a86cab2d7f0f157`.
+
+Across interrupted/resumed verification, wager indices 0–7 extracted 250 cents each; index 8 naturally lost and paid zero. No odds were changed and no gate was rerolled. Wager 2 was recovered after interruption using a new temporary session, then settled before creating wager 3. Final base state: player **10,200 cents**, house **999,800 cents**, reserved **0**, `active=false`, `nextIndex=9`; wallet **6.343075378 devnet SOL**. This finite sample is integration evidence, not an estimate or guarantee of returns.
+
+Lint, TypeScript, and all 17 browser/transport tests passed after recovery tooling changes. Live CLI evidence verifies session signing, real callbacks, and base crediting, but does not replace a fresh-wallet manual browser run or real-outage recovery exercise. Those release gates remain open.
 
 No real-money wagering, mainnet deployment, cash payout guarantee, security audit, or automatic infrastructure-outage refund is included. Real custody and a real-money release would require a separate design and review.

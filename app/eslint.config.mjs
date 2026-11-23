@@ -10,6 +10,7 @@ const eslintConfig = defineConfig([
     // Default ignores of eslint-config-next:
     ".next/**",
     ".next-wager-tests/**",
+    ".next-practice-tests/**",
     "test-results/**",
     "playwright-report/**",
     "out/**",
