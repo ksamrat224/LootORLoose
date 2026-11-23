@@ -3,6 +3,8 @@ use ephemeral_rollups_sdk::anchor::{commit, delegate, ephemeral};
 use ephemeral_rollups_sdk::cpi::DelegateConfig;
 use ephemeral_rollups_sdk::ephem::MagicIntentBundleBuilder;
 use session_keys::{session_auth_or, Session, SessionError, SessionTokenV2};
+pub mod wager;
+pub use wager::*;
 
 declare_id!("BenkDp3MuSNQshYqTC7PyiWvpBsCQTT5LX6EGYWCQhvj");
 pub const PROFILE_SEED: &[u8] = b"profile";
@@ -75,6 +77,66 @@ fn expire_if_needed(run: &mut RunState) -> Result<bool> {
 #[program]
 pub mod loot_or_lose {
     use super::*;
+
+    pub fn initialize_house(ctx: Context<InitializeHouse>) -> Result<()> {
+        wager::initialize_house_handler(ctx)
+    }
+    pub fn initialize_demo_player(ctx: Context<InitializeDemoPlayer>) -> Result<()> {
+        wager::initialize_player(ctx)
+    }
+    pub fn create_wager(ctx: Context<CreateWager>, index: u64, stake: u64) -> Result<()> {
+        wager::create(ctx, index, stake)
+    }
+    pub fn delegate_wager(ctx: Context<DelegateWager>, index: u64) -> Result<()> {
+        wager::delegate(ctx, index)
+    }
+    #[session_auth_or(ctx.accounts.wager.authority == ctx.accounts.signer.key(), SessionError::InvalidToken)]
+    pub fn advance_wager(
+        ctx: Context<UpdateWager>,
+        index: u64,
+        expected_nonce: u64,
+        path: Vec<u8>,
+    ) -> Result<()> {
+        wager::advance_handler(ctx, index, expected_nonce, path)
+    }
+    #[session_auth_or(ctx.accounts.wager.authority == ctx.accounts.signer.key(), SessionError::InvalidToken)]
+    pub fn risk_gate(ctx: Context<RiskGate>, index: u64, expected_nonce: u64) -> Result<()> {
+        wager::risk(ctx, index, expected_nonce)
+    }
+    pub fn resolve_gate(
+        ctx: Context<ResolveGate>,
+        randomness: [u8; 32],
+        index: u64,
+        request_nonce: u64,
+        gate: u8,
+    ) -> Result<()> {
+        wager::resolve(ctx, randomness, index, request_nonce, gate)
+    }
+    #[session_auth_or(ctx.accounts.wager.authority == ctx.accounts.signer.key(), SessionError::InvalidToken)]
+    pub fn extract_wager(ctx: Context<UpdateWager>, index: u64, expected_nonce: u64) -> Result<()> {
+        wager::extract(ctx, index, expected_nonce)
+    }
+    pub fn cancel_wager(ctx: Context<CancelWager>, index: u64) -> Result<()> {
+        wager::cancel(ctx, index)
+    }
+    pub fn authorize_wager_session(
+        ctx: Context<CancelWager>,
+        _index: u64,
+        session_signer: Pubkey,
+    ) -> Result<()> {
+        require!(
+            ctx.accounts.wager.phase == WagerPhase::Active,
+            GameError::WrongPhase
+        );
+        ctx.accounts.wager.session_signer = session_signer;
+        Ok(())
+    }
+    pub fn finalize_wager(ctx: Context<FinalizeWager>, index: u64) -> Result<()> {
+        wager::finalize(ctx, index)
+    }
+    pub fn settle_wager(ctx: Context<SettleWager>, index: u64) -> Result<()> {
+        wager::settle(ctx, index)
+    }
 
     pub fn initialize_profile(ctx: Context<InitializeProfile>) -> Result<()> {
         let profile = &mut ctx.accounts.profile;
@@ -357,4 +419,24 @@ pub enum GameError {
     NotExpired,
     #[msg("Arithmetic overflow")]
     Overflow,
+    #[msg("Settle the existing wager before starting another")]
+    ActiveWager,
+    #[msg("Stake must be $1 to $100 in demo credits")]
+    Stake,
+    #[msg("Insufficient demo credits")]
+    Balance,
+    #[msg("House cannot reserve this payout")]
+    Reserves,
+    #[msg("Wrong wager phase")]
+    Phase,
+    #[msg("Action nonce is stale")]
+    Nonce,
+    #[msg("Invalid risk gate")]
+    Gate,
+    #[msg("Stand beside the next risk gate")]
+    TooFar,
+    #[msg("Randomness request does not match")]
+    Request,
+    #[msg("Unsupported wager rules")]
+    Rules,
 }

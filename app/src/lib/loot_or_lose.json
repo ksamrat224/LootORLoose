@@ -124,6 +124,191 @@
       ]
     },
     {
+      "name": "advance_wager",
+      "discriminator": [
+        202,
+        2,
+        207,
+        139,
+        150,
+        200,
+        135,
+        152
+      ],
+      "accounts": [
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  97,
+                  103,
+                  101,
+                  114,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "wager.authority",
+                "account": "WagerState"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "session_token",
+          "optional": true
+        },
+        {
+          "name": "signer",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        },
+        {
+          "name": "expected_nonce",
+          "type": "u64"
+        },
+        {
+          "name": "path",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "authorize_wager_session",
+      "discriminator": [
+        54,
+        62,
+        99,
+        213,
+        155,
+        197,
+        105,
+        66
+      ],
+      "accounts": [
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  97,
+                  103,
+                  101,
+                  114,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "wager"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "_index",
+          "type": "u64"
+        },
+        {
+          "name": "session_signer",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
+      "name": "cancel_wager",
+      "discriminator": [
+        57,
+        92,
+        124,
+        123,
+        216,
+        16,
+        37,
+        148
+      ],
+      "accounts": [
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  97,
+                  103,
+                  101,
+                  114,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "wager"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "create_run",
       "discriminator": [
         195,
@@ -200,6 +385,159 @@
       "args": [
         {
           "name": "index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "create_wager",
+      "discriminator": [
+        210,
+        82,
+        178,
+        75,
+        253,
+        34,
+        84,
+        120
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  109,
+                  111,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101,
+                  95,
+                  118,
+                  51
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  109,
+                  111,
+                  95,
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "ticket",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  99,
+                  107,
+                  101,
+                  116,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  97,
+                  103,
+                  101,
+                  114,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "player"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        },
+        {
+          "name": "stake",
           "type": "u64"
         }
       ]
@@ -398,6 +736,204 @@
       ]
     },
     {
+      "name": "delegate_wager",
+      "discriminator": [
+        224,
+        104,
+        170,
+        29,
+        146,
+        83,
+        42,
+        4
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "buffer_wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "wager"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                158,
+                67,
+                21,
+                92,
+                213,
+                220,
+                197,
+                226,
+                45,
+                186,
+                206,
+                124,
+                212,
+                30,
+                88,
+                19,
+                187,
+                204,
+                110,
+                130,
+                97,
+                8,
+                134,
+                210,
+                8,
+                107,
+                12,
+                229,
+                213,
+                46,
+                244,
+                116
+              ]
+            }
+          }
+        },
+        {
+          "name": "delegation_record_wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "wager"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "delegation_metadata_wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "wager"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  97,
+                  103,
+                  101,
+                  114,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner_program",
+          "address": "BenkDp3MuSNQshYqTC7PyiWvpBsCQTT5LX6EGYWCQhvj"
+        },
+        {
+          "name": "delegation_program",
+          "address": "DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "expire_run",
       "discriminator": [
         160,
@@ -439,6 +975,69 @@
       "args": [
         {
           "name": "_index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "extract_wager",
+      "discriminator": [
+        165,
+        236,
+        163,
+        84,
+        199,
+        212,
+        22,
+        58
+      ],
+      "accounts": [
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  97,
+                  103,
+                  101,
+                  114,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "wager.authority",
+                "account": "WagerState"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "session_token",
+          "optional": true
+        },
+        {
+          "name": "signer",
+          "signer": true
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        },
+        {
+          "name": "expected_nonce",
           "type": "u64"
         }
       ]
@@ -504,6 +1103,180 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "finalize_wager",
+      "discriminator": [
+        163,
+        101,
+        89,
+        53,
+        146,
+        2,
+        54,
+        220
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "wager"
+          ]
+        },
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  97,
+                  103,
+                  101,
+                  114,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "magic_context",
+          "writable": true,
+          "address": "MagicContext1111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "initialize_demo_player",
+      "discriminator": [
+        101,
+        165,
+        178,
+        172,
+        91,
+        13,
+        227,
+        198
+      ],
+      "accounts": [
+        {
+          "name": "player",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  109,
+                  111,
+                  95,
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_house",
+      "discriminator": [
+        180,
+        46,
+        86,
+        125,
+        135,
+        107,
+        214,
+        28
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  109,
+                  111,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101,
+                  95,
+                  118,
+                  51
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
     },
     {
       "name": "initialize_profile",
@@ -778,9 +1551,356 @@
           "type": "u64"
         }
       ]
+    },
+    {
+      "name": "resolve_gate",
+      "discriminator": [
+        244,
+        130,
+        255,
+        120,
+        183,
+        200,
+        240,
+        244
+      ],
+      "accounts": [
+        {
+          "name": "vrf_program_identity",
+          "docs": [
+            "Scoped VRF identity PDA, bound to this program. Its presence as a signer proves",
+            "the callback was issued by the VRF program for this program."
+          ],
+          "signer": true
+        },
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  97,
+                  103,
+                  101,
+                  114,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "wager.authority",
+                "account": "WagerState"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "randomness",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "index",
+          "type": "u64"
+        },
+        {
+          "name": "request_nonce",
+          "type": "u64"
+        },
+        {
+          "name": "gate",
+          "type": "u8"
+        }
+      ]
+    },
+    {
+      "name": "risk_gate",
+      "discriminator": [
+        222,
+        74,
+        16,
+        93,
+        34,
+        244,
+        25,
+        224
+      ],
+      "accounts": [
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  97,
+                  103,
+                  101,
+                  114,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "wager.authority",
+                "account": "WagerState"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "session_token",
+          "optional": true
+        },
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "oracle_queue",
+          "writable": true
+        },
+        {
+          "name": "program_identity",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  100,
+                  101,
+                  110,
+                  116,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vrf_program",
+          "address": "Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz"
+        },
+        {
+          "name": "slot_hashes",
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        },
+        {
+          "name": "expected_nonce",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "settle_wager",
+      "discriminator": [
+        161,
+        242,
+        169,
+        152,
+        172,
+        163,
+        161,
+        104
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  109,
+                  111,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101,
+                  95,
+                  118,
+                  51
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  109,
+                  111,
+                  95,
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "ticket",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  105,
+                  99,
+                  107,
+                  101,
+                  116,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "wager",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  119,
+                  97,
+                  103,
+                  101,
+                  114,
+                  95,
+                  118,
+                  51
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "player",
+            "ticket",
+            "wager"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        }
+      ]
     }
   ],
   "accounts": [
+    {
+      "name": "DemoHouse",
+      "discriminator": [
+        246,
+        150,
+        95,
+        226,
+        231,
+        40,
+        73,
+        6
+      ]
+    },
+    {
+      "name": "DemoPlayer",
+      "discriminator": [
+        115,
+        131,
+        137,
+        216,
+        234,
+        53,
+        165,
+        192
+      ]
+    },
     {
       "name": "PlayerProfile",
       "discriminator": [
@@ -805,6 +1925,32 @@
         229,
         44,
         21
+      ]
+    },
+    {
+      "name": "WagerState",
+      "discriminator": [
+        70,
+        182,
+        246,
+        40,
+        25,
+        18,
+        131,
+        40
+      ]
+    },
+    {
+      "name": "WagerTicket",
+      "discriminator": [
+        239,
+        153,
+        45,
+        227,
+        47,
+        133,
+        189,
+        71
       ]
     }
   ],
@@ -863,9 +2009,111 @@
       "code": 6010,
       "name": "Overflow",
       "msg": "Arithmetic overflow"
+    },
+    {
+      "code": 6011,
+      "name": "ActiveWager",
+      "msg": "Settle the existing wager before starting another"
+    },
+    {
+      "code": 6012,
+      "name": "Stake",
+      "msg": "Stake must be $1 to $100 in demo credits"
+    },
+    {
+      "code": 6013,
+      "name": "Balance",
+      "msg": "Insufficient demo credits"
+    },
+    {
+      "code": 6014,
+      "name": "Reserves",
+      "msg": "House cannot reserve this payout"
+    },
+    {
+      "code": 6015,
+      "name": "Phase",
+      "msg": "Wrong wager phase"
+    },
+    {
+      "code": 6016,
+      "name": "Nonce",
+      "msg": "Action nonce is stale"
+    },
+    {
+      "code": 6017,
+      "name": "Gate",
+      "msg": "Invalid risk gate"
+    },
+    {
+      "code": 6018,
+      "name": "TooFar",
+      "msg": "Stand beside the next risk gate"
+    },
+    {
+      "code": 6019,
+      "name": "Request",
+      "msg": "Randomness request does not match"
+    },
+    {
+      "code": 6020,
+      "name": "Rules",
+      "msg": "Unsupported wager rules"
     }
   ],
   "types": [
+    {
+      "name": "DemoHouse",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "balance",
+            "type": "u64"
+          },
+          {
+            "name": "reserved",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "DemoPlayer",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "balance",
+            "type": "u64"
+          },
+          {
+            "name": "next_index",
+            "type": "u64"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "active_index",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
     {
       "name": "Phase",
       "type": {
@@ -1001,6 +2249,146 @@
           {
             "name": "valid_until",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WagerPhase",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Active"
+          },
+          {
+            "name": "RandomnessPending"
+          },
+          {
+            "name": "Extracting"
+          },
+          {
+            "name": "Lost"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WagerState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "session_signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "index",
+            "type": "u64"
+          },
+          {
+            "name": "rules_version",
+            "type": "u8"
+          },
+          {
+            "name": "stake",
+            "type": "u64"
+          },
+          {
+            "name": "phase",
+            "type": {
+              "defined": {
+                "name": "WagerPhase"
+              }
+            }
+          },
+          {
+            "name": "x",
+            "type": "u8"
+          },
+          {
+            "name": "y",
+            "type": "u8"
+          },
+          {
+            "name": "gate",
+            "type": "u8"
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "request_nonce",
+            "type": "u64"
+          },
+          {
+            "name": "requested_at",
+            "type": "i64"
+          },
+          {
+            "name": "fulfilled_at",
+            "type": "i64"
+          },
+          {
+            "name": "randomness",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "payout",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "WagerTicket",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "index",
+            "type": "u64"
+          },
+          {
+            "name": "stake",
+            "type": "u64"
+          },
+          {
+            "name": "reserve",
+            "type": "u64"
+          },
+          {
+            "name": "settled",
+            "type": "bool"
+          },
+          {
+            "name": "payout",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }

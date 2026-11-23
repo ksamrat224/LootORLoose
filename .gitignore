@@ -11,3 +11,7 @@ test-ledger
 app/.env.local
 .next/
 app/.next/
+# Browser test artifacts
+app/test-results/
+app/playwright-report/
+app/.next-wager-tests/

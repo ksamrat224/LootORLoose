@@ -7,9 +7,12 @@ import { Connection, Keypair, PublicKey, SystemProgram } from "@solana/web3.js";
 
 const { AnchorProvider, BN, Program } = anchor;
 const useSession = process.argv.includes("--session");
+const resumeIndexArg = process.argv.find((arg) => arg.startsWith("--resume-index="));
+const resumeIndex = resumeIndexArg ? Number(resumeIndexArg.split("=")[1]) : null;
+if (resumeIndex !== null && (!Number.isSafeInteger(resumeIndex) || resumeIndex < 0)) throw new Error("--resume-index must be a nonnegative integer");
 
 const idl = JSON.parse(readFileSync(new URL("../src/lib/loot_or_lose.json", import.meta.url), "utf8"));
-const configuredKeypair = execFileSync("solana", ["config", "get"], { encoding: "utf8" }).match(/^Keypair Path:\s*(.+)$/m)?.[1];
+const configuredKeypair = execFileSync("solana", ["config", "get"], { encoding: "utf8" }).match(/^Keypair Path:\s*(.+)$/m)?.[1]?.trim();
 const keypairPath = process.env.SOLANA_KEYPAIR || configuredKeypair;
 if (!keypairPath) throw new Error("No configured Solana CLI keypair. Set SOLANA_KEYPAIR to a local keypair path.");
 const payer = Keypair.fromSecretKey(Uint8Array.from(JSON.parse(readFileSync(keypairPath, "utf8"))));
@@ -97,11 +100,19 @@ async function main() {
   }
   if (!record) throw new Error("Profile missing after initialization");
   for (const outcome of ["success", "failure"]) {
-    const index = record.nextRunIndex.toNumber();
+    const resuming = outcome === "success" && resumeIndex !== null;
+    const index = resuming ? resumeIndex : record.nextRunIndex.toNumber();
     const run = address(index);
     console.log(`\n${outcome.toUpperCase()} run ${index}: ${run}`);
-    await send(base, "create run", await client(base).methods.createRun(new BN(index)).accountsPartial({ profile, run, authority: payer.publicKey, systemProgram: SystemProgram.programId }).transaction());
-    await send(base, "delegate run", await client(base).methods.delegateRun(new BN(index)).accountsPartial({ authority: payer.publicKey, run }).transaction());
+    if (resuming) {
+      if (index >= record.nextRunIndex.toNumber()) throw new Error("Resume index was not created by this profile");
+      if (!(await route(run))) throw new Error("Resume run is not delegated");
+      const pending = await state(await route(run), run);
+      if (!pending || phase(pending) !== "created") throw new Error("Resume run must be in CREATED phase");
+    } else {
+      await send(base, "create run", await client(base).methods.createRun(new BN(index)).accountsPartial({ profile, run, authority: payer.publicKey, systemProgram: SystemProgram.programId }).transaction());
+      await send(base, "delegate run", await client(base).methods.delegateRun(new BN(index)).accountsPartial({ authority: payer.publicKey, run }).transaction());
+    }
     const er = await waitFor("delegated ER account", async () => {
       const connection = await route(run);
       const erAccount = connection && await connection.getAccountInfo(run);

@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "playwright test",
+    "test:unit": "playwright test checkpoints.spec.ts transactions.spec.ts",
+    "verify:devnet-wager": "NEXT_PUBLIC_WAGER_V3_ENABLED=true node --env-file=.env.local --import tsx scripts/devnet-wager.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "0.32.1",
@@ -22,6 +25,7 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -29,6 +33,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.3",
+    "tsx": "^4.23.15",
     "typescript": "^5"
   }
 }
