@@ -1,9 +1,17 @@
 # Brand — Loot or Lose
 
-_Status: deferred (interim dark-stone + gold + mint direction in use)_
+_Status: applied — **Torch Vault** (Nov 25, 2026)_
 
-The palette selection is awaiting a user choice. The game now uses a restrained dark-stone dungeon treatment with treasure-gold actions and mint exits, plus procedural tile details and compact HUD cards. This is an interim visual direction, not a selected brand palette; the six dungeon-inspired candidates remain in `.brand-preview/index.html`.
+Warm black stone with a single amber treasure accent.
 
-To apply a real palette, pick `1–6` from the preview or say `more like 3` in the project chat.
+| Role | Value |
+| --- | --- |
+| Background | `#110F0A` |
+| Surface | `#1A1711` |
+| Line | `#3A3326` |
+| Foreground | `#F3F1ED` |
+| Primary (amber) | `#D9A452` |
+| Primary light | `#E8C389` |
+| Primary foreground | `#110F0A` |
 
-_Deferred at: 2026-11-22_
+Gate accent colours (copper `#E8C389`, emerald `#83D7C5`, crown `#BAB0ED`) identify guardians. Tokens live in `app/src/app/globals.css`. Other candidates remain in `.brand-preview/index.html`.

@@ -23,7 +23,9 @@ export const toHex = (bytes: ArrayLike<number>) =>
 export const isZeroRandomness = (bytes: ArrayLike<number>) =>
   bytes.length !== 32 || Array.from(bytes).every((b) => !b);
 
-async function sha256(...parts: Uint8Array[]): Promise<Uint8Array> {
+async function sha256(
+  ...parts: Uint8Array[]
+): Promise<Uint8Array<ArrayBuffer>> {
   const joined = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
   let offset = 0;
   for (const part of parts) {
@@ -40,7 +42,7 @@ export async function sampleRandomness(
   if (seed.length !== 32) throw new Error("Randomness must be 32 bytes");
   const d = BigInt(denominator);
   const limit = U64_MAX - (U64_MAX % d);
-  let bytes = Uint8Array.from(seed);
+  let bytes: Uint8Array<ArrayBuffer> = Uint8Array.from(seed);
   for (let rehashes = 0; ; rehashes++) {
     const view = new DataView(bytes.buffer, bytes.byteOffset, 32);
     for (let i = 0; i < 32; i += 8) {

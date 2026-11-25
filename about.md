@@ -66,6 +66,7 @@ The player sees the dungeon board beside a focused risk panel:
 - Safe exploration is immediate and responsive; confirmed checkpoints reconcile with the authoritative state in the background.
 - The side panel always shows stake, available demo balance, current total return, and net profit if extracted.
 - Once a guardian has been cleared, **Extract** and **Risk next gate** are presented together so the central choice is never hidden.
+- After each resolved gate a **Proof of roll** card shows the VRF randomness bytes read from the wager account, the request-to-fulfilment time, and a **Verify this roll in your browser** button that reruns the program's rejection-sampling rule and reports the sample against the gate threshold.
 - A pending gate becomes a clear **Randomness pending** state rather than a misleading success or loss state.
 - Gate 3 automatically freezes the 3× result if it succeeds.
 - Result cards distinguish a frozen result from a base-layer-settled result. `EXTRACTED`, `LOST`, and `REFUNDED` appear only when the appropriate state is confirmed.
@@ -161,7 +162,7 @@ The project has been tested at three layers:
 - **Browser and transport tests:** responsive stake UI, public odds, local result paths, wallet rejection/change, session renewal, reload recovery, delayed VRF, ER outage handling, and ambiguous transaction submission without duplicate sends.
 - **Live devnet checks:** deployed ELF verification, delegated ER gameplay, session-key actions, real VRF callbacks, both success and failure settlements, and independent base-layer balance/receipt reads.
 
-The current browser suite contains 17 passing tests. The live verification command, `npm run verify:devnet-wager` from `app/`, refuses to transact if the deployed program bytes do not match the local binary. It also resumes an unresolved run and recognizes already-settled test evidence, rather than creating duplicate stakes after an interruption.
+The current browser suite contains 23 passing tests (including in-browser recomputation of real devnet VRF rolls). The live verification command, `npm run verify:devnet-wager` from `app/`, refuses to transact if the deployed program bytes do not match the local binary. It also resumes an unresolved run and recognizes already-settled test evidence, rather than creating duplicate stakes after an interruption.
 
 ## Scope and honest limitations
 

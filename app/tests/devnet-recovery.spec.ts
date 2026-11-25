@@ -23,6 +23,7 @@ async function fixture(page: Page) {
     ).coder.accounts,
     pid = new PublicKey(idl.address);
   let phase = "active",
+    resolved: { gate: number; randomness: number[] } | null = null,
     pending = false,
     applied = false,
     outage = false,
@@ -161,16 +162,18 @@ async function fixture(page: Page) {
             phase: { [phase]: {} },
             x: 1,
             y: 1,
-            gate: 0,
-            nonce: new BN(phase === "active" ? 0 : 1),
+            gate: resolved?.gate ?? 0,
+            nonce: new BN(phase === "active" && !resolved ? 0 : 1),
             requestNonce: new BN(0),
             requestedAt: new BN(
               phase === "randomnessPending"
                 ? Math.floor(Date.now() / 1000) - 120
+                : resolved
+                ? 1
                 : 0
             ),
-            fulfilledAt: new BN(0),
-            randomness: Array(32).fill(0),
+            fulfilledAt: new BN(resolved ? 3 : 0),
+            randomness: resolved?.randomness ?? Array(32).fill(0),
             payout: new BN(phase === "cancelled" ? 200 : 0),
             bump: 255,
           });
@@ -242,6 +245,21 @@ async function fixture(page: Page) {
     uploads: () => uploads,
     delayRandomness: () => {
       phase = "randomnessPending";
+    },
+    // Real devnet VRF bytes from docs/wager-prototype.md (gate 1, 19/25).
+    resolveGate: (success: boolean) => {
+      phase = success ? "active" : "lost";
+      resolved = {
+        gate: success ? 1 : 0,
+        randomness: Array.from(
+          Buffer.from(
+            success
+              ? "fbbf203d559ec610611d51a5bc56be1a5d5c6f8201ef1be027cdaa2aa7c72156"
+              : "12cc756d34165d392a873e04f74c18072136c00809be50f49a86cab2d7f0f157",
+            "hex"
+          )
+        ),
+      };
     },
     apply: () => {
       applied = true;
@@ -389,4 +407,33 @@ test("an ambiguous cancellation survives reload and is not resubmitted", async (
   ).toBeVisible();
   await expect(page.getByText("REFUNDED", { exact: true })).toHaveCount(0);
   expect(game.uploads()).toBe(1);
+});
+
+test("a resolved gate shows a proof the browser can recompute", async ({
+  page,
+}) => {
+  const game = await fixture(page);
+  await game.connect();
+  game.resolveGate(true);
+  const proof = page.getByTestId("roll-proof");
+  await expect(proof).toContainText("Gate 1 · cleared");
+  await expect(proof).toContainText("fulfilled in ~2s");
+  await expect(proof).toContainText("fbbf203d559ec610");
+  await proof.getByRole("button", { name: /Verify this roll/ }).click();
+  await expect(proof.getByRole("status")).toContainText(
+    "✓ Match — sample 7 of 25 < 19 → cleared"
+  );
+  expect(game.uploads()).toBe(0);
+});
+
+test("a failed gate proof recomputes the losing sample", async ({ page }) => {
+  const game = await fixture(page);
+  await game.connect();
+  game.resolveGate(false);
+  const proof = page.getByTestId("roll-proof");
+  await expect(proof).toContainText("Gate 1 · failed");
+  await proof.getByRole("button", { name: /Verify this roll/ }).click();
+  await expect(proof.getByRole("status")).toContainText(
+    "✓ Match — sample 22 of 25 ≥ 19 → failed"
+  );
 });

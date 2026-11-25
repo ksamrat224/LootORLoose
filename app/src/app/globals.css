@@ -387,15 +387,16 @@ kbd {
   }
 }
 
-/* Dungeon field guide: warm paper, dark stone, and a single treasure accent. */
+/* Brand: Torch Vault — warm black stone with a single amber treasure accent. */
 :root {
-  --background: #11171a;
-  --foreground: #f7f1df;
-  --surface: #1c2529;
-  --line: #465057;
-  --muted: #c8c6b9;
-  --primary: #f2c46e;
-  --primary-fg: #20170a;
+  --background: #110f0a;
+  --foreground: #f3f1ed;
+  --surface: #1a1711;
+  --line: #3a3326;
+  --muted: #c9c3b6;
+  --primary: #d9a452;
+  --primary-fg: #110f0a;
+  --primary-light: #e8c389;
 }
 body {
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
@@ -435,7 +436,7 @@ body {
   letter-spacing: 0.08em;
 }
 .mode-nav button.selected {
-  background: #f2c46e;
+  background: #d9a452;
   color: #21180e;
 }
 .landing {
@@ -463,8 +464,8 @@ body {
   font-weight: 900;
 }
 .landing h1 em {
-  color: #f2c46e;
-  text-shadow: 0 0 36px #f2c46e3d;
+  color: #d9a452;
+  text-shadow: 0 0 36px #d9a4523d;
 }
 .rules {
   box-shadow: 14px 14px 0 #0c1215;
@@ -521,7 +522,7 @@ body {
   background: #482f2c;
 }
 .meter span {
-  background: linear-gradient(90deg, #dc6a5e, #f2c46e);
+  background: linear-gradient(90deg, #dc6a5e, #d9a452);
 }
 .button.primary {
   box-shadow: 0 4px 0 #92692d;
@@ -598,7 +599,7 @@ body {
   padding-top: 0;
 }
 .diagnostics a {
-  color: #f2c46e;
+  color: #d9a452;
 }
 @media (max-width: 900px) {
   .chain-hero,
@@ -667,7 +668,7 @@ body {
 
 /* Wager chambers reuse the existing stone/gold palette; colors identify the gates. */
 :root {
-  --gate-copper: #f2c46e;
+  --gate-copper: #e8c389;
   --gate-emerald: #83d7c5;
   --gate-crown: #bab0ed;
   --danger: #ffb4a8;
@@ -899,4 +900,30 @@ input:focus-visible {
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Proof of roll */
+.roll-proof .roll {
+  display: grid;
+  gap: 6px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.roll-proof .roll small {
+  color: var(--muted);
+  font-weight: 400;
+}
+.roll-proof code {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 12px;
+  color: var(--primary-light);
+  overflow-wrap: anywhere;
+}
+.proof-ok {
+  color: #7eedae;
+  font-size: 13px;
+}
+.proof-bad {
+  color: var(--danger);
+  font-size: 13px;
 }

@@ -54,6 +54,7 @@ export type Wager = {
   nonce: number;
   requestNonce: number;
   requestedAt: number;
+  fulfilledAt?: number;
   payout: number;
   delegated: boolean;
   endpoint?: string;
@@ -172,6 +173,7 @@ export async function readWager(
     nonce: value.nonce.toNumber(),
     requestNonce: value.requestNonce.toNumber(),
     requestedAt: value.requestedAt.toNumber(),
+    fulfilledAt: value.fulfilledAt.toNumber(),
     payout: value.payout.toNumber(),
     delegated: route.delegated,
     endpoint: route.endpoint,

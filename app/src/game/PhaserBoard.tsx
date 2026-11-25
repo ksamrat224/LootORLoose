@@ -148,7 +148,7 @@ export function PhaserBoard({
                   fontSize: "14px",
                   color: "#f7f1df",
                   fontStyle: "bold",
-                  backgroundColor: "#11171a",
+                  backgroundColor: "#110f0a",
                 })
                 .setOrigin(0.5);
               const guardian = this.add.circle(

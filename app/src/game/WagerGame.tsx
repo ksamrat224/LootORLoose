@@ -31,6 +31,7 @@ import { AwaitingCheckpoint, Checkpoints, type Step } from "./checkpoints";
 import { GATES, gateReturn, money, parseStake } from "./wager-rules";
 import { INITIAL_DEMO, distance, isWalkable } from "./model";
 import { PhaserBoard } from "./PhaserBoard";
+import { RollProof } from "./RollProof";
 
 type Lifecycle =
   | "ready"
@@ -945,6 +946,7 @@ export function WagerGame() {
                 Resume · authorize session
               </button>
             )}
+            {live && <RollProof run={run} />}
             {terminal(run) && (
               <div className="card result">
                 <p className="eyebrow">
