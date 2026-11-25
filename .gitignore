@@ -17,3 +17,7 @@ app/test-results/
 app/playwright-report/
 app/.next-wager-tests/
 app/.next-practice-tests/
+
+# Local design references; approved shipped assets live under app/public/brand/.
+/pictures/
+app/.next-quest-tests/

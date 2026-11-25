@@ -38,7 +38,9 @@
     ".next-wager-tests/types/**/*.ts",
     ".next-wager-tests/dev/types/**/*.ts",
     ".next-practice-tests/types/**/*.ts",
-    ".next-practice-tests/dev/types/**/*.ts"
+    ".next-practice-tests/dev/types/**/*.ts",
+    ".next-quest-tests/types/**/*.ts",
+    ".next-quest-tests/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

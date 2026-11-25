@@ -5,7 +5,7 @@ for (const width of [375, 768, 1280]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 900 });
-    await page.goto("/");
+    await page.goto("/recovery");
     await page.getByRole("button", { name: "Play", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: /Keep the haul/ })
@@ -69,7 +69,7 @@ test("gate success and failure fixtures exercise the real UI without rerolls", a
       return value;
     }) as typeof crypto.getRandomValues;
   });
-  await page.goto("/");
+  await page.goto("/recovery");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page
     .getByRole("button", { name: "Choose stake · enter dungeon" })
@@ -114,7 +114,7 @@ test("a failed practice gate settles zero without crediting the stake", async ({
       return value;
     }) as typeof crypto.getRandomValues;
   });
-  await page.goto("/");
+  await page.goto("/recovery");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page
     .getByRole("button", { name: "Choose stake · enter dungeon" })
@@ -136,7 +136,7 @@ test("a failed practice gate settles zero without crediting the stake", async ({
 
 test("risk away from a gate keeps the run playable", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 900 });
-  await page.goto("/");
+  await page.goto("/recovery");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await page
     .getByRole("button", { name: "Choose stake · enter dungeon" })

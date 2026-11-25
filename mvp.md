@@ -1,3 +1,9 @@
+# Current MVP direction: six independent quests
+
+The current implementation follows [QUESTS_V4.md](docs/QUESTS_V4.md): stake first, hunt any of six quests, explicitly attempt, reveal, settle and return to the dungeon. V4 devnet is disabled until deployment and live verification. The earlier sequential-gate MVP described below is retained as historical V3 context.
+
+---
+
 Loot or Lose: the final MVP, end to end
 This is what I'd ship by Nov 27. It is the current V3 plus the polish we've discussed. It doesn't change the deployed program. Items marked ✅ exist today, and items marked 🔜 are not built yet.
 

@@ -1,3 +1,5 @@
+> Current landing and gameplay use six independent V4 quests in practice. See [QUESTS_V4.md](docs/QUESTS_V4.md). This document describes V3, preserved at `/recovery`. V4 has not been verified live.
+
 # Loot or Lose — V3 demo-credit dungeon
 
 ## What it is

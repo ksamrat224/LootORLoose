@@ -1,0 +1,678 @@
+/* Scoped V4 interface: one viewport; additional content scrolls inside dialogs. */
+.quest-shell {
+  height: 100dvh;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+  color: var(--foreground);
+}
+.quest-brand {
+  flex: none;
+  height: 56px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 24px;
+  border-bottom: 1px solid var(--line);
+  background: #15120de8;
+  z-index: 1;
+}
+.quest-brand > span:first-child {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.quest-brand img {
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+.quest-brand b {
+  font-size: 13px;
+  letter-spacing: 0.16em;
+}
+.quest-brand em {
+  color: var(--primary);
+  font-style: normal;
+}
+.q-brand-note {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+.quest-welcome {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  padding: clamp(20px, 5vw, 72px);
+}
+.quest-hero {
+  object-fit: cover;
+  object-position: 60% center;
+  z-index: -2;
+  image-rendering: pixelated;
+}
+.quest-welcome::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, #100e0af5 0%, #100e0ac9 35%, #100e0a25 75%),
+    linear-gradient(0deg, #100e0a80, transparent 55%);
+}
+.quest-welcome-copy {
+  max-width: 550px;
+  display: grid;
+  gap: 18px;
+}
+.quest-welcome h1 {
+  font-family: Georgia, serif;
+  font-size: clamp(2.5rem, 6vw, 5.5rem);
+  line-height: 1;
+  letter-spacing: -0.045em;
+  margin: 0;
+}
+.quest-welcome h1 em {
+  color: var(--primary);
+  font-weight: 400;
+}
+.quest-welcome-copy > p {
+  line-height: 1.6;
+  margin: 0;
+  max-width: 410px;
+  color: var(--foreground);
+}
+.quest-welcome-copy > .q-button {
+  width: 220px;
+  display: flex;
+  justify-content: space-between;
+}
+.quest-welcome-copy > a {
+  color: var(--muted);
+  font-size: 12px;
+  width: fit-content;
+  padding: 10px 0;
+}
+.quest-game {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 20px 16px;
+  overflow: hidden;
+}
+.q-toolbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.q-demo {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--primary);
+  line-height: 1.5;
+}
+.q-tools {
+  display: flex;
+  gap: 6px;
+}
+.quest-shell button,
+.quest-dialog button {
+  font: inherit;
+  cursor: pointer;
+}
+.quest-shell button:disabled,
+.quest-dialog button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.q-button {
+  background: var(--primary);
+  border: 1px solid var(--primary);
+  color: var(--primary-fg);
+  border-radius: 7px;
+  min-height: 44px;
+  padding: 12px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+}
+.q-quiet,
+.q-icon-button {
+  min-height: 40px;
+  padding: 8px 12px;
+  background: transparent;
+  color: var(--foreground);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.q-icon-button {
+  min-width: 40px;
+  font-size: 22px;
+}
+.q-tools .q-quiet {
+  font-size: 12px;
+}
+.quest-shell :focus-visible,
+.quest-dialog :focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+.q-amounts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  flex: none;
+}
+.q-amounts > span {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+}
+.q-amounts strong {
+  font-size: 18px;
+  color: var(--foreground);
+}
+.q-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 290px;
+  gap: 16px;
+  flex: 1;
+  min-height: 0;
+}
+.q-world {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.q-board {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.q-board .game-canvas {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  max-width: none;
+  position: relative;
+  overflow: hidden;
+  background: #0e1317;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.q-board .game-canvas canvas {
+  position: absolute;
+  max-width: 100%;
+  max-height: 100%;
+}
+.q-help {
+  font-size: 11px;
+  text-align: center;
+  color: var(--muted);
+  margin: 8px 0 0;
+  flex: none;
+}
+.q-board .touch-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  flex: none;
+}
+.q-board .touch-pad {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.q-board .touch-pad > div {
+  display: flex;
+  gap: 6px;
+}
+.q-board .touch-controls button {
+  width: 44px;
+  height: 40px;
+  min-height: 40px;
+  padding: 6px;
+  background: var(--surface);
+  color: var(--foreground);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+.q-board .touch-controls .touch-interact {
+  width: auto;
+  min-width: 96px;
+  height: 40px;
+  color: var(--primary);
+}
+.q-actions {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 8px;
+  overflow: auto;
+}
+.q-mode {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  font-size: 12px;
+  flex: none;
+}
+.q-mode label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  cursor: pointer;
+}
+.q-mode input {
+  accent-color: var(--primary);
+}
+.q-actions .wallet-adapter-button {
+  min-height: 40px;
+  height: auto;
+  line-height: 1.3;
+  padding: 10px;
+  font-size: 12px;
+  justify-content: center;
+}
+.q-eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--primary);
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+.q-objective h1 {
+  font-size: 24px;
+  line-height: 1.1;
+  margin: 8px 0;
+  letter-spacing: -0.025em;
+}
+.q-objective > p:not(.q-eyebrow) {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.q-status {
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.q-small {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 0;
+}
+.q-actions > .q-button,
+.q-actions > .q-quiet {
+  width: 100%;
+  flex: none;
+}
+.q-recovery {
+  margin-top: auto;
+  font-size: 11px;
+  color: var(--muted);
+  padding: 10px 0;
+}
+.q-stages {
+  font-size: 12px;
+  line-height: 1.8;
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+.q-stages [aria-current="step"] {
+  color: var(--primary);
+}
+.quest-dialog {
+  position: fixed;
+  margin: auto;
+  width: min(520px, calc(100vw - 24px));
+  max-height: calc(100dvh - 24px);
+  padding: 24px;
+  color: var(--foreground);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: auto;
+  box-shadow: 0 20px 80px #000a;
+}
+.quest-dialog::backdrop {
+  background: #080704dc;
+  backdrop-filter: blur(5px);
+}
+.quest-dialog > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.quest-dialog h2 {
+  font-family: Georgia, serif;
+  font-size: 26px;
+  line-height: 1.15;
+  margin: 0;
+}
+.quest-dialog p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.quest-dialog code {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+  padding: 12px;
+  background: var(--background);
+}
+.quest-dialog input {
+  width: 100%;
+  min-height: 48px;
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 8px;
+  font-size: 20px;
+}
+.quest-dialog label {
+  font-size: 13px;
+}
+.quest-dialog a {
+  color: var(--primary);
+  display: block;
+  padding: 10px 0;
+  overflow-wrap: anywhere;
+}
+.quest-dialog .q-button {
+  width: 100%;
+}
+.quest-dialog form > .q-small {
+  margin-top: 12px;
+}
+.q-presets {
+  display: flex;
+  gap: 10px;
+  margin: 16px 0;
+}
+.q-presets button {
+  flex: 1;
+  font-size: 20px;
+  min-height: 48px;
+}
+.q-presets [aria-pressed="true"] {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+#q-stake-error {
+  color: #e7a795;
+  min-height: 20px;
+}
+.q-quest-list {
+  display: grid;
+  gap: 10px;
+}
+.q-quest-list button {
+  display: grid;
+  gap: 6px;
+  text-align: left;
+  padding: 14px;
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+.q-quest-list button[aria-pressed="true"] {
+  border-color: var(--primary);
+}
+.q-quest-list span {
+  color: var(--primary);
+  font-size: 13px;
+}
+.q-quest-list small {
+  color: var(--muted);
+  line-height: 1.5;
+}
+.q-result-amounts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin: 24px 0;
+}
+.q-result-amounts > span {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.q-result-amounts b {
+  font-size: 24px;
+  color: var(--foreground);
+}
+@media (max-width: 700px) {
+  .quest-brand {
+    height: 48px;
+    padding: 4px 12px;
+  }
+  .q-brand-note {
+    display: none;
+  }
+  .quest-game {
+    padding: 8px;
+    gap: 6px;
+  }
+  .q-toolbar {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .q-tools {
+    margin-left: auto;
+  }
+  .q-tools .q-quiet {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+  .q-amounts {
+    padding: 8px;
+    gap: 6px;
+  }
+  .q-amounts > span {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    font-size: 10px;
+  }
+  .q-amounts strong {
+    font-size: 14px;
+  }
+  .q-workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(130px, 1fr) auto;
+    gap: 8px;
+  }
+  .q-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 10px;
+    padding: 10px;
+    max-height: 44dvh;
+  }
+  .q-objective {
+    grid-column: 1 / -1;
+  }
+  .q-objective h1 {
+    font-size: 18px;
+    display: inline;
+    margin: 0;
+  }
+  .q-objective > .q-eyebrow {
+    margin: 0 0 4px;
+  }
+  .q-objective > p:not(.q-eyebrow) {
+    font-size: 11px;
+    margin: 4px 0;
+  }
+  .q-status {
+    padding-top: 4px;
+  }
+  .q-actions > .q-mode,
+  .q-actions > .q-small,
+  .q-stages {
+    grid-column: 1 / -1;
+  }
+  .q-mode {
+    justify-content: flex-start;
+    gap: 24px;
+  }
+  .q-mode label {
+    min-height: 30px;
+  }
+  .q-actions > .q-button {
+    grid-column: 1 / -1;
+    min-height: 44px;
+  }
+  .q-actions > .q-recovery {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 4px 0;
+    font-size: 10px;
+  }
+  .q-help {
+    display: none;
+  }
+  .q-board .touch-controls {
+    gap: 4px;
+  }
+  .q-board .touch-controls button {
+    width: 40px;
+  }
+  .q-board .touch-controls .touch-interact {
+    min-width: 88px;
+  }
+  .quest-welcome {
+    padding: 24px;
+  }
+  .quest-welcome-copy {
+    gap: 14px;
+  }
+  .quest-welcome h1 {
+    font-size: clamp(2.3rem, 10vw, 3.5rem);
+  }
+  .quest-hero {
+    object-position: 57% center;
+  }
+  .quest-welcome::before {
+    background: linear-gradient(90deg, #100e0ae8, #100e0a65),
+      linear-gradient(0deg, #100e0a80, transparent);
+  }
+}
+@media (max-height: 500px) and (min-width: 701px) {
+  .quest-brand {
+    height: 40px;
+  }
+  .quest-game {
+    padding: 6px 12px;
+    gap: 6px;
+  }
+  .q-amounts {
+    padding: 6px 12px;
+  }
+  .q-actions {
+    padding: 10px;
+    gap: 6px;
+  }
+  .q-objective h1 {
+    font-size: 19px;
+  }
+  .q-objective p {
+    margin: 4px 0;
+  }
+  .q-status {
+    padding-top: 4px;
+  }
+  .q-recovery {
+    padding: 4px 0;
+  }
+  .q-help {
+    display: none;
+  }
+  .quest-welcome h1 {
+    font-size: 2.8rem;
+  }
+  .quest-welcome-copy {
+    gap: 8px;
+  }
+  .quest-welcome-copy > p {
+    font-size: 13px;
+  }
+}
+.q-board .touch-controls {
+  padding: 0;
+}
+.q-board .touch-pad {
+  flex-direction: row;
+}
+@media (max-width: 700px) {
+  .q-toolbar {
+    flex-wrap: nowrap;
+  }
+  .q-toolbar > .q-demo {
+    max-width: 110px;
+    font-size: 8px;
+  }
+  .q-tools {
+    flex: none;
+  }
+  .q-tools .q-quiet {
+    font-size: 10px;
+    padding: 6px;
+  }
+  .q-workspace {
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .q-actions .q-navigation-hint,
+  .q-actions > .q-recovery {
+    display: none;
+  }
+  .q-actions {
+    max-height: 35dvh;
+  }
+  .q-objective .q-status {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}

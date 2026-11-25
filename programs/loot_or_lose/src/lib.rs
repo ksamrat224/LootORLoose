@@ -3,6 +3,8 @@ use ephemeral_rollups_sdk::anchor::{commit, delegate, ephemeral};
 use ephemeral_rollups_sdk::cpi::DelegateConfig;
 use ephemeral_rollups_sdk::ephem::MagicIntentBundleBuilder;
 use session_keys::{session_auth_or, Session, SessionError, SessionTokenV2};
+pub mod quest;
+pub use quest::*;
 pub mod wager;
 pub use wager::*;
 
@@ -136,6 +138,59 @@ pub mod loot_or_lose {
     }
     pub fn settle_wager(ctx: Context<SettleWager>, index: u64) -> Result<()> {
         wager::settle(ctx, index)
+    }
+
+    pub fn initialize_quest_house(ctx: Context<InitializeQuestHouse>) -> Result<()> {
+        quest::quest_initialize_house_handler(ctx)
+    }
+    pub fn initialize_quest_player(ctx: Context<InitializeQuestPlayer>) -> Result<()> {
+        quest::quest_initialize_player(ctx)
+    }
+    pub fn create_quest_attempt(
+        ctx: Context<CreateQuestAttempt>,
+        index: u64,
+        stake: u64,
+        quest_id: u8,
+        approach_path: Vec<u8>,
+    ) -> Result<()> {
+        quest::quest_create(ctx, index, stake, quest_id, approach_path)
+    }
+    pub fn delegate_quest_attempt(ctx: Context<DelegateQuestAttempt>, index: u64) -> Result<()> {
+        quest::quest_delegate(ctx, index)
+    }
+    #[session_auth_or(ctx.accounts.wager.authority == ctx.accounts.signer.key(), SessionError::InvalidToken)]
+    pub fn risk_quest(ctx: Context<RiskQuest>, index: u64, expected_nonce: u64, quest_id: u8, approach_path: Vec<u8>) -> Result<()> {
+        quest::quest_risk(ctx, index, expected_nonce, quest_id, approach_path)
+    }
+    pub fn resolve_quest(
+        ctx: Context<ResolveQuest>,
+        randomness: [u8; 32],
+        index: u64,
+        request_nonce: u64,
+        quest_id: u8,
+    ) -> Result<()> {
+        quest::quest_resolve(ctx, randomness, index, request_nonce, quest_id)
+    }
+    pub fn cancel_quest_attempt(ctx: Context<CancelQuestAttempt>, index: u64) -> Result<()> {
+        quest::quest_cancel(ctx, index)
+    }
+    pub fn authorize_quest_session(
+        ctx: Context<CancelQuestAttempt>,
+        _index: u64,
+        session_signer: Pubkey,
+    ) -> Result<()> {
+        require!(
+            ctx.accounts.wager.phase == QuestPhase::Active,
+            GameError::WrongPhase
+        );
+        ctx.accounts.wager.session_signer = session_signer;
+        Ok(())
+    }
+    pub fn finalize_quest_attempt(ctx: Context<FinalizeQuestAttempt>, index: u64) -> Result<()> {
+        quest::quest_finalize(ctx, index)
+    }
+    pub fn settle_quest_attempt(ctx: Context<SettleQuestAttempt>, index: u64) -> Result<()> {
+        quest::quest_settle(ctx, index)
     }
 
     pub fn initialize_profile(ctx: Context<InitializeProfile>) -> Result<()> {

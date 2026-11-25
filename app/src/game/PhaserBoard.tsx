@@ -10,6 +10,7 @@ import {
   type DemoState,
   type Direction,
 } from "./model";
+import { QUESTS } from "./quest-rules";
 import { GATES } from "./wager-rules";
 
 type Props = {
@@ -17,6 +18,7 @@ type Props = {
   onMove: (direction: Direction) => void;
   onInteract: () => void;
   wagerMode?: boolean;
+  questMode?: boolean;
   gatePhase?: string;
   gateIndex?: number;
 };
@@ -26,6 +28,7 @@ export function PhaserBoard({
   onMove,
   onInteract,
   wagerMode = false,
+  questMode = false,
   gatePhase = "active",
   gateIndex = 0,
 }: Props) {
@@ -40,9 +43,18 @@ export function PhaserBoard({
 
   useEffect(() => {
     let disposed = false;
+    const observer = new ResizeObserver(() => {
+      if (host.current && game.current && questMode)
+        game.current.scale.setParentSize(
+          host.current.clientWidth,
+          host.current.clientHeight
+        );
+    });
+    if (host.current && questMode) observer.observe(host.current);
     void import("phaser").then((Phaser) => {
       if (disposed || !host.current) return;
       const tile = 38;
+      const landmarks = questMode ? QUESTS : GATES;
       const reducedMotion = window.matchMedia(
         "(prefers-reduced-motion: reduce)"
       );
@@ -104,7 +116,7 @@ export function PhaserBoard({
               color: "#e6fffa",
             });
           }
-          (wagerMode ? GATES : CHESTS).forEach((chest, id) => {
+          (wagerMode ? landmarks : CHESTS).forEach((chest, id) => {
             this.add
               .rectangle(
                 chest.x * tile + 19,
@@ -121,7 +133,9 @@ export function PhaserBoard({
             );
             this.chests.push(box);
             if (wagerMode) {
-              const colors = [0xf2c46e, 0x83d7c5, 0xbab0ed];
+              const colors = [
+                0xf2c46e, 0xcbd2d9, 0x83d7c5, 0xaaa0b8, 0xbab0ed, 0xe39a68,
+              ];
               box.setTint(colors[id]);
               this.add
                 .text(chest.x * tile + 19, chest.y * tile - 9, `0${id + 1}`, {
@@ -190,6 +204,7 @@ export function PhaserBoard({
           }
           this.input.keyboard?.on("keydown", (event: KeyboardEvent) => {
             if (
+              document.querySelector("dialog[open]") ||
               document.activeElement?.matches(
                 "button,input,textarea,select,[contenteditable=true]"
               )
@@ -219,13 +234,15 @@ export function PhaserBoard({
               return;
             }
             const { phase, index } = gateRef.current;
-            const cleared = id < index;
+            const cleared = questMode
+              ? id === index && phase === "succeeded"
+              : id < index;
             const failed = phase === "lost" && id === index;
             const ready =
               id === index &&
-              phase === "active" &&
-              Math.abs(current.x - GATES[id].x) +
-                Math.abs(current.y - GATES[id].y) <=
+              (phase === "active" || (questMode && phase === "exploring")) &&
+              Math.abs(current.x - landmarks[id].x) +
+                Math.abs(current.y - landmarks[id].y) <=
                 1;
             box.setTint(
               failed
@@ -246,7 +263,11 @@ export function PhaserBoard({
                 : 1
             );
           });
-          if (current.outcome !== "active" || time - this.lastStep < 115)
+          if (
+            document.querySelector("dialog[open]") ||
+            current.outcome !== "active" ||
+            time - this.lastStep < 115
+          )
             return;
           if (
             document.activeElement?.matches(
@@ -283,13 +304,19 @@ export function PhaserBoard({
         scene: Dungeon,
         scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
       });
+      if (questMode && host.current)
+        game.current.scale.setParentSize(
+          host.current.clientWidth,
+          host.current.clientHeight
+        );
     });
     return () => {
+      observer.disconnect();
       disposed = true;
       game.current?.destroy(true);
       game.current = null;
     };
-  }, [wagerMode]);
+  }, [wagerMode, questMode]);
 
   return (
     <>
@@ -316,7 +343,7 @@ export function PhaserBoard({
           </div>
         </div>
         <button className="touch-interact" onClick={onInteract}>
-          {wagerMode ? "Risk gate" : "Open chest"}
+          {questMode ? "Interact" : wagerMode ? "Risk gate" : "Open chest"}
         </button>
       </div>
     </>

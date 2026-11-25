@@ -1,69 +1,61 @@
 "use client";
-
 import { useState } from "react";
-import { WagerGame } from "@/game/WagerGame";
-
+import Image from "next/image";
+import Link from "next/link";
+import { QuestGame } from "@/game/QuestGame";
 export default function Home() {
   const [playing, setPlaying] = useState(false);
   return (
-    <main className={`shell ${playing ? "in-game" : "welcome-shell"}`}>
-      <header className="topbar">
-        <span className="wordmark">
-          <span aria-hidden="true">◆</span> LOOT <em>OR</em> LOSE
+    <main
+      className={`quest-shell ${
+        playing ? "quest-shell-playing" : "quest-shell-welcome"
+      }`}
+    >
+      <header className="quest-brand">
+        <span>
+          <Image
+            src="/brand/brand-logo.png"
+            alt=""
+            width={36}
+            height={36}
+            priority
+          />
+          <b>
+            LOOT <em>OR</em> LOSE
+          </b>
         </span>
-        <span className="top-note">A DUNGEON OF DECISIONS</span>
+        <span className="q-brand-note">SIX QUESTS. YOUR CHOICE.</span>
       </header>
       {playing ? (
-        <div className="content">
-          <WagerGame />
-        </div>
+        <QuestGame />
       ) : (
-        <section className="welcome" aria-labelledby="welcome-title">
-          <div className="welcome-glow" aria-hidden="true">
-            <div className="welcome-door">
-              <span>◆</span>
-            </div>
-          </div>
-          <div className="welcome-copy">
-            <p className="eyebrow">A THREE-GATE EXTRACTION GAME</p>
+        <section className="quest-welcome" aria-labelledby="welcome-title">
+          <Image
+            className="quest-hero"
+            src="/brand/pixel-hero.png"
+            alt=""
+            fill
+            sizes="100vw"
+            priority
+          />
+          <div className="quest-welcome-copy">
+            <p className="q-eyebrow">A DUNGEON OF INDEPENDENT QUESTS</p>
             <h1 id="welcome-title">
-              The vault is open.
+              Your path.
               <br />
-              <em>How far will you go?</em>
+              <em>Your next quest.</em>
             </h1>
             <p>
-              Walk the dungeon. Face three guardians. Choose when to take your
-              haul and leave.
+              Choose your stake. Hunt any of six guardians. Reveal your outcome.
             </p>
-            <button
-              className="button primary welcome-play"
-              onClick={() => setPlaying(true)}
-            >
+            <button className="q-button" onClick={() => setPlaying(true)}>
               Play <span aria-hidden="true">→</span>
             </button>
-            <span className="welcome-footnote">
-              FREE TO EXPLORE · DEMO CREDITS ONLY
-            </span>
-          </div>
-          <div className="welcome-steps" aria-label="How to play">
-            <span>
-              <b>01</b> Choose your stake
-            </span>
-            <span>
-              <b>02</b> Face the guardians
-            </span>
-            <span>
-              <b>03</b> Extract your haul
-            </span>
+            <span className="q-demo">DEMO CREDITS · NO CASH VALUE</span>
+            <Link href="/recovery">Recover an earlier V3 run ↗</Link>
           </div>
         </section>
       )}
-      <footer className="footer">
-        <span>LOOT OR LOSE / DEVNET DEMO</span>
-        <span>
-          Demo credits have no cash value. No real deposits or cash prizes.
-        </span>
-      </footer>
     </main>
   );
 }

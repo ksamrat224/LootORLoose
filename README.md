@@ -1,8 +1,12 @@
 # Loot or Lose
 
+**Current UI: six independent V4 quests in local practice.** Stake first, hunt any quest, explicitly attempt it and settle the revealed result. The new fixed-screen interface uses the supplied brand artwork. V4 program/client support is implemented locally; devnet V4 remains disabled pending deployment and live verification. See [V4 architecture and rollout](docs/QUESTS_V4.md). Earlier V3 gameplay and recovery remain at `/recovery`; the V3 deployment evidence below does not verify V4.
+
 A dungeon extraction game with a three-gate, simulated-stake prototype. The original free game and its session-key upgrade were verified on Solana devnet through a MagicBlock Ephemeral Rollup and back to base-layer receipts. **The V3 wager program was upgraded on devnet on Nov 23, 2026.** All wager credits are nonredeemable demo units; there are no real deposits or cash prizes.
 
 ## Documentation map
+
+- [docs/QUESTS_V4.md](docs/QUESTS_V4.md) — current six-quest gameplay, versioned accounts, safety boundaries and rollout.
 
 - [about.md](about.md) — product description, rules, UI and honest limitations (start here).
 - [docs/wager-prototype.md](docs/wager-prototype.md) — V3 architecture, verification and live devnet evidence.
@@ -20,7 +24,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000`. **Risk gates → Local practice** offers $2/$5/custom demo stakes and voluntary 1.25×/2×/3× gates with published odds. Movement is safe, and returns include the stake. Practice uses browser randomness and resets when its game context is discarded; it creates no blockchain receipt. The original free local and devnet game code remains in the repository but is hidden from the landing page.
+Open `http://localhost:3000` and choose **Play** for six independent practice quests. V4 devnet is gated by `NEXT_PUBLIC_QUEST_V4_ENABLED=false`. The following describes the earlier game at `/recovery`: **Risk gates → Local practice** offers $2/$5/custom demo stakes and voluntary 1.25×/2×/3× gates with published odds. Movement is safe, and returns include the stake. Practice uses browser randomness and resets when its game context is discarded; it creates no blockchain receipt. The original free local and devnet game code remains in the repository but is hidden from the landing page.
 
 ## Verify the source
 

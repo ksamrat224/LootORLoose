@@ -1,5 +1,7 @@
 # Loot or Lose — UI direction
 
+> V4 update: the current interface follows the six-quest, fixed-viewport flow in [QUESTS_V4.md](QUESTS_V4.md). Use the supplied brand-logo and pixel-hero from `app/public/brand/`. Quests are independent and freely selected; the sequential gate track and long document layouts below are historical V3 guidance. Keep board and actions within `100dvh`; secondary information belongs in internally scrollable dialogs.
+
 _Written Nov 25, 2026. Audience: whoever builds the UI (code or art). Companion to [ROADMAP.md](ROADMAP.md)._
 
 ## Why this document exists

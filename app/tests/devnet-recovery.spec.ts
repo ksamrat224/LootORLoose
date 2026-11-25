@@ -233,7 +233,7 @@ async function fixture(page: Page) {
     await route.fulfill({ json: { jsonrpc: "2.0", id: rpc.id, result } });
   });
   const connect = async () => {
-    await page.goto("http://localhost:3100");
+    await page.goto("http://localhost:3100/recovery");
     await page.getByRole("button", { name: "Play", exact: true }).click();
     await page
       .getByRole("radio", { name: "Devnet wager", exact: true })

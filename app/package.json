@@ -9,7 +9,8 @@
     "lint": "eslint",
     "test": "playwright test",
     "test:unit": "playwright test checkpoints.spec.ts transactions.spec.ts",
-    "verify:devnet-wager": "NEXT_PUBLIC_WAGER_V3_ENABLED=true node --env-file=.env.local --import tsx scripts/devnet-wager.ts"
+    "verify:devnet-wager": "NEXT_PUBLIC_WAGER_V3_ENABLED=true node --env-file=.env.local --import tsx scripts/devnet-wager.ts",
+    "verify:devnet-quests": "NEXT_PUBLIC_QUEST_V4_ENABLED=true node --env-file=.env.local --import tsx scripts/devnet-quests.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "0.32.1",

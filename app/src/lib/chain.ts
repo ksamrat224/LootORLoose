@@ -338,7 +338,11 @@ export async function createGameSession(
 ): Promise<{ session: GameSession; signature: string }> {
   if (
     DEPLOYED_ID !== PROGRAM_ID.toBase58() ||
-    !(isConfigured || process.env.NEXT_PUBLIC_WAGER_V3_ENABLED === "true")
+    !(
+      isConfigured ||
+      process.env.NEXT_PUBLIC_WAGER_V3_ENABLED === "true" ||
+      process.env.NEXT_PUBLIC_QUEST_V4_ENABLED === "true"
+    )
   ) {
     throw new Error(
       "Deploy and verify the target game program before authorizing a session"

@@ -4,6 +4,8 @@ _Written Nov 25, 2026. Demo target: **Nov 27, 2026**. Audience: the team. Read w
 
 ## Where we are
 
+- V4 independent quests and the fixed-screen UI are implemented locally; see [QUESTS_V4.md](QUESTS_V4.md). V4 devnet stays disabled pending matching deployment, live VRF success/failure and a fresh-wallet browser check. The tasks below originated for V3 and must not be treated as V4 live verification.
+
 - V3 (demo-credit risk gates) is deployed on devnet and verified live with real VRF callbacks. See [wager-prototype.md](wager-prototype.md).
 - The proof-of-roll card, which recomputes VRF outcomes in the browser, is committed (`5540474`). Lint, build and 23 browser/unit tests pass.
 - Torch Vault palette is applied to the CSS tokens.
