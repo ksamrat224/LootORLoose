@@ -22,7 +22,7 @@ export const ROUTER_URL =
   "https://devnet-router.magicblock.app/";
 export const PROGRAM_ID = new PublicKey(idl.address);
 export const DEPLOYED_ID = process.env.NEXT_PUBLIC_GAME_PROGRAM_ID;
-// The checked-in IDL is newer than the currently deployed devnet program until an explicit upgrade.
+// Legacy V2 entry remains explicitly gated; V5 has its own verified devnet flag.
 export const isConfigured = Boolean(
   process.env.NEXT_PUBLIC_GAME_V2_ENABLED === "true" &&
     DEPLOYED_ID &&

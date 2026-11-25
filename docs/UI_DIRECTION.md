@@ -1,4 +1,4 @@
-> Current gameplay is V5: stake once, hunt three different quests from six, and collect their combined random loot. See [HUNTS_V5.md](HUNTS_V5.md). V5 devnet remains disabled pending live verification. V3/V4 recovery is preserved.
+> Current gameplay is V5: stake once, hunt three different quests from six, and collect their combined random loot. See [HUNTS_V5.md](HUNTS_V5.md). V5 is deployed and verified on devnet; see [live verification](DEVNET_V5_VERIFICATION.md). V3/V4 recovery is preserved.
 
 # Loot or Lose — UI direction
 

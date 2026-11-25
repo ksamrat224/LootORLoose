@@ -61,7 +61,11 @@ async function state(index: number): Promise<Wager> {
 async function waitForResult(index: number, expectedCount: number) {
   for (let attempt = 0; attempt < 60; attempt++) {
     const value = await state(index);
-    if (value.revealCount >= expectedCount && value.phase !== "randomnessPending") return value;
+    if (
+      value.revealCount >= expectedCount &&
+      value.phase !== "randomnessPending"
+    )
+      return value;
     await pause(1000);
   }
   throw new Error(

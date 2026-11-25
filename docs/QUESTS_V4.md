@@ -1,4 +1,4 @@
-> Current gameplay is V5: stake once, hunt three different quests from six, and collect their combined random loot. See [HUNTS_V5.md](HUNTS_V5.md). V5 devnet remains disabled pending live verification. V3/V4 recovery is preserved.
+> Current gameplay is V5: stake once, hunt three different quests from six, and collect their combined random loot. See [HUNTS_V5.md](HUNTS_V5.md). V5 is deployed and verified on devnet; see [live verification](DEVNET_V5_VERIFICATION.md). V3/V4 recovery is preserved.
 
 # Six independent quests — V4
 
@@ -17,9 +17,9 @@ Each attempt is independent. Every quest can fail for zero return. All six have 
 
 ## Deployment status
 
-**V4 is implemented locally and is not deployed or verified live.** `NEXT_PUBLIC_QUEST_V4_ENABLED=false` is the default. Practice uses browser rejection sampling and makes no VRF claim. Do not enable V4 devnet until the rebuilt binary has been deployed and the real lifecycle has been verified.
+**V4 handlers are included in the V5 deployment for compatibility, but standalone V4 gameplay is not independently verified live.** `NEXT_PUBLIC_QUEST_V4_ENABLED=false` remains the default; new play uses V5. Practice uses browser rejection sampling and makes no VRF claim. Do not enable V4 devnet until the rebuilt binary has been deployed and the real lifecycle has been verified.
 
-The local ELF now contains V4 and differs from the previously deployed V3-only binary. Binary-comparison verifiers should refuse live sends until the matching program is deployed. Existing live V3 evidence remains historical evidence for V3, not V4.
+The deployed V5 ELF includes the legacy V4 handlers. Existing V3/V5 live evidence does not independently verify the standalone V4 flow.
 
 ## Versioned program boundary
 

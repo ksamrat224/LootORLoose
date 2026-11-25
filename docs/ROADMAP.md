@@ -1,4 +1,4 @@
-> Current gameplay is V5: stake once, hunt three different quests from six, and collect their combined random loot. See [HUNTS_V5.md](HUNTS_V5.md). V5 devnet remains disabled pending live verification. V3/V4 recovery is preserved.
+> Current gameplay is V5: stake once, hunt three different quests from six, and collect their combined random loot. See [HUNTS_V5.md](HUNTS_V5.md). V5 is deployed and verified on devnet; see [live verification](DEVNET_V5_VERIFICATION.md). V3/V4 recovery is preserved.
 
 # Loot or Lose — Roadmap, issues and fixes
 
@@ -6,7 +6,7 @@ _Written Nov 25, 2026. Demo target: **Nov 27, 2026**. Audience: the team. Read w
 
 ## Where we are
 
-- V5 three-reveal hunts and the fixed-screen UI are implemented locally; see [HUNTS_V5.md](HUNTS_V5.md). V5 devnet stays disabled pending matching deployment, real VRF reveals, settlement and a fresh-wallet browser check. The tasks below originated for V3 and do not verify V5.
+- V5 three-reveal hunts and the fixed-screen UI are implemented locally; see [HUNTS_V5.md](HUNTS_V5.md). V5 is deployed and verified on devnet, including real VRF, settlement and a fresh-wallet browser lifecycle; see [live evidence](DEVNET_V5_VERIFICATION.md). The tasks below originated for V3 and do not verify V5.
 
 Historical V3 implementation notes:
 
