@@ -234,6 +234,7 @@ async function fixture(page: Page) {
   });
   const connect = async () => {
     await page.goto("http://localhost:3100");
+    await page.getByRole("button", { name: "Play", exact: true }).click();
     await page
       .getByRole("radio", { name: "Devnet wager", exact: true })
       .check();
@@ -280,6 +281,7 @@ test("reload recovers the existing wager and wallet disconnect removes its state
     page.getByRole("button", { name: "Resume · authorize session" })
   ).toBeVisible();
   await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("radio", { name: "Devnet wager", exact: true }).check();
   await connectWallet(page);
   await expect(page.getByText("$98.00", { exact: true })).toBeVisible();
@@ -288,6 +290,7 @@ test("reload recovers the existing wager and wallet disconnect removes its state
   ).toHaveCount(0);
   await page.getByRole("button", { name: /Fixture Wallet icon/ }).click();
   await page.getByText("Disconnect", { exact: true }).click();
+  await page.getByRole("button", { name: "Choose stake · enter dungeon" }).click();
   await expect(
     page.getByRole("button", { name: "Start devnet run" })
   ).toBeVisible();
@@ -310,6 +313,7 @@ test("disconnecting while a wallet approval is open prevents a late submission",
   );
   await page.getByRole("button", { name: /Fixture Wallet icon/ }).click();
   await page.getByText("Disconnect", { exact: true }).click();
+  await page.getByRole("button", { name: "Choose stake · enter dungeon" }).click();
   await expect(
     page.getByRole("button", { name: "Start devnet run" })
   ).toBeVisible();
@@ -348,7 +352,7 @@ test("a delayed VRF request stays pending without loss, cancellation or reroll",
   expect(game.uploads()).toBe(0);
   await page.getByRole("button", { name: "Switch to practice" }).click();
   await expect(
-    page.getByRole("button", { name: "Start practice run" })
+    page.getByRole("button", { name: "Choose stake · enter dungeon" })
   ).toBeVisible();
   await page.getByRole("radio", { name: /Devnet wager/ }).check();
   await expect(
@@ -405,6 +409,7 @@ test("an ambiguous cancellation survives reload and is not resubmitted", async (
     })
   ).toBeVisible();
   await page.reload();
+  await page.getByRole("button", { name: "Play", exact: true }).click();
   await page.getByRole("radio", { name: "Devnet wager", exact: true }).check();
   await connectWallet(page);
   await expect(

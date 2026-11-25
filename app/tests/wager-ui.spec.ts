@@ -6,6 +6,7 @@ for (const width of [375, 768, 1280]) {
   }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/");
+    await page.getByRole("button", { name: "Play", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: /Keep the haul/ })
     ).toBeVisible();
@@ -15,6 +16,9 @@ for (const width of [375, 768, 1280]) {
     await expect(
       page.getByRole("radio", { name: /Devnet wager/ })
     ).toBeDisabled();
+    await page
+      .getByRole("button", { name: "Choose stake · enter dungeon" })
+      .click();
     const input = page.getByLabel("Stake in demo credits");
     await input.fill("2.001");
     await page.getByRole("button", { name: "Start practice run" }).click();
@@ -33,7 +37,9 @@ for (const width of [375, 768, 1280]) {
     ).toBeVisible();
     await page.getByRole("button", { name: "Settle practice result" }).click();
     await expect(page.getByText("REFUNDED", { exact: true })).toBeVisible();
-    await expect(page.getByText("$100.00", { exact: true })).toBeVisible();
+    await expect(
+      page.locator(".result-summary").getByText("$100.00", { exact: true })
+    ).toBeVisible();
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= window.innerWidth
@@ -55,6 +61,10 @@ test("gate success and failure fixtures exercise the real UI without rerolls", a
     }) as typeof crypto.getRandomValues;
   });
   await page.goto("/");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Choose stake · enter dungeon" })
+    .click();
   await page.getByRole("button", { name: "Start practice run" }).click();
   await expect(page.locator("canvas")).toBeVisible();
   await page.locator("body").click({ position: { x: 5, y: 5 } });
@@ -78,7 +88,9 @@ test("gate success and failure fixtures exercise the real UI without rerolls", a
     .click();
   await page.getByRole("button", { name: "Settle practice result" }).click();
   await expect(page.getByText("EXTRACTED", { exact: true })).toBeVisible();
-  await expect(page.getByText("$100.50", { exact: true })).toBeVisible();
+  await expect(
+    page.locator(".result-summary").getByText("$100.50", { exact: true })
+  ).toBeVisible();
 });
 
 test("a failed practice gate settles zero without crediting the stake", async ({
@@ -94,6 +106,10 @@ test("a failed practice gate settles zero without crediting the stake", async ({
     }) as typeof crypto.getRandomValues;
   });
   await page.goto("/");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Choose stake · enter dungeon" })
+    .click();
   await page.getByRole("button", { name: "Start practice run" }).click();
   await expect(page.locator("canvas")).toBeVisible();
   for (const direction of ["right", "right", "down"])
@@ -104,5 +120,20 @@ test("a failed practice gate settles zero without crediting the stake", async ({
   await expect(page.getByText("Gate failed", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Settle practice result" }).click();
   await expect(page.getByText("LOST", { exact: true })).toBeVisible();
-  await expect(page.getByText("$98.00", { exact: true })).toBeVisible();
+  await expect(
+    page.locator(".result-summary").getByText("$98.00", { exact: true })
+  ).toBeVisible();
+});
+
+test("risk away from a gate keeps the run playable", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 900 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.getByRole("button", { name: "Choose stake · enter dungeon" }).click();
+  await page.getByRole("button", { name: "Start practice run" }).click();
+  await page.getByRole("button", { name: "Risk gate", exact: true }).click();
+  await expect(page.getByText("Your run is still active.", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Recover existing run" })).toHaveCount(0);
+  await page.getByRole("button", { name: "Move right", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Cancel · return full stake" })).toBeEnabled();
 });

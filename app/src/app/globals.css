@@ -960,3 +960,261 @@ input:focus-visible {
 .gate-progress .failed {
   color: #e68c7c;
 }
+
+/* Torch Vault: welcome and game surfaces */
+:root {
+  --background: #110f0a;
+  --surface: #1a1711;
+  --line: #3a3326;
+  --foreground: #f3f1ed;
+  --primary: #d9a452;
+  --primary-fg: #110f0a;
+  --muted: #c0b9ab;
+}
+.shell {
+  background: radial-gradient(
+    ellipse at 50% 20%,
+    #292013 0%,
+    var(--background) 57%
+  );
+}
+.topbar {
+  min-height: 72px;
+}
+.top-note {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+}
+.welcome {
+  width: min(1240px, 100%);
+  margin: auto;
+  flex: 1;
+  padding: 36px 24px 50px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  position: relative;
+}
+.welcome-copy {
+  grid-column: 1;
+  grid-row: 1;
+  z-index: 1;
+  max-width: 610px;
+}
+.welcome-copy h1 {
+  font-family: Georgia, serif;
+  font-size: clamp(3rem, 6vw, 5.8rem);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  margin: 22px 0;
+}
+.welcome-copy h1 em {
+  color: var(--primary);
+  font-weight: 400;
+}
+.welcome-copy > p:not(.eyebrow) {
+  max-width: 430px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-size: 1.05rem;
+}
+.welcome-play {
+  margin-top: 24px;
+  min-width: 220px;
+  min-height: 60px;
+  font-size: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.welcome-footnote {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  margin-top: 18px;
+}
+.welcome-glow {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  place-items: center;
+  height: 480px;
+  background: radial-gradient(
+    ellipse,
+    #74502866,
+    #34241633 40%,
+    transparent 70%
+  );
+}
+.welcome-door {
+  width: min(230px, 55%);
+  height: 310px;
+  border: 12px solid #493925;
+  border-bottom: 4px solid #493925;
+  border-radius: 110px 110px 2px 2px;
+  box-shadow: 0 0 70px #d9a45233, inset 0 0 45px #090806;
+  background: repeating-linear-gradient(
+    90deg,
+    #241b11 0 35px,
+    #44301a 37px,
+    #241b11 40px
+  );
+  display: grid;
+  place-items: center;
+  color: var(--primary);
+  font-size: 2rem;
+}
+.welcome-steps {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 36px;
+  border-top: 1px solid var(--line);
+  padding-top: 24px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+}
+.welcome-steps b {
+  color: var(--primary);
+  margin-right: 8px;
+}
+.wager-guide summary,
+.roll-proof summary {
+  cursor: pointer;
+  color: var(--foreground);
+  font-weight: 700;
+  padding: 8px 0;
+}
+.sound-toggle {
+  min-height: 40px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+.result-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 18px 0;
+}
+.result-summary span {
+  display: flex;
+  flex-direction: column;
+  color: var(--muted);
+  font-size: 0.8rem;
+  gap: 4px;
+}
+.result-summary b {
+  color: var(--foreground);
+  font-size: 1rem;
+}
+.result-panel {
+  border-color: var(--primary);
+  box-shadow: 0 0 35px #d9a4521c;
+}
+.roll-proof {
+  background: #211d15;
+}
+.roll-proof code {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 700px) {
+  .top-note {
+    display: none;
+  }
+  .welcome {
+    grid-template-columns: 1fr;
+    padding-top: 18px;
+  }
+  .welcome-glow {
+    grid-column: 1;
+    grid-row: 1;
+    height: 260px;
+    opacity: 0.75;
+  }
+  .welcome-door {
+    height: 220px;
+    width: 150px;
+  }
+  .welcome-copy {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .welcome-copy h1 {
+    font-size: clamp(2.6rem, 11vw, 4rem);
+  }
+  .welcome-steps {
+    grid-column: 1;
+    grid-row: 3;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 36px;
+  }
+}
+.wager-playing .wager-heading h1 {
+  font-size: clamp(1.5rem, 3vw, 2.3rem);
+  margin: 0;
+}
+.wager-playing .wager-heading h1 br {
+  display: none;
+}
+.wager-playing .wager-heading h1 em::before {
+  content: " ";
+}
+.wager-playing .wager-heading > div:first-child > p:not(.eyebrow) {
+  display: none;
+}
+.wager-playing .wager-heading {
+  margin-bottom: 1rem;
+}
+
+.stake-dialog {
+  margin: auto;
+  width: min(460px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  border: 1px solid var(--primary);
+  border-radius: 16px;
+  padding: 24px;
+  color: var(--foreground);
+  background: var(--surface);
+  box-shadow: 0 24px 100px #0009;
+}
+.stake-dialog::backdrop {
+  background: #080704d9;
+  backdrop-filter: blur(6px);
+}
+.stake-dialog .stake-form {
+  border: 0;
+  padding: 20px 0 0;
+  box-shadow: none;
+}
+.stake-dialog .demo-label {
+  white-space: normal;
+}
+.choose-stake {
+  align-self: start;
+  min-height: 60px;
+}
+.recovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.recovery-actions p {
+  flex-basis: 100%;
+}
+.pending-gate > button {
+  margin: 8px 12px 8px 0;
+}
+.stake-presets button[aria-pressed="true"] {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-fg);
+}

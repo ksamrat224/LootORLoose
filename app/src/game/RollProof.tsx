@@ -100,9 +100,9 @@ export function RollProof({ run }: { run: Wager }) {
   };
 
   return (
-    <div className="card roll-proof" data-testid="roll-proof">
-      <p className="eyebrow">Proof of roll · MagicBlock VRF</p>
-      {rolls.map((roll) => {
+    <details open className="card roll-proof" data-testid="roll-proof">
+      <summary>Proof of roll · MagicBlock VRF</summary>
+      {[...rolls].reverse().map((roll) => {
         const check = checks[roll.randomness];
         const gate = GATES[roll.gate];
         const matches =
@@ -155,6 +155,6 @@ export function RollProof({ run }: { run: Wager }) {
           Inspect account ↗
         </a>
       </p>
-    </div>
+    </details>
   );
 }

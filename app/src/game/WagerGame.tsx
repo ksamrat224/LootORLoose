@@ -71,10 +71,54 @@ export function WagerGame() {
   const wallet = useAnchorWallet();
   const walletKey = wallet?.publicKey.toBase58() || "";
   const [live, setLive] = useState(false);
+  const stakeDialog = useRef<HTMLDialogElement>(null);
   const [amount, setAmount] = useState("2.00");
   const [amountError, setAmountError] = useState("");
   const [balance, setBalance] = useState<number | null>(10000);
   const [run, setRun] = useState<Wager | null>(null);
+  const [sound, setSound] = useState(false);
+  const previousOutcome = useRef("");
+  useEffect(() => {
+    const timer = setTimeout(
+      () => setSound(localStorage.getItem("loot-sound") === "on"),
+      0
+    );
+    return () => clearTimeout(timer);
+  }, []);
+  useEffect(() => {
+    if (!run) {
+      previousOutcome.current = "";
+      return;
+    }
+    const outcome = `${run.index}:${run.gate}:${run.phase}`;
+    const previous = previousOutcome.current;
+    previousOutcome.current = outcome;
+    if (
+      !sound ||
+      !previous ||
+      previous === outcome ||
+      (run.phase !== "lost" && run.gate === 0)
+    )
+      return;
+    if (run.phase !== "active" && run.phase !== "lost" && !run.settled) return;
+    try {
+      const context = new AudioContext();
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.value = run.phase === "lost" ? 180 : 660;
+      gain.gain.setValueAtTime(0.035, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.25);
+      oscillator.connect(gain).connect(context.destination);
+      oscillator.start();
+      oscillator.stop(context.currentTime + 0.25);
+      oscillator.onended = () => {
+        void context.close();
+      };
+    } catch {
+      /* Audio is optional. */
+    }
+  }, [run, sound]);
   const [point, setPoint] = useState({ x: 1, y: 1 });
   const [lifecycle, setLifecycle] = useState<Lifecycle>("ready");
   const [message, setMessage] = useState(
@@ -468,12 +512,36 @@ export function WagerGame() {
     });
   };
 
-  const risk = () =>
+  const risk = () => {
+    const candidate = current.current;
+    if (!candidate || candidate.phase !== "active") return;
+    const next = GATES[candidate.gate];
+    if (!next || distance(movement.current.predict(), next) > 1) {
+      setMessage(
+        `Walk beside gate ${
+          candidate.gate + 1
+        } before choosing Risk. Your run is still active.`
+      );
+      return;
+    }
+    if (
+      live &&
+      (!session.current || session.current.expiresAt <= Date.now() / 1000)
+    ) {
+      setMessage(
+        "Your gameplay session has expired. Authorize a session to continue this run."
+      );
+      return;
+    }
     void operate(async (guard) => {
       const state = current.current!;
       const gate = GATES[state.gate];
-      if (!gate || distance(movement.current.predict(), gate) > 1)
-        throw new Error("Stand beside the next numbered gate");
+      if (state.phase !== "active" || !gate || distance(state, gate) > 1) {
+        setMessage(
+          "Walk beside the next numbered gate. Your run is still active."
+        );
+        return;
+      }
       if (!live) {
         accept({
           ...state,
@@ -511,6 +579,7 @@ export function WagerGame() {
         "Randomness pending. The gate is locked to this request; no rerolls."
       );
     });
+  };
 
   const extract = () =>
     void operate(async (guard) => {
@@ -623,7 +692,7 @@ export function WagerGame() {
       run?.phase === "active" ? ("active" as const) : ("escaped" as const),
   };
   return (
-    <section className="wager" aria-busy={busy}>
+    <section className={`wager ${run ? "wager-playing" : ""}`} aria-busy={busy}>
       <div className="wager-heading">
         <div>
           <p className="eyebrow">The three-gate dungeon</p>
@@ -637,6 +706,17 @@ export function WagerGame() {
           </p>
         </div>
         <div className="wager-wallet">
+          <button
+            className="sound-toggle"
+            onClick={() => {
+              const next = !sound;
+              setSound(next);
+              localStorage.setItem("loot-sound", next ? "on" : "off");
+            }}
+            aria-pressed={sound}
+          >
+            Sound {sound ? "on" : "off"}
+          </button>
           <span className="demo-label">DEMO CREDITS · NO CASH VALUE</span>
           {live && <WalletMultiButton />}
           <span className="muted">
@@ -646,57 +726,54 @@ export function WagerGame() {
           </span>
         </div>
       </div>
-      <fieldset
-        className="wager-mode"
-        disabled={(!!run && !run.settled) || busy}
-      >
-        <legend>Play mode</legend>
-        <label>
-          <input
-            type="radio"
-            name="wager-mode"
-            checked={!live}
-            onChange={() => setLive(false)}
-          />{" "}
-          Local practice
-        </label>
-        <label>
-          <input
-            type="radio"
-            name="wager-mode"
-            checked={live}
-            disabled={!wagerEnabled}
-            onChange={() => setLive(true)}
-          />{" "}
-          Devnet wager {wagerEnabled ? "" : "· verification pending"}
-        </label>
-      </fieldset>
-      <div className="odds-ladder" aria-label="Published gate odds">
-        {GATES.map((gate, index) => (
-          <div
-            key={gate.name}
-            className={`gate-card ${gate.color} ${
-              run && run.gate > index ? "cleared" : ""
-            }`}
-          >
-            <span>
-              0{index + 1} / {gate.name}
-            </span>
-            <strong>{gate.multiplier}</strong>
-            <p>{gate.odds} chance at this gate</p>
-            <small>
-              {run && run.gate > index
-                ? "✓ Cleared"
-                : "Total return, including stake"}
-            </small>
-          </div>
-        ))}
-      </div>
-      <p className="muted odds-note">
-        95% theoretical return before cent rounding for each fixed extraction
-        strategy. Every failed gate returns zero. No real deposits, withdrawals,
-        or cash prizes.
-      </p>
+      {(!run || run.settled) && (
+        <fieldset
+          className="wager-mode"
+          disabled={(!!run && !run.settled) || busy}
+        >
+          <legend>Play mode</legend>
+          <label>
+            <input
+              type="radio"
+              name="wager-mode"
+              checked={!live}
+              onChange={() => setLive(false)}
+            />{" "}
+            Local practice
+          </label>
+          <label>
+            <input
+              type="radio"
+              name="wager-mode"
+              checked={live}
+              disabled={!wagerEnabled}
+              onChange={() => setLive(true)}
+            />{" "}
+            Devnet wager {wagerEnabled ? "" : "· verification pending"}
+          </label>
+        </fieldset>
+      )}
+      {!run && (
+        <div className="odds-ladder" aria-label="Published gate odds">
+          {GATES.map((gate, index) => (
+            <div key={gate.name} className={`gate-card ${gate.color}`}>
+              <span>
+                0{index + 1} / {gate.name}
+              </span>
+              <strong>{gate.multiplier}</strong>
+              <p>{gate.odds} chance at this gate</p>
+              <small>Total return, including stake</small>
+            </div>
+          ))}
+        </div>
+      )}
+      {!run && (
+        <p className="muted odds-note">
+          95% theoretical return before cent rounding for each fixed extraction
+          strategy. Every failed gate returns zero. No real deposits,
+          withdrawals, or cash prizes.
+        </p>
+      )}
       {run && (
         <ol className="gate-progress" aria-label="Run progress">
           {GATES.map((gate, index) => (
@@ -733,11 +810,11 @@ export function WagerGame() {
         {message}
       </p>
       {lifecycle === "reconciling" && (
-        <div>
+        <div className="recovery-actions">
           <button className="button primary" onClick={() => void recover()}>
             Recover existing run
           </button>
-          {live && (
+          {live && !pending && (
             <button className="button secondary" onClick={() => setLive(false)}>
               Switch to practice
             </button>
@@ -752,82 +829,107 @@ export function WagerGame() {
       )}
       {!run ? (
         <div className="wager-start">
-          <form
-            className="card stake-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              start();
-            }}
+          <button
+            className="button primary choose-stake"
+            onClick={() => stakeDialog.current?.showModal()}
           >
-            <p className="eyebrow">Pack light. Choose your stake.</p>
-            <div className="stat">
-              <span>Demo balance</span>
-              <strong>{balance === null ? "Loading…" : money(balance)}</strong>
-            </div>
-            <div className="stake-presets">
-              {["2.00", "5.00"].map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  className="button secondary"
-                  aria-pressed={amount === value}
-                  onClick={() => {
-                    setAmount(value);
-                    setAmountError("");
-                  }}
-                >
-                  ${value} demo
-                </button>
-              ))}
-            </div>
-            <label htmlFor="demo-stake">Stake in demo credits</label>
-            <input
-              id="demo-stake"
-              disabled={!hydrated}
-              inputMode="decimal"
-              type="text"
-              autoComplete="off"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              onBlur={() =>
-                setAmountError(
-                  parseStake(amount) === null
-                    ? "Enter $1.00–$100.00 with at most two decimals."
-                    : ""
-                )
-              }
-              aria-invalid={!!amountError}
-              aria-describedby="stake-help stake-error"
-            />
-            <p id="stake-help" className="muted">
-              $1–$100 demo. A $5 stake at 2× returns $10 total, including your
-              stake.
-            </p>
-            <p id="stake-error" className="field-error">
-              {amountError}
-            </p>
+            Choose stake · enter dungeon
+          </button>
+          <dialog
+            ref={stakeDialog}
+            className="stake-dialog"
+            aria-label="Choose your demo stake"
+          >
             <button
-              className="button primary full"
-              disabled={
-                !hydrated || blocked || (live && (!wallet || balance === null))
-              }
-              type="submit"
+              className="text-button"
+              onClick={() => stakeDialog.current?.close()}
             >
-              {busy
-                ? "Preparing dungeon…"
-                : live
-                ? "Start devnet run"
-                : "Start practice run"}
+              Close stake selection
             </button>
-            {live && (
-              <p className="muted">
-                Wallet approvals prepare the run and a four-minute session.
-                Session top-up: 0.002 devnet SOL plus network fees. Gameplay
-                uses the temporary signer.
+            <p className="demo-label">DEMO CREDITS · NO CASH VALUE</p>
+            <form
+              className="card stake-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                start();
+              }}
+            >
+              <p className="eyebrow">Pack light. Choose your stake.</p>
+              {live && !wallet && <p className="muted">Close this panel and connect your wallet to start a devnet run.</p>}
+              <div className="stat">
+                <span>Demo balance</span>
+                <strong>
+                  {balance === null ? "Loading…" : money(balance)}
+                </strong>
+              </div>
+              <div className="stake-presets">
+                {["2.00", "5.00"].map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className="button secondary"
+                    aria-pressed={amount === value}
+                    onClick={() => {
+                      setAmount(value);
+                      setAmountError("");
+                    }}
+                  >
+                    ${value} demo
+                  </button>
+                ))}
+              </div>
+              <label htmlFor="demo-stake">Stake in demo credits</label>
+              <input
+                id="demo-stake"
+                disabled={!hydrated}
+                inputMode="decimal"
+                type="text"
+                autoComplete="off"
+                value={amount}
+                onChange={(event) => setAmount(event.target.value)}
+                onBlur={() =>
+                  setAmountError(
+                    parseStake(amount) === null
+                      ? "Enter $1.00–$100.00 with at most two decimals."
+                      : ""
+                  )
+                }
+                aria-invalid={!!amountError}
+                aria-describedby="stake-help stake-error"
+              />
+              <p id="stake-help" className="muted">
+                $1–$100 demo. A $5 stake at 2× returns $10 total, including your
+                stake.
               </p>
-            )}
-          </form>
-          <div className="card wager-guide">
+              <p id="stake-error" className="field-error">
+                {amountError}
+              </p>
+              <button
+                className="button primary full"
+                disabled={
+                  !hydrated ||
+                  blocked ||
+                  (live && (!wallet || balance === null))
+                }
+                type="submit"
+              >
+                {busy
+                  ? "Preparing dungeon…"
+                  : live
+                  ? "Start devnet run"
+                  : "Start practice run"}
+              </button>
+              {live && (
+                <p className="muted">
+                  Wallet approvals prepare the run and a four-minute session.
+                  Session top-up: 0.002 devnet SOL plus network fees. Gameplay
+                  uses the temporary signer.
+                </p>
+              )}
+            </form>
+          </dialog>
+          <details className="card wager-guide">
+            <summary>How it works</summary>
             <p className="eyebrow">Your route through the vault</p>
             <ol>
               <li>
@@ -848,11 +950,11 @@ export function WagerGame() {
             {!wagerEnabled && (
               <p className="muted">
                 Devnet wagering stays disabled until deployment, browser
-                recovery, VRF, and settlement are verified. Local practice remains
-                available.
+                recovery, VRF, and settlement are verified. Local practice
+                remains available.
               </p>
             )}
-          </div>
+          </details>
         </div>
       ) : (
         <div className="run-layout wager-run">
@@ -863,6 +965,8 @@ export function WagerGame() {
                 onMove={move}
                 onInteract={risk}
                 wagerMode
+                gatePhase={run.phase}
+                gateIndex={run.gate}
               />
             </div>
             <div className="controls">
@@ -1022,7 +1126,7 @@ export function WagerGame() {
             )}
             {live && <RollProof run={run} />}
             {terminal(run) && (
-              <div className="card result">
+              <div className="card result result-panel" role="status">
                 <p className="eyebrow">
                   {run.settled
                     ? "Settled result"
@@ -1043,6 +1147,27 @@ export function WagerGame() {
                   {money(run.payout)} demo credits{" "}
                   {run.settled ? "credited" : "to credit"}.
                 </p>
+                <div className="result-summary">
+                  <span>
+                    Stake <b>{money(run.stake)}</b>
+                  </span>
+                  <span>
+                    Return <b>{money(run.payout)}</b>
+                  </span>
+                  <span>
+                    Net <b>{money(run.payout - run.stake)}</b>
+                  </span>
+                  <span>
+                    Balance{" "}
+                    <b>{balance === null ? "Loading…" : money(balance)}</b>
+                  </span>
+                </div>
+                {run.settled && (
+                  <p className="muted">
+                    Each fixed extraction strategy has a 95% theoretical return
+                    before rounding.
+                  </p>
+                )}
                 {!run.settled ? (
                   <button
                     className="button primary full"
