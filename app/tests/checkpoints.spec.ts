@@ -30,6 +30,17 @@ test("uncertain actions freeze inputs and cannot be submitted twice", () => {
   queue.confirm({ x: 2, y: 1 }, 1);
   expect(queue.enqueue(2)).toBe(true);
 });
+test("slow confirmations buffer movement while transactions stay within twelve steps", () => {
+  const queue = new Checkpoints({ x: 0, y: 0 }, () => true);
+  for (let i = 0; i < 12; i++) queue.enqueue(1);
+  expect(queue.begin(0)?.path).toHaveLength(12);
+  for (let i = 0; i < 36; i++) expect(queue.enqueue(1)).toBe(true);
+  expect(queue.enqueue(1)).toBe(false);
+  expect(queue.predict()).toEqual({ x: 48, y: 0 });
+  queue.confirm({ x: 12, y: 0 }, 1);
+  expect(queue.predict()).toEqual({ x: 48, y: 0 });
+  expect(queue.begin(1)?.path).toHaveLength(12);
+});
 test("failed and terminal checkpoints discard unsafe pending paths", () => {
   const queue = new Checkpoints({ x: 1, y: 1 }, (x) => x !== 4);
   queue.enqueue(1);

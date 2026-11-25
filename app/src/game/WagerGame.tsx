@@ -72,6 +72,7 @@ export function WagerGame() {
   const walletKey = wallet?.publicKey.toBase58() || "";
   const [live, setLive] = useState(false);
   const stakeDialog = useRef<HTMLDialogElement>(null);
+  const [setupStage, setSetupStage] = useState("");
   const [amount, setAmount] = useState("2.00");
   const [amountError, setAmountError] = useState("");
   const [balance, setBalance] = useState<number | null>(10000);
@@ -176,6 +177,15 @@ export function WagerGame() {
   const refresh = useCallback(async () => {
     if (!wallet || identity.current !== walletKey) return;
     const epoch = generation.current;
+    const active = current.current;
+    if (active?.delegated && !terminal(active)) {
+      const latest = await readWager(wallet, active.index, false, true);
+      if (epoch !== generation.current || !latest) return;
+      accept(latest);
+      if (!locked.current && !pendingError.current)
+        setLifecycle(terminal(latest) ? "settling" : "active");
+      return;
+    }
     const player = await readPlayer(wallet);
     const saved = window.localStorage.getItem(storageKey);
     const index = player?.active
@@ -214,6 +224,7 @@ export function WagerGame() {
       setPoint({ x: 1, y: 1 });
       setLifecycle("ready");
       setSessionExpiry(0);
+      setSetupStage("");
       setBalance(live ? null : 10000);
       if (live && wallet) {
         try {
@@ -244,6 +255,7 @@ export function WagerGame() {
   }, [live, walletKey]);
 
   useEffect(() => {
+    let polling = false;
     const interval = setInterval(() => {
       setNow(Math.floor(Date.now() / 1000));
       if (
@@ -252,13 +264,20 @@ export function WagerGame() {
         current.current &&
         !locked.current &&
         !flushing.current &&
-        !pendingError.current
-      )
-        void refresh().catch(() => {
-          setMessage(
-            "Connection interrupted. Your last result is retained; use Recover."
-          );
-        });
+        !pendingError.current &&
+        !polling
+      ) {
+        polling = true;
+        void refresh()
+          .catch(() => {
+            setMessage(
+              "Connection interrupted. Your last result is retained; use Recover."
+            );
+          })
+          .finally(() => {
+            polling = false;
+          });
+      }
     }, 1500);
     return () => clearInterval(interval);
   }, [live, wallet, refresh]);
@@ -347,7 +366,18 @@ export function WagerGame() {
             }
           );
           confirmed = true;
-          const latest = await readWager(wallet, state.index);
+          let latest = await readWager(wallet, state.index, false, true);
+          // Confirmed ER transactions can precede readable account state.
+          // Observe the same checkpoint; never resubmit it during propagation.
+          for (
+            let attempt = 0;
+            attempt < 4 && (!latest || latest.nonce <= batch.nonce);
+            attempt++
+          ) {
+            await new Promise((resolve) => setTimeout(resolve, 150));
+            if (epoch !== generation.current) return;
+            latest = await readWager(wallet, state.index, false, true);
+          }
           if (epoch !== generation.current) return;
           if (!latest || latest.nonce <= batch.nonce)
             throw new Error(
@@ -449,7 +479,10 @@ export function WagerGame() {
           : "The action could not complete. Recover to check your current run; details are available below."
       );
     } finally {
-      if (epoch === generation.current) locked.current = false;
+      if (epoch === generation.current) {
+        locked.current = false;
+        setSetupStage("");
+      }
     }
   };
 
@@ -463,7 +496,11 @@ export function WagerGame() {
       setAmountError("Your demo balance is too low for this stake.");
       return;
     }
+    if (locked.current || pendingError.current || lifecycle === "reconciling")
+      return;
     setAmountError("");
+    stakeDialog.current?.close();
+    if (live) setSetupStage("Prepare demo credits");
     void operate(async (guard) => {
       if (!live) {
         setBalance((value) => (value ?? 10000) - stake);
@@ -478,6 +515,10 @@ export function WagerGame() {
       setMessage("Preparing your demo ledger…");
       await initializeLedger(wallet, guard);
       guard();
+      setSetupStage("Reserve your stake");
+      setMessage(
+        "Approve your chosen demo stake. This run will be recovered if setup is interrupted."
+      );
       const index = await createWager(wallet, stake, guard);
       guard();
       window.localStorage.setItem(storageKey, String(index));
@@ -486,16 +527,19 @@ export function WagerGame() {
       if (!created) throw new Error("Wager created; waiting for its state");
       accept(created);
       if (!created.delegated) {
+        setSetupStage("Connect the dungeon");
         setMessage("Approve delegation to enter the dungeon…");
         await delegateWager(wallet, index, guard);
         guard();
       }
+      setSetupStage("Connect the dungeon");
       setMessage("Waiting for the dungeon connection…");
       await waitForEr(wallet, index);
       guard();
       setMessage(
         "Authorize four minutes of gameplay · 0.002 devnet SOL fee top-up…"
       );
+      setSetupStage("Authorize gameplay");
       const authorized = await createGameSession(wallet, guard);
       guard();
       session.current = authorized.session;
@@ -827,7 +871,38 @@ export function WagerGame() {
           )}
         </div>
       )}
-      {!run ? (
+      {setupStage ? (
+        <section
+          className="setup-progress card"
+          aria-label="Preparing your dungeon"
+        >
+          <p className="eyebrow">Preparing your dungeon</p>
+          <h2>{setupStage}</h2>
+          <ol>
+            {[
+              "Prepare demo credits",
+              "Reserve your stake",
+              "Connect the dungeon",
+              "Authorize gameplay",
+            ].map((step, index, steps) => (
+              <li
+                key={step}
+                aria-current={step === setupStage ? "step" : undefined}
+                className={index < steps.indexOf(setupStage) ? "done" : ""}
+              >
+                <span>
+                  {index < steps.indexOf(setupStage) ? "✓" : index + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
+          <p className="muted">
+            Keep this tab open. Your wallet will ask for the approvals needed at
+            each step. Movement uses a temporary signer once setup finishes.
+          </p>
+        </section>
+      ) : !run ? (
         <div className="wager-start">
           <button
             className="button primary choose-stake"
@@ -855,7 +930,12 @@ export function WagerGame() {
               }}
             >
               <p className="eyebrow">Pack light. Choose your stake.</p>
-              {live && !wallet && <p className="muted">Close this panel and connect your wallet to start a devnet run.</p>}
+              {live && !wallet && (
+                <p className="muted">
+                  Close this panel and connect your wallet to start a devnet
+                  run.
+                </p>
+              )}
               <div className="stat">
                 <span>Demo balance</span>
                 <strong>
@@ -957,8 +1037,154 @@ export function WagerGame() {
           </details>
         </div>
       ) : (
-        <div className="run-layout wager-run">
-          <div>
+        <div
+          className={`run-layout wager-run ${terminal(run) ? "run-ended" : ""}`}
+        >
+          {terminal(run) && (
+            <div className="card result result-panel" role="status">
+              <p className="eyebrow">
+                {run.settled
+                  ? "Settled result"
+                  : "Frozen result · settlement required"}
+              </p>
+              <strong>
+                {run.settled
+                  ? run.phase === "lost"
+                    ? "LOST"
+                    : run.phase === "cancelled"
+                    ? "REFUNDED"
+                    : "EXTRACTED"
+                  : run.phase === "lost"
+                  ? "Gate failed"
+                  : "Return frozen"}
+              </strong>
+              <p>
+                {money(run.payout)} demo credits{" "}
+                {run.settled ? "credited" : "to credit"}.
+              </p>
+              <div className="result-summary">
+                <span>
+                  Stake <b>{money(run.stake)}</b>
+                </span>
+                <span>
+                  Return <b>{money(run.payout)}</b>
+                </span>
+                <span>
+                  Net <b>{money(run.payout - run.stake)}</b>
+                </span>
+                <span>
+                  Balance{" "}
+                  <b>{balance === null ? "Loading…" : money(balance)}</b>
+                </span>
+              </div>
+              {run.settled && (
+                <p className="muted">
+                  {run.phase === "cancelled"
+                    ? "Cancelled before the first risk. "
+                    : `Cleared ${run.gate} of 3 gates. `}
+                  Each fixed extraction strategy has a 95% theoretical return
+                  before rounding.
+                </p>
+              )}
+              {live && (
+                <p>
+                  <a
+                    href={`https://explorer.solana.com/address/${run.address.toBase58()}?cluster=devnet`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Inspect devnet receipt ↗
+                  </a>
+                </p>
+              )}
+              {!run.settled ? (
+                <button
+                  className="button primary full"
+                  disabled={blocked}
+                  onClick={settle}
+                >
+                  Settle {live ? "on Solana" : "practice result"}
+                </button>
+              ) : (
+                <button
+                  className="button secondary full"
+                  onClick={() => {
+                    current.current = null;
+                    movement.current = new Checkpoints(
+                      { x: 1, y: 1 },
+                      isWalkable
+                    );
+                    setRun(null);
+                    setPoint({ x: 1, y: 1 });
+                    setLifecycle("ready");
+                    setTimeout(() => stakeDialog.current?.showModal(), 0);
+                  }}
+                >
+                  Choose another stake
+                </button>
+              )}
+            </div>
+          )}
+          <div className="card run-stats" aria-label="Run amounts">
+            <p className="eyebrow">Your haul · demo credits</p>
+            <div className="stat">
+              <span>Stake</span>
+              <strong>{money(run.stake)}</strong>
+            </div>
+            <div className="stat">
+              <span>Available balance</span>
+              <strong>{balance === null ? "Loading…" : money(balance)}</strong>
+            </div>
+            <div className="stat">
+              <span>
+                {terminal(run) ? "Frozen total return" : "Current total return"}
+              </span>
+              <strong>
+                {money(terminal(run) ? run.payout : currentReturn)}
+              </strong>
+            </div>
+            <div className="stat">
+              <span>Net profit if extracted</span>
+              <strong>
+                {money(
+                  (terminal(run) ? run.payout : currentReturn) - run.stake
+                )}
+              </strong>
+            </div>
+            <p className="muted">
+              {run.settled
+                ? live
+                  ? "Credit confirmed on Solana devnet."
+                  : "Practice balance credited locally."
+                : pending
+                ? "No cash-out is available while this gate is pending."
+                : "Return includes your original stake."}
+            </p>
+          </div>
+
+          <div className="dungeon-column">
+            {!terminal(run) && (
+              <div className="run-objective">
+                <span className="eyebrow">
+                  {pending
+                    ? "Gate in progress"
+                    : busy
+                    ? "Syncing your action"
+                    : "Next objective"}
+                </span>
+                <p>
+                  {pending
+                    ? "Wait for this gate’s result. Your request is already recorded."
+                    : busy
+                    ? "Confirming your latest position and action…"
+                    : live && sessionExpiry <= now
+                    ? "Authorize a gameplay session to continue your existing run."
+                    : canRisk
+                    ? `You reached ${nextGate?.name}. Choose Risk when you are ready.`
+                    : `Walk to gate ${run.gate + 1} · ${nextGate?.name}.`}
+                </p>
+              </div>
+            )}
             <div className="board-frame">
               <PhaserBoard
                 state={board}
@@ -1015,46 +1241,6 @@ export function WagerGame() {
             )}
           </div>
           <aside className="sidebar">
-            <div className="card">
-              <p className="eyebrow">Your haul · demo credits</p>
-              <div className="stat">
-                <span>Stake</span>
-                <strong>{money(run.stake)}</strong>
-              </div>
-              <div className="stat">
-                <span>Available balance</span>
-                <strong>
-                  {balance === null ? "Loading…" : money(balance)}
-                </strong>
-              </div>
-              <div className="stat">
-                <span>
-                  {terminal(run)
-                    ? "Frozen total return"
-                    : "Current total return"}
-                </span>
-                <strong>
-                  {money(terminal(run) ? run.payout : currentReturn)}
-                </strong>
-              </div>
-              <div className="stat">
-                <span>Net profit if extracted</span>
-                <strong>
-                  {money(
-                    (terminal(run) ? run.payout : currentReturn) - run.stake
-                  )}
-                </strong>
-              </div>
-              <p className="muted">
-                {run.settled
-                  ? live
-                    ? "Credit confirmed on Solana devnet."
-                    : "Practice balance credited locally."
-                  : pending
-                  ? "No cash-out is available while this gate is pending."
-                  : "Return includes your original stake."}
-              </p>
-            </div>
             {run.phase === "active" && (
               <div className="card choice-card">
                 <p className="eyebrow">Your call</p>
@@ -1125,76 +1311,6 @@ export function WagerGame() {
               </button>
             )}
             {live && <RollProof run={run} />}
-            {terminal(run) && (
-              <div className="card result result-panel" role="status">
-                <p className="eyebrow">
-                  {run.settled
-                    ? "Settled result"
-                    : "Frozen result · settlement required"}
-                </p>
-                <strong>
-                  {run.settled
-                    ? run.phase === "lost"
-                      ? "LOST"
-                      : run.phase === "cancelled"
-                      ? "REFUNDED"
-                      : "EXTRACTED"
-                    : run.phase === "lost"
-                    ? "Gate failed"
-                    : "Return frozen"}
-                </strong>
-                <p>
-                  {money(run.payout)} demo credits{" "}
-                  {run.settled ? "credited" : "to credit"}.
-                </p>
-                <div className="result-summary">
-                  <span>
-                    Stake <b>{money(run.stake)}</b>
-                  </span>
-                  <span>
-                    Return <b>{money(run.payout)}</b>
-                  </span>
-                  <span>
-                    Net <b>{money(run.payout - run.stake)}</b>
-                  </span>
-                  <span>
-                    Balance{" "}
-                    <b>{balance === null ? "Loading…" : money(balance)}</b>
-                  </span>
-                </div>
-                {run.settled && (
-                  <p className="muted">
-                    Each fixed extraction strategy has a 95% theoretical return
-                    before rounding.
-                  </p>
-                )}
-                {!run.settled ? (
-                  <button
-                    className="button primary full"
-                    disabled={blocked}
-                    onClick={settle}
-                  >
-                    Settle {live ? "on Solana" : "practice result"}
-                  </button>
-                ) : (
-                  <button
-                    className="button secondary full"
-                    onClick={() => {
-                      current.current = null;
-                      movement.current = new Checkpoints(
-                        { x: 1, y: 1 },
-                        isWalkable
-                      );
-                      setRun(null);
-                      setPoint({ x: 1, y: 1 });
-                      setLifecycle("ready");
-                    }}
-                  >
-                    Choose another stake
-                  </button>
-                )}
-              </div>
-            )}
           </aside>
         </div>
       )}

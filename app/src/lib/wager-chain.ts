@@ -142,7 +142,8 @@ export async function initializeLedger(
 export async function readWager(
   wallet: AnchorWallet,
   index: number,
-  baseOnly = false
+  baseOnly = false,
+  runtimeOnly = false
 ): Promise<Wager | null> {
   const address = wagerAddress(wallet.publicKey, index);
   const route = baseOnly
@@ -155,12 +156,16 @@ export async function readWager(
     "wagerState"
   );
   if (!value) return null;
-  const ticket = await readAccount<{ settled: boolean; payout: BN }>(
-    base,
-    wallet,
-    ticketAddress(wallet.publicKey, index),
-    "wagerTicket"
-  );
+  // Movement and pending-gate polling need only the authoritative runtime.
+  // Settlement checks still read the independent base-layer ticket.
+  const ticket = runtimeOnly
+    ? null
+    : await readAccount<{ settled: boolean; payout: BN }>(
+        base,
+        wallet,
+        ticketAddress(wallet.publicKey, index),
+        "wagerTicket"
+      );
   return {
     address,
     index,
@@ -245,6 +250,9 @@ export async function waitForEr(
     "Delegation is still propagating. Recover this run before starting another."
   );
 }
+// A token observed in a particular ER need not be fetched before every move.
+// On-chain session constraints continue to validate expiry and revocation.
+const propagatedSessions = new WeakMap<GameSession, Set<string>>();
 export async function wagerAction(
   wallet: AnchorWallet,
   state: Wager,
@@ -258,9 +266,15 @@ export async function wagerAction(
     throw new Error("Session belongs to a different wallet");
   const route = await resolveEr(state.address);
   if (!route.connection) throw new Error("Waiting for the delegated run");
+  const endpoint = route.connection.rpcEndpoint;
+  const observed = propagatedSessions.get(session) || new Set<string>();
   // The session token must be available in the actual ER runtime, not just on base.
-  for (let attempt = 0; attempt < 10; attempt++) {
-    if (await route.connection.getAccountInfo(session.token)) break;
+  for (let attempt = 0; !observed.has(endpoint) && attempt < 10; attempt++) {
+    if (await route.connection.getAccountInfo(session.token)) {
+      observed.add(endpoint);
+      propagatedSessions.set(session, observed);
+      break;
+    }
     if (attempt === 9)
       throw new Error("Session is still propagating. Retry after a moment.");
     await new Promise((resolve) => setTimeout(resolve, 500));

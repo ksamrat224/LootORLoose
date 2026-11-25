@@ -1218,3 +1218,144 @@ input:focus-visible {
   background: var(--primary);
   color: var(--primary-fg);
 }
+
+.setup-progress {
+  max-width: 640px;
+  margin: 24px auto;
+}
+.setup-progress h2 {
+  font-size: 1.8rem;
+  margin: 12px 0 24px;
+}
+.setup-progress ol {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 16px;
+}
+.setup-progress li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+}
+.setup-progress li > span {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+}
+.setup-progress li[aria-current="step"] {
+  color: var(--primary);
+  font-weight: bold;
+}
+.setup-progress li[aria-current="step"] > span {
+  border-color: var(--primary);
+}
+.setup-progress .done {
+  color: #83d7c5;
+}
+.wager-run > .run-stats {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+}
+.run-stats > .eyebrow,
+.run-stats > p {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.run-stats .stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  border: 0;
+  padding: 0;
+}
+.run-stats .stat strong {
+  font-size: 1.5rem;
+}
+.run-objective {
+  padding: 0 0 16px;
+}
+.run-objective p {
+  margin: 6px 0 0;
+  color: var(--foreground);
+}
+.wager-run > .result-panel {
+  grid-column: 1 / -1;
+  padding: 28px;
+}
+.result-panel > strong {
+  font-family: Georgia, serif;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+}
+.result-panel > .button {
+  width: auto;
+  min-width: 220px;
+}
+.result-panel .result-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.run-ended .dungeon-column .board-frame {
+  opacity: 0.5;
+}
+@media (max-width: 700px) {
+  .wager-run > .run-stats,
+  .result-panel .result-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .run-stats .stat strong {
+    font-size: 1.2rem;
+  }
+  .result-panel > .button {
+    width: 100%;
+    min-width: 0;
+  }
+  .wager-run .choice-card {
+    position: sticky;
+    bottom: 12px;
+    z-index: 2;
+  }
+}
+.wager-playing .wager-heading {
+  margin-top: 0;
+  gap: 16px;
+}
+.wager-playing .wager-wallet {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.wager-playing .wager-wallet > .muted {
+  flex-basis: 100%;
+  text-align: right;
+  font-size: 12px;
+}
+.wager-run > .run-stats {
+  padding: 16px 20px;
+  gap: 8px 16px;
+}
+.run-stats > .eyebrow {
+  display: none;
+}
+.run-stats .stat {
+  margin: 0;
+}
+.run-stats > .muted {
+  font-size: 12px;
+}
+@media (max-width: 700px) {
+  .wager-playing .wager-wallet {
+    justify-content: flex-start;
+  }
+  .wager-playing .wager-wallet > .muted {
+    text-align: left;
+  }
+}

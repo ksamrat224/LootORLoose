@@ -38,7 +38,7 @@ export class Checkpoints {
   enqueue(step: Step): boolean {
     if (
       this.uncertain ||
-      this.queued.length + (this.flight?.path.length || 0) >= 24
+      this.queued.length + (this.flight?.path.length || 0) >= 48
     )
       return false;
     const point = this.predict(),

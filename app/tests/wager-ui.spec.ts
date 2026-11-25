@@ -45,6 +45,15 @@ for (const width of [375, 768, 1280]) {
         () => document.documentElement.scrollWidth <= window.innerWidth
       )
     ).toBeTruthy();
+    await page.getByRole("button", { name: "Choose another stake" }).click();
+    await expect(
+      page.getByRole("dialog", { name: "Choose your demo stake" })
+    ).toBeVisible();
+    await expect(page.getByLabel("Stake in demo credits")).toHaveValue("5.00");
+    await page.keyboard.press("Escape");
+    await expect(
+      page.getByRole("dialog", { name: "Choose your demo stake" })
+    ).not.toBeVisible();
   });
 }
 
@@ -129,11 +138,19 @@ test("risk away from a gate keeps the run playable", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 900 });
   await page.goto("/");
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await page.getByRole("button", { name: "Choose stake · enter dungeon" }).click();
+  await page
+    .getByRole("button", { name: "Choose stake · enter dungeon" })
+    .click();
   await page.getByRole("button", { name: "Start practice run" }).click();
   await page.getByRole("button", { name: "Risk gate", exact: true }).click();
-  await expect(page.getByText("Your run is still active.", { exact: false })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Recover existing run" })).toHaveCount(0);
+  await expect(
+    page.getByText("Your run is still active.", { exact: false })
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Recover existing run" })
+  ).toHaveCount(0);
   await page.getByRole("button", { name: "Move right", exact: true }).click();
-  await expect(page.getByRole("button", { name: "Cancel · return full stake" })).toBeEnabled();
+  await expect(
+    page.getByRole("button", { name: "Cancel · return full stake" })
+  ).toBeEnabled();
 });
