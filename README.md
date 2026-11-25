@@ -7,6 +7,9 @@ A dungeon extraction game with a three-gate, simulated-stake prototype. The orig
 - [about.md](about.md) — product description, rules, UI and honest limitations (start here).
 - [docs/wager-prototype.md](docs/wager-prototype.md) — V3 architecture, verification and live devnet evidence.
 - [docs/MAGICBLOCK_ARCHITECTURE.md](docs/MAGICBLOCK_ARCHITECTURE.md) — ER account boundary and routing rules.
+- [docs/ROADMAP.md](docs/ROADMAP.md) — what's left to do, known issues and fixes, 2-day schedule, release checklist.
+- [docs/UI_DIRECTION.md](docs/UI_DIRECTION.md) — UI critique and target design based on the reference images.
+- [mvp.md](mvp.md) — the finished MVP, end to end.
 - [docs/archive/](docs/archive/) — historical V1 idea, requirements and bootstrap guide (superseded).
 
 ## Run the local demo
@@ -17,7 +20,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000`. **Risk gates → Local practice** offers $2/$5/custom demo stakes and voluntary 1.25×/2×/3× gates with published odds. Movement is safe, and returns include the stake. Practice uses browser randomness and resets when its game context is discarded; it creates no blockchain receipt. **Free local demo** retains the original timed dungeon. **Free devnet run** retains the deployed session-signed game.
+Open `http://localhost:3000`. **Risk gates → Local practice** offers $2/$5/custom demo stakes and voluntary 1.25×/2×/3× gates with published odds. Movement is safe, and returns include the stake. Practice uses browser randomness and resets when its game context is discarded; it creates no blockchain receipt. The original free local and devnet game code remains in the repository but is hidden from the landing page.
 
 ## Verify the source
 

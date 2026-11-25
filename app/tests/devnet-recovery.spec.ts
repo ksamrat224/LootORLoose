@@ -346,6 +346,16 @@ test("a delayed VRF request stays pending without loss, cancellation or reroll",
   ).toBeVisible();
   await expect(page.getByText("$98.00", { exact: true })).toBeVisible();
   expect(game.uploads()).toBe(0);
+  await page.getByRole("button", { name: "Switch to practice" }).click();
+  await expect(
+    page.getByRole("button", { name: "Start practice run" })
+  ).toBeVisible();
+  await page.getByRole("radio", { name: /Devnet wager/ }).check();
+  await expect(
+    page.getByRole("heading", { name: "The guardian is deciding." })
+  ).toBeVisible();
+  await expect(page.getByText("$98.00", { exact: true })).toBeVisible();
+  expect(game.uploads()).toBe(0);
 });
 
 test("wallet rejection and an ER outage retain the unresolved stake", async ({

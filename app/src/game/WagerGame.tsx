@@ -697,13 +697,58 @@ export function WagerGame() {
         strategy. Every failed gate returns zero. No real deposits, withdrawals,
         or cash prizes.
       </p>
+      {run && (
+        <ol className="gate-progress" aria-label="Run progress">
+          {GATES.map((gate, index) => (
+            <li
+              key={gate.name}
+              className={
+                run.gate > index
+                  ? "complete"
+                  : run.phase === "lost" && run.gate === index
+                  ? "failed"
+                  : run.gate === index && !terminal(run)
+                  ? "current"
+                  : ""
+              }
+            >
+              <span aria-hidden="true">
+                {run.gate > index ? "✓" : index + 1}
+              </span>
+              <span>
+                {gate.name} ·{" "}
+                {run.gate > index
+                  ? "cleared"
+                  : run.phase === "lost" && run.gate === index
+                  ? "failed"
+                  : run.gate === index && !terminal(run)
+                  ? "current"
+                  : "ahead"}
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
       <p className="message" role="status" aria-live="polite">
         {message}
       </p>
       {lifecycle === "reconciling" && (
-        <button className="button primary" onClick={() => void recover()}>
-          Recover existing run
-        </button>
+        <div>
+          <button className="button primary" onClick={() => void recover()}>
+            Recover existing run
+          </button>
+          {live && (
+            <button className="button secondary" onClick={() => setLive(false)}>
+              Switch to practice
+            </button>
+          )}
+          {live && (
+            <p className="muted">
+              Your devnet run remains unresolved. Return to Devnet to recover
+              it; practice has a separate balance.
+            </p>
+          )}
+        </div>
       )}
       {!run ? (
         <div className="wager-start">
@@ -803,8 +848,8 @@ export function WagerGame() {
             {!wagerEnabled && (
               <p className="muted">
                 Devnet wagering stays disabled until deployment, browser
-                recovery, VRF, and settlement are verified. The original free
-                modes remain available.
+                recovery, VRF, and settlement are verified. Local practice remains
+                available.
               </p>
             )}
           </div>
@@ -839,12 +884,28 @@ export function WagerGame() {
                     : "One request. One result. The next risk and extraction unlock after this gate resolves."}
                 </p>
                 {live && (
-                  <button
-                    className="button secondary"
-                    onClick={() => void recover()}
-                  >
-                    Check existing request
-                  </button>
+                  <>
+                    <button
+                      className="button secondary"
+                      onClick={() => void recover()}
+                    >
+                      Check existing request
+                    </button>
+                    {now - run.requestedAt >= 60 && (
+                      <>
+                        <button
+                          className="button secondary"
+                          onClick={() => setLive(false)}
+                        >
+                          Switch to practice
+                        </button>
+                        <p className="muted">
+                          Your devnet request remains pending. Return to Devnet
+                          to recover it; practice has a separate balance.
+                        </p>
+                      </>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -899,6 +960,19 @@ export function WagerGame() {
                   {money(gateReturn(run.stake, run.gate + 1))} total return.
                   Failure returns $0.00.
                 </p>
+                {run.gate > 0 && nextGate && (
+                  <p className="muted">
+                    Extract now: {money(currentReturn)}. Continue:{" "}
+                    {nextGate.odds} ×{" "}
+                    {money(gateReturn(run.stake, run.gate + 1))} ={" "}
+                    {money(
+                      (gateReturn(run.stake, run.gate + 1) *
+                        nextGate.numerator) /
+                        nextGate.denominator
+                    )}{" "}
+                    expected.
+                  </p>
+                )}
                 <div className="wager-choices">
                   <button
                     className="button secondary full"

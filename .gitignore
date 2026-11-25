@@ -7,6 +7,7 @@ test-ledger
 .yarn
 .surfpool
 .brand-preview/
+/pictures/
 .env.local
 app/.env.local
 .next/

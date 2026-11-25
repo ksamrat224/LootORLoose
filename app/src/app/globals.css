@@ -927,3 +927,36 @@ input:focus-visible {
   color: var(--danger);
   font-size: 13px;
 }
+
+.gate-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+.gate-progress li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted, #aaa397);
+  font-size: 0.8rem;
+}
+.gate-progress li > span:first-child {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+.gate-progress .current {
+  color: var(--primary, #d9a452);
+}
+.gate-progress .complete {
+  color: #83d7c5;
+}
+.gate-progress .failed {
+  color: #e68c7c;
+}
