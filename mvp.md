@@ -1,6 +1,6 @@
-# Current MVP direction: six independent quests
+# Current MVP direction: stake once, hunt three
 
-The current implementation follows [QUESTS_V4.md](docs/QUESTS_V4.md): stake first, hunt any of six quests, explicitly attempt, reveal, settle and return to the dungeon. V4 devnet is disabled until deployment and live verification. The earlier sequential-gate MVP described below is retained as historical V3 context.
+The current implementation follows [HUNTS_V5.md](docs/HUNTS_V5.md): one stake, three distinct quests chosen from six, independent random rewards and one final collection. The shared table averages 86.5% before rounding. V5 devnet is disabled until deployment and live verification. Earlier versions below remain historical context.
 
 ---
 

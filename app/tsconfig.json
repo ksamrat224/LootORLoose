@@ -40,7 +40,9 @@
     ".next-practice-tests/types/**/*.ts",
     ".next-practice-tests/dev/types/**/*.ts",
     ".next-quest-tests/types/**/*.ts",
-    ".next-quest-tests/dev/types/**/*.ts"
+    ".next-quest-tests/dev/types/**/*.ts",
+    ".next-live-hunts/types/**/*.ts",
+    ".next-live-hunts/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

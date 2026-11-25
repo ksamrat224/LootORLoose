@@ -191,6 +191,74 @@
       ]
     },
     {
+      "name": "authorize_hunt_session",
+      "discriminator": [
+        193,
+        77,
+        144,
+        43,
+        46,
+        164,
+        69,
+        32
+      ],
+      "accounts": [
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  97,
+                  116,
+                  116,
+                  101,
+                  109,
+                  112,
+                  116,
+                  95,
+                  118,
+                  53
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "wager"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "_index",
+          "type": "u64"
+        },
+        {
+          "name": "session_signer",
+          "type": "pubkey"
+        }
+      ]
+    },
+    {
       "name": "authorize_quest_session",
       "discriminator": [
         113,
@@ -321,6 +389,70 @@
       ]
     },
     {
+      "name": "cancel_hunt_attempt",
+      "discriminator": [
+        63,
+        223,
+        22,
+        12,
+        231,
+        203,
+        56,
+        251
+      ],
+      "accounts": [
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  97,
+                  116,
+                  116,
+                  101,
+                  109,
+                  112,
+                  116,
+                  95,
+                  118,
+                  53
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "wager"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "cancel_quest_attempt",
       "discriminator": [
         212,
@@ -438,6 +570,171 @@
       "args": [
         {
           "name": "index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "create_hunt_attempt",
+      "discriminator": [
+        123,
+        7,
+        130,
+        228,
+        182,
+        255,
+        8,
+        203
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101,
+                  95,
+                  118,
+                  53
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  118,
+                  53
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "ticket",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  116,
+                  105,
+                  99,
+                  107,
+                  101,
+                  116,
+                  95,
+                  118,
+                  53
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  97,
+                  116,
+                  116,
+                  101,
+                  109,
+                  112,
+                  116,
+                  95,
+                  118,
+                  53
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "player"
+          ]
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        },
+        {
+          "name": "stake",
           "type": "u64"
         }
       ]
@@ -849,6 +1146,211 @@
         },
         {
           "name": "stake",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "delegate_hunt_attempt",
+      "discriminator": [
+        126,
+        35,
+        26,
+        17,
+        68,
+        72,
+        130,
+        98
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "buffer_wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  98,
+                  117,
+                  102,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "wager"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                158,
+                67,
+                21,
+                92,
+                213,
+                220,
+                197,
+                226,
+                45,
+                186,
+                206,
+                124,
+                212,
+                30,
+                88,
+                19,
+                187,
+                204,
+                110,
+                130,
+                97,
+                8,
+                134,
+                210,
+                8,
+                107,
+                12,
+                229,
+                213,
+                46,
+                244,
+                116
+              ]
+            }
+          }
+        },
+        {
+          "name": "delegation_record_wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "wager"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "delegation_metadata_wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  100,
+                  101,
+                  108,
+                  101,
+                  103,
+                  97,
+                  116,
+                  105,
+                  111,
+                  110,
+                  45,
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "wager"
+              }
+            ],
+            "program": {
+              "kind": "account",
+              "path": "delegation_program"
+            }
+          }
+        },
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  97,
+                  116,
+                  116,
+                  101,
+                  109,
+                  112,
+                  116,
+                  95,
+                  118,
+                  53
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "owner_program",
+          "address": "BenkDp3MuSNQshYqTC7PyiWvpBsCQTT5LX6EGYWCQhvj"
+        },
+        {
+          "name": "delegation_program",
+          "address": "DELeGGvXpWV2fqJUhqcF5ZSYMS4JTLjteaAMARRSaeSh"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
           "type": "u64"
         }
       ]
@@ -1560,6 +2062,80 @@
       ]
     },
     {
+      "name": "finalize_hunt_attempt",
+      "discriminator": [
+        9,
+        68,
+        168,
+        124,
+        120,
+        90,
+        207,
+        61
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "wager"
+          ]
+        },
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  97,
+                  116,
+                  116,
+                  101,
+                  109,
+                  112,
+                  116,
+                  95,
+                  118,
+                  53
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "magic_program",
+          "address": "Magic11111111111111111111111111111111111111"
+        },
+        {
+          "name": "magic_context",
+          "writable": true,
+          "address": "MagicContext1111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "finalize_quest_attempt",
       "discriminator": [
         103,
@@ -1854,6 +2430,113 @@
                   118,
                   51
                 ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_hunt_house",
+      "discriminator": [
+        53,
+        89,
+        12,
+        254,
+        43,
+        18,
+        10,
+        221
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101,
+                  95,
+                  118,
+                  53
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "initialize_hunt_player",
+      "discriminator": [
+        18,
+        125,
+        242,
+        132,
+        88,
+        85,
+        162,
+        54
+      ],
+      "accounts": [
+        {
+          "name": "player",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  118,
+                  53
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
               }
             ]
           }
@@ -2330,6 +3013,93 @@
       ]
     },
     {
+      "name": "resolve_hunt",
+      "discriminator": [
+        123,
+        248,
+        246,
+        136,
+        3,
+        6,
+        204,
+        76
+      ],
+      "accounts": [
+        {
+          "name": "vrf_program_identity",
+          "docs": [
+            "Scoped VRF identity PDA, bound to this program. Its presence as a signer proves",
+            "the callback was issued by the VRF program for this program."
+          ],
+          "signer": true
+        },
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  97,
+                  116,
+                  116,
+                  101,
+                  109,
+                  112,
+                  116,
+                  95,
+                  118,
+                  53
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "wager.authority",
+                "account": "HuntAttempt"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "randomness",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "index",
+          "type": "u64"
+        },
+        {
+          "name": "request_nonce",
+          "type": "u64"
+        },
+        {
+          "name": "quest_id",
+          "type": "u8"
+        },
+        {
+          "name": "reveal_index",
+          "type": "u8"
+        }
+      ]
+    },
+    {
       "name": "resolve_quest",
       "discriminator": [
         244,
@@ -2514,6 +3284,121 @@
       ]
     },
     {
+      "name": "risk_hunt",
+      "discriminator": [
+        49,
+        108,
+        70,
+        255,
+        197,
+        32,
+        72,
+        80
+      ],
+      "accounts": [
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  97,
+                  116,
+                  116,
+                  101,
+                  109,
+                  112,
+                  116,
+                  95,
+                  118,
+                  53
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "wager.authority",
+                "account": "HuntAttempt"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "session_token",
+          "optional": true
+        },
+        {
+          "name": "signer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "oracle_queue",
+          "writable": true
+        },
+        {
+          "name": "program_identity",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  105,
+                  100,
+                  101,
+                  110,
+                  116,
+                  105,
+                  116,
+                  121
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "vrf_program",
+          "address": "Vrf1RNUjXmQGjmQrQLvJHs9SNkvDJEsRVFPkfSQUwGz"
+        },
+        {
+          "name": "slot_hashes",
+          "address": "SysvarS1otHashes111111111111111111111111111"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
+        },
+        {
+          "name": "expected_nonce",
+          "type": "u64"
+        },
+        {
+          "name": "quest_id",
+          "type": "u8"
+        },
+        {
+          "name": "approach_path",
+          "type": "bytes"
+        }
+      ]
+    },
+    {
       "name": "risk_quest",
       "discriminator": [
         123,
@@ -2626,6 +3511,163 @@
         {
           "name": "approach_path",
           "type": "bytes"
+        }
+      ]
+    },
+    {
+      "name": "settle_hunt_attempt",
+      "discriminator": [
+        68,
+        39,
+        103,
+        114,
+        66,
+        14,
+        55,
+        245
+      ],
+      "accounts": [
+        {
+          "name": "house",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  104,
+                  111,
+                  117,
+                  115,
+                  101,
+                  95,
+                  118,
+                  53
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "name": "player",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  112,
+                  108,
+                  97,
+                  121,
+                  101,
+                  114,
+                  95,
+                  118,
+                  53
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              }
+            ]
+          }
+        },
+        {
+          "name": "ticket",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  116,
+                  105,
+                  99,
+                  107,
+                  101,
+                  116,
+                  95,
+                  118,
+                  53
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "wager",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  97,
+                  116,
+                  116,
+                  101,
+                  109,
+                  112,
+                  116,
+                  95,
+                  118,
+                  53
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "player",
+            "ticket",
+            "wager"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "index",
+          "type": "u64"
         }
       ]
     },
@@ -2964,6 +4006,58 @@
       ]
     },
     {
+      "name": "HuntAttempt",
+      "discriminator": [
+        47,
+        105,
+        31,
+        78,
+        49,
+        31,
+        64,
+        36
+      ]
+    },
+    {
+      "name": "HuntHouse",
+      "discriminator": [
+        141,
+        123,
+        47,
+        143,
+        17,
+        3,
+        188,
+        123
+      ]
+    },
+    {
+      "name": "HuntPlayer",
+      "discriminator": [
+        180,
+        53,
+        151,
+        91,
+        44,
+        237,
+        228,
+        170
+      ]
+    },
+    {
+      "name": "HuntTicket",
+      "discriminator": [
+        229,
+        91,
+        185,
+        79,
+        254,
+        7,
+        251,
+        70
+      ]
+    },
+    {
       "name": "PlayerProfile",
       "discriminator": [
         82,
@@ -3219,6 +4313,240 @@
           },
           {
             "name": "active_index",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HuntAttempt",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "session_signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "index",
+            "type": "u64"
+          },
+          {
+            "name": "rules_version",
+            "type": "u8"
+          },
+          {
+            "name": "stake",
+            "type": "u64"
+          },
+          {
+            "name": "phase",
+            "type": {
+              "defined": {
+                "name": "HuntPhase"
+              }
+            }
+          },
+          {
+            "name": "x",
+            "type": "u8"
+          },
+          {
+            "name": "y",
+            "type": "u8"
+          },
+          {
+            "name": "quest_id",
+            "type": "u8"
+          },
+          {
+            "name": "nonce",
+            "type": "u64"
+          },
+          {
+            "name": "request_nonce",
+            "type": "u64"
+          },
+          {
+            "name": "requested_at",
+            "type": "i64"
+          },
+          {
+            "name": "fulfilled_at",
+            "type": "i64"
+          },
+          {
+            "name": "opened_mask",
+            "type": "u8"
+          },
+          {
+            "name": "reveal_count",
+            "type": "u8"
+          },
+          {
+            "name": "reveals",
+            "type": {
+              "array": [
+                {
+                  "defined": {
+                    "name": "HuntReveal"
+                  }
+                },
+                3
+              ]
+            }
+          },
+          {
+            "name": "payout",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HuntHouse",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "balance",
+            "type": "u64"
+          },
+          {
+            "name": "reserved",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HuntPhase",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Active"
+          },
+          {
+            "name": "RandomnessPending"
+          },
+          {
+            "name": "Complete"
+          },
+          {
+            "name": "Cancelled"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HuntPlayer",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "balance",
+            "type": "u64"
+          },
+          {
+            "name": "next_index",
+            "type": "u64"
+          },
+          {
+            "name": "active",
+            "type": "bool"
+          },
+          {
+            "name": "active_index",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HuntReveal",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "quest_id",
+            "type": "u8"
+          },
+          {
+            "name": "randomness",
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "bucket",
+            "type": "u8"
+          },
+          {
+            "name": "reward",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "HuntTicket",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "quest_id",
+            "type": "u8"
+          },
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "index",
+            "type": "u64"
+          },
+          {
+            "name": "stake",
+            "type": "u64"
+          },
+          {
+            "name": "reserve",
+            "type": "u64"
+          },
+          {
+            "name": "settled",
+            "type": "bool"
+          },
+          {
+            "name": "payout",
             "type": "u64"
           },
           {

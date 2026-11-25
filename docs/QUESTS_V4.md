@@ -1,6 +1,8 @@
+> Current gameplay is V5: stake once, hunt three different quests from six, and collect their combined random loot. See [HUNTS_V5.md](HUNTS_V5.md). V5 devnet remains disabled pending live verification. V3/V4 recovery is preserved.
+
 # Six independent quests — V4
 
-The landing page now opens a six-quest dungeon. Choose $1–$100 in fictional demo credits at the start, then hunt any quest. Exploration is local and immediate after the stake is reserved. The stake does not preselect a quest. Approach any guardian, review its odds if desired, and explicitly choose **Attempt quest**. A resolved attempt must settle before another stake can be reserved. Returning to the dungeon preserves the local exploration position.
+The historical V4 interface at `/recovery/quests` opens a six-quest dungeon. Choose $1–$100 in fictional demo credits at the start, then hunt any quest. Exploration is local and immediate after the stake is reserved. The stake does not preselect a quest. Approach any guardian, review its odds if desired, and explicitly choose **Attempt quest**. A resolved attempt must settle before another stake can be reserved. Returning to the dungeon preserves the local exploration position.
 
 | ID | Quest | Position | Return including stake | Success odds |
 |---|---|---|---|---|

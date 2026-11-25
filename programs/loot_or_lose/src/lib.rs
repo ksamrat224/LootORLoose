@@ -3,6 +3,8 @@ use ephemeral_rollups_sdk::anchor::{commit, delegate, ephemeral};
 use ephemeral_rollups_sdk::cpi::DelegateConfig;
 use ephemeral_rollups_sdk::ephem::MagicIntentBundleBuilder;
 use session_keys::{session_auth_or, Session, SessionError, SessionTokenV2};
+pub mod hunt;
+pub use hunt::*;
 pub mod quest;
 pub use quest::*;
 pub mod wager;
@@ -159,7 +161,13 @@ pub mod loot_or_lose {
         quest::quest_delegate(ctx, index)
     }
     #[session_auth_or(ctx.accounts.wager.authority == ctx.accounts.signer.key(), SessionError::InvalidToken)]
-    pub fn risk_quest(ctx: Context<RiskQuest>, index: u64, expected_nonce: u64, quest_id: u8, approach_path: Vec<u8>) -> Result<()> {
+    pub fn risk_quest(
+        ctx: Context<RiskQuest>,
+        index: u64,
+        expected_nonce: u64,
+        quest_id: u8,
+        approach_path: Vec<u8>,
+    ) -> Result<()> {
         quest::quest_risk(ctx, index, expected_nonce, quest_id, approach_path)
     }
     pub fn resolve_quest(
@@ -191,6 +199,71 @@ pub mod loot_or_lose {
     }
     pub fn settle_quest_attempt(ctx: Context<SettleQuestAttempt>, index: u64) -> Result<()> {
         quest::quest_settle(ctx, index)
+    }
+
+    pub fn initialize_hunt_house(ctx: Context<InitializeHuntHouse>) -> Result<()> {
+        hunt::hunt_initialize_house_handler(ctx)
+    }
+    pub fn initialize_hunt_player(ctx: Context<InitializeHuntPlayer>) -> Result<()> {
+        hunt::hunt_initialize_player(ctx)
+    }
+    pub fn create_hunt_attempt(
+        ctx: Context<CreateHuntAttempt>,
+        index: u64,
+        stake: u64,
+    ) -> Result<()> {
+        hunt::hunt_create(ctx, index, stake)
+    }
+    pub fn delegate_hunt_attempt(ctx: Context<DelegateHuntAttempt>, index: u64) -> Result<()> {
+        hunt::hunt_delegate(ctx, index)
+    }
+    #[session_auth_or(ctx.accounts.wager.authority == ctx.accounts.signer.key(), SessionError::InvalidToken)]
+    pub fn risk_hunt(
+        ctx: Context<RiskHunt>,
+        index: u64,
+        expected_nonce: u64,
+        quest_id: u8,
+        approach_path: Vec<u8>,
+    ) -> Result<()> {
+        hunt::hunt_risk(ctx, index, expected_nonce, quest_id, approach_path)
+    }
+    pub fn resolve_hunt(
+        ctx: Context<ResolveHunt>,
+        randomness: [u8; 32],
+        index: u64,
+        request_nonce: u64,
+        quest_id: u8,
+        reveal_index: u8,
+    ) -> Result<()> {
+        hunt::hunt_resolve(
+            ctx,
+            randomness,
+            index,
+            request_nonce,
+            quest_id,
+            reveal_index,
+        )
+    }
+    pub fn cancel_hunt_attempt(ctx: Context<CancelHuntAttempt>, index: u64) -> Result<()> {
+        hunt::hunt_cancel(ctx, index)
+    }
+    pub fn authorize_hunt_session(
+        ctx: Context<CancelHuntAttempt>,
+        _index: u64,
+        session_signer: Pubkey,
+    ) -> Result<()> {
+        require!(
+            ctx.accounts.wager.phase == HuntPhase::Active,
+            GameError::WrongPhase
+        );
+        ctx.accounts.wager.session_signer = session_signer;
+        Ok(())
+    }
+    pub fn finalize_hunt_attempt(ctx: Context<FinalizeHuntAttempt>, index: u64) -> Result<()> {
+        hunt::hunt_finalize(ctx, index)
+    }
+    pub fn settle_hunt_attempt(ctx: Context<SettleHuntAttempt>, index: u64) -> Result<()> {
+        hunt::hunt_settle(ctx, index)
     }
 
     pub fn initialize_profile(ctx: Context<InitializeProfile>) -> Result<()> {

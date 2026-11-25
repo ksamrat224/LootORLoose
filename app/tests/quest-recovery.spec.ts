@@ -246,8 +246,8 @@ async function fixture(page: Page) {
     await route.fulfill({ json: { jsonrpc: "2.0", id: rpc.id, result } });
   });
   const connect = async () => {
-    await page.goto("http://localhost:3102");
-    await page.getByRole("button", { name: "Play", exact: true }).click();
+    await page.goto("http://localhost:3102/recovery/quests");
+
     await page.getByRole("radio", { name: "Devnet", exact: true }).check();
     await connectWallet(page);
     await expect(
@@ -297,7 +297,7 @@ test("V4 reload restores the same attempt and disconnect clears its state", asyn
     page.getByRole("button", { name: "Authorize gameplay session" })
   ).toBeVisible();
   await page.reload();
-  await page.getByRole("button", { name: "Play", exact: true }).click();
+
   await page.getByRole("radio", { name: "Devnet", exact: true }).check();
   await connectWallet(page);
   await expect(
@@ -347,7 +347,7 @@ test("V4 ambiguous cancellation survives reload without resending", async ({
   ).toBeVisible();
   expect(game.uploads()).toBe(1);
   await page.reload();
-  await page.getByRole("button", { name: "Play", exact: true }).click();
+
   await page.getByRole("radio", { name: "Devnet", exact: true }).check();
   await connectWallet(page);
   await page.getByRole("button", { name: "Recover existing attempt" }).click();
@@ -403,8 +403,8 @@ test("V4 proof recomputes the selected quest's odds", async ({ page }) => {
 test("an unresolved V3 run blocks V4 preparation", async ({ page }) => {
   const game = await fixture(page);
   game.blockWithV3();
-  await page.goto("http://localhost:3102");
-  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.goto("http://localhost:3102/recovery/quests");
+
   await page.getByRole("radio", { name: "Devnet", exact: true }).check();
   await connectWallet(page);
   await expect(

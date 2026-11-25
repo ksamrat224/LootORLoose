@@ -341,7 +341,8 @@ export async function createGameSession(
     !(
       isConfigured ||
       process.env.NEXT_PUBLIC_WAGER_V3_ENABLED === "true" ||
-      process.env.NEXT_PUBLIC_QUEST_V4_ENABLED === "true"
+      process.env.NEXT_PUBLIC_QUEST_V4_ENABLED === "true" ||
+      process.env.NEXT_PUBLIC_HUNT_V5_ENABLED === "true"
     )
   ) {
     throw new Error(

@@ -1,12 +1,13 @@
 # Loot or Lose
 
-**Current UI: six independent V4 quests in local practice.** Stake first, hunt any quest, explicitly attempt it and settle the revealed result. The new fixed-screen interface uses the supplied brand artwork. V4 program/client support is implemented locally; devnet V4 remains disabled pending deployment and live verification. See [V4 architecture and rollout](docs/QUESTS_V4.md). Earlier V3 gameplay and recovery remain at `/recovery`; the V3 deployment evidence below does not verify V4.
+**Current UI: V5 three-reveal hunts in local practice.** Stake once, explore six guardians, open three different quests and collect their combined random loot. The listed reward table averages 86.5% before cent rounding. V5 devnet stays disabled pending deployment and live verification. See [V5 architecture and rollout](docs/HUNTS_V5.md). Earlier V3/V4 recovery remains at `/recovery` and `/recovery/quests`; historical deployment evidence does not verify V5.
 
 A dungeon extraction game with a three-gate, simulated-stake prototype. The original free game and its session-key upgrade were verified on Solana devnet through a MagicBlock Ephemeral Rollup and back to base-layer receipts. **The V3 wager program was upgraded on devnet on Nov 23, 2026.** All wager credits are nonredeemable demo units; there are no real deposits or cash prizes.
 
 ## Documentation map
 
-- [docs/QUESTS_V4.md](docs/QUESTS_V4.md) — current six-quest gameplay, versioned accounts, safety boundaries and rollout.
+- [docs/HUNTS_V5.md](docs/HUNTS_V5.md) — current three-reveal gameplay, reward math, accounts, recovery and rollout.
+- [docs/QUESTS_V4.md](docs/QUESTS_V4.md) — historical single-quest V4 rules and recovery.
 
 - [about.md](about.md) — product description, rules, UI and honest limitations (start here).
 - [docs/wager-prototype.md](docs/wager-prototype.md) — V3 architecture, verification and live devnet evidence.

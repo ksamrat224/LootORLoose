@@ -676,3 +676,46 @@
     overflow: hidden;
   }
 }
+
+/* V5 has a four-part HUD and two full-width hunt actions. */
+.hunt-game .q-amounts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.hunt-game .q-amounts > span {
+  min-width: 0;
+}
+@media (max-width: 700px) {
+  .hunt-game .q-amounts strong {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+  .hunt-game .q-objective > .q-eyebrow {
+    display: none;
+  }
+  .hunt-game .q-actions > .q-quiet {
+    grid-column: 1 / -1;
+    min-height: 40px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+}
+@media (max-height: 500px) and (min-width: 701px) {
+  .hunt-game .q-objective > .q-eyebrow,
+  .hunt-game .q-recovery {
+    display: none;
+  }
+  .hunt-game .q-actions {
+    gap: 4px;
+  }
+  .hunt-game .q-mode label {
+    min-height: 30px;
+  }
+  .hunt-game .q-objective .q-status {
+    font-size: 11px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+}

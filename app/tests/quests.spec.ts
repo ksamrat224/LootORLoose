@@ -12,8 +12,8 @@ for (const q of QUESTS) {
         return value;
       }) as typeof crypto.getRandomValues;
     });
-    await page.goto("/");
-    await page.getByRole("button", { name: "Play", exact: true }).click();
+    await page.goto("/recovery/quests");
+
     await page
       .getByRole("button", { name: "Choose stake", exact: true })
       .click();
@@ -78,14 +78,14 @@ for (const [width, height] of [
     page,
   }) => {
     await page.setViewportSize({ width, height });
-    await page.goto("/");
+    await page.goto("/recovery/quests");
     const overflow = () =>
       page.evaluate(() => ({
         x: document.documentElement.scrollWidth > innerWidth,
         y: document.documentElement.scrollHeight > innerHeight,
       }));
     expect(await overflow()).toEqual({ x: false, y: false });
-    await page.getByRole("button", { name: "Play", exact: true }).click();
+
     await expect(
       page.getByRole("radio", { name: "Devnet", exact: true })
     ).toBeDisabled();
@@ -119,8 +119,8 @@ test("failure and cancellation settle the pre-funded stake exactly once", async 
       return value;
     }) as typeof crypto.getRandomValues;
   });
-  await page.goto("/");
-  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await page.goto("/recovery/quests");
+
   await page.getByRole("button", { name: "Choose stake", exact: true }).click();
   await page.getByRole("button", { name: "Prepare practice attempt" }).click();
   await page

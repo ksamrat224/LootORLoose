@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { QuestGame } from "@/game/QuestGame";
+import { HuntGame } from "@/game/HuntGame";
 export default function Home() {
   const [playing, setPlaying] = useState(false);
   return (
@@ -24,10 +24,10 @@ export default function Home() {
             LOOT <em>OR</em> LOSE
           </b>
         </span>
-        <span className="q-brand-note">SIX QUESTS. YOUR CHOICE.</span>
+        <span className="q-brand-note">SIX QUESTS. THREE REVEALS.</span>
       </header>
       {playing ? (
-        <QuestGame />
+        <HuntGame />
       ) : (
         <section className="quest-welcome" aria-labelledby="welcome-title">
           <Image
@@ -39,14 +39,14 @@ export default function Home() {
             priority
           />
           <div className="quest-welcome-copy">
-            <p className="q-eyebrow">A DUNGEON OF INDEPENDENT QUESTS</p>
+            <p className="q-eyebrow">ONE STAKE. THREE DISCOVERIES.</p>
             <h1 id="welcome-title">
               Your path.
               <br />
               <em>Your next quest.</em>
             </h1>
             <p>
-              Choose your stake. Hunt any of six guardians. Reveal your outcome.
+              Stake once. Hunt three of six guardians. Reveal your hidden loot.
             </p>
             <button className="q-button" onClick={() => setPlaying(true)}>
               Play <span aria-hidden="true">→</span>

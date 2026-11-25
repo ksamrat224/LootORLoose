@@ -235,7 +235,7 @@ export function PhaserBoard({
             }
             const { phase, index } = gateRef.current;
             const cleared = questMode
-              ? id === index && phase === "succeeded"
+              ? !!(current.opened & (1 << id)) || (id === index && phase === "succeeded")
               : id < index;
             const failed = phase === "lost" && id === index;
             const ready =
