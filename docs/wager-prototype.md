@@ -1,6 +1,6 @@
 # V3 demo wager prototype
 
-Status: upgraded on devnet and live VRF success/failure settlements verified on Nov 23, 2026. This workspace's ignored `app/.env.local` enables V3; the example environment stays disabled by default. Original free-game receipt layouts remain unchanged. This is a demo-credit prototype, not a production or real-money release.
+Status: upgraded on devnet and live VRF success/failure settlements verified on Nov 23, 2026. The example environment (`.env.example`) enables V3 by default; set `NEXT_PUBLIC_WAGER_V3_ENABLED=false` to hide it. Original free-game receipt layouts remain unchanged. This is a demo-credit prototype, not a production or real-money release.
 
 ## Rules
 

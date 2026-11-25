@@ -1,3 +1,5 @@
+> **ARCHIVED — bootstrap guide.** The repository now exists and is built. This file's "repository has not been generated" statements are obsolete. For current setup/verification commands use the root [README.md](../../README.md). Still useful as MagicBlock background and a failure-mode table.
+
 # Loot or Lose — Developer Setup & Implementation Guide
 
 **Last reviewed:** November 22, 2026  

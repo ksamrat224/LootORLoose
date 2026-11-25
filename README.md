@@ -2,6 +2,13 @@
 
 A dungeon extraction game with a three-gate, simulated-stake prototype. The original free game and its session-key upgrade were verified on Solana devnet through a MagicBlock Ephemeral Rollup and back to base-layer receipts. **The V3 wager program was upgraded on devnet on Nov 23, 2026.** All wager credits are nonredeemable demo units; there are no real deposits or cash prizes.
 
+## Documentation map
+
+- [about.md](about.md) — product description, rules, UI and honest limitations (start here).
+- [docs/wager-prototype.md](docs/wager-prototype.md) — V3 architecture, verification and live devnet evidence.
+- [docs/MAGICBLOCK_ARCHITECTURE.md](docs/MAGICBLOCK_ARCHITECTURE.md) — ER account boundary and routing rules.
+- [docs/archive/](docs/archive/) — historical V1 idea, requirements and bootstrap guide (superseded).
+
 ## Run the local demo
 
 ```bash
@@ -28,7 +35,7 @@ The program uses Anchor 1.0.2, Rust MagicBlock SDK 0.16.2 with VRF enabled, sess
 
 ## V3 wager rollout
 
-`NEXT_PUBLIC_WAGER_V3_ENABLED=true` is now set in this workspace's ignored `app/.env.local` after live VRF success/failure settlement checks passed. Restart `npm run dev` from `app/`, then choose **Risk gates → Devnet**. Fresh clones retain the conservative `false` default in `.env.example`. Existing receipts are preserved: V3 uses new PDA seeds and account types rather than resizing earlier accounts.
+`NEXT_PUBLIC_WAGER_V3_ENABLED=true` is the default in `.env.example` now that live VRF success/failure settlement checks have passed. Copy it to `app/.env.local`, restart `npm run dev` from `app/`, then choose **Risk gates → Devnet**. Set it to `false` to hide the wager mode. Existing receipts are preserved: V3 uses new PDA seeds and account types rather than resizing earlier accounts.
 
 After the wallet was funded, the [V3 upgrade](https://explorer.solana.com/tx/3CKwV6qmWZ3fPqpwMLcdcXm81YYHW1RGJE7AtoTnsqaymd7Z9GJjby55mvZD9xDSgzMyQ7huZKFGX5PWYdkB47Mr?cluster=devnet) confirmed at slot **525323703**. The deployed 551,272-byte ELF was independently compared with the local binary: SHA-256 `32326ab3aaab75db90ef761155cb5c2d507203973e2fcc26012c779f0f931804`. Existing free-game receipts remained readable. Unrelated deployment buffers were left untouched.
 

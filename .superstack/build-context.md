@@ -1,7 +1,9 @@
 # Build context — Loot or Lose
 
-- **Architecture:** Next.js App Router frontend in `app/`; Anchor workspace at the repository root; Phaser for rendered dungeon scenes.
-- **MagicBlock baseline:** Counter / Anchor reference at upstream commit `3376663f33f7dd2293d3daa7914c310f708d1b6e`; Anchor `1.0.2`; `ephemeral-rollups-sdk` Rust `0.16.2`; Solana `3.1.x`; Yarn `1.22.19` for reference tests.
-- **Validation passed:** MagicSVM counter lifecycle test: initialize → delegate → ER increment → commit → undelegate.
-- **Build status:** MVP not implemented; tests for the application not yet written; devnet deployment not started.
-- **Brand:** Selection deferred; preview candidates are intentionally kept uncommitted in `.brand-preview/`.
+- **Architecture:** Next.js 16 App Router frontend in `app/`; Anchor 1.0.2 workspace at the repo root (`programs/loot_or_lose`); Phaser 3.90 for dungeon scenes.
+- **Stack:** `ephemeral-rollups-sdk` 0.16.2 (VRF enabled), session-keys 3.1.1, Solana 3.1.x.
+- **Status (Nov 25, 2026):** V1 free game, V2 session-key game and V3 demo-credit risk-gate wager are implemented. Program `BenkDp3MuSNQshYqTC7PyiWvpBsCQTT5LX6EGYWCQhvj` is upgraded on devnet with V3; live VRF success and failure settlements verified (see `docs/wager-prototype.md`).
+- **Tests:** LiteSVM program tests, 17 Playwright browser/transport tests, `npm run verify:devnet-wager` live check.
+- **Open release gates:** fresh-wallet manual browser run; real outage-recovery exercise; hosted demo with V3 enabled.
+- **Brand:** palette selection deferred; candidates in `.brand-preview/`.
+- **Source of truth for docs:** `about.md`, `docs/wager-prototype.md`, `docs/MAGICBLOCK_ARCHITECTURE.md`. `docs/archive/` is historical.

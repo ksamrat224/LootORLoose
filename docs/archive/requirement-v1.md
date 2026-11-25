@@ -1,3 +1,5 @@
+> **ARCHIVED — historical V1 requirements.** The program and app are implemented and deployed to devnet. Requirements here describe the original chest/enemy MVP; current behaviour is in [about.md](../../about.md) and [wager-prototype.md](../wager-prototype.md).
+
 # Loot or Lose — MVP Requirements
 
 **Version:** 0.1 — November 22, 2026  

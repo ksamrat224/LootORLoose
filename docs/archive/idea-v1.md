@@ -1,3 +1,5 @@
+> **ARCHIVED — historical V1 proposal.** Written Nov 22, 2026 before implementation. The shipped product is the V3 demo-credit risk-gate game; see [about.md](../../about.md) and [wager-prototype.md](../wager-prototype.md). Chest/enemy/loot rules below are not the current design.
+
 # Loot or Lose — Idea & Product Vision
 
 **Project:** Loot or Lose (working title)  
