@@ -1,5 +1,7 @@
 # V5 — stake once, hunt three
 
+> New practice hunts now use [V6 rewards](HUNTS_V6.md). This table remains authoritative for existing V5 hunts and currently deployed devnet creation. V6 reuses these accounts and ledgers without another allocation.
+
 The default experience is welcome → stake → explore six quests → open three different quests → collect loot. Stakes are $1–$100 in fictional demo credits. All six guardians share one reward pool; choosing a location does not change the reward distribution. Opened quests are unavailable for the remainder of the hunt. Zero rewards do not end a hunt or remove previous loot.
 
 | Reward / original stake | Probability | Sample buckets |
@@ -38,7 +40,7 @@ Historical interfaces remain at `/recovery` (V3) and `/recovery/quests` (V4). Th
 
 ## Rollout and verification
 
-V5 was deployed and verified on devnet on Nov 25, 2026. `NEXT_PUBLIC_HUNT_V5_ENABLED=true` in the example environment enables it; unset or false still disables it. Deployed bytes match this build, real VRF includes zero and positive rewards, base settlement and duplicate-settlement safety passed, and a fresh-wallet browser lifecycle passed. See [live evidence and limits](DEVNET_V5_VERIFICATION.md); existing V3 evidence and mocked tests alone do not verify V5.
+V5 was deployed and verified on devnet on Nov 25, 2026. `NEXT_PUBLIC_HUNT_V5_ENABLED=true` in the example environment enables it; unset or false still disables it. The verified V5 release bytes matched its build; the current local V6 build is not deployed. In that V5 release, real VRF includes zero and positive rewards, base settlement and duplicate-settlement safety passed, and a fresh-wallet browser lifecycle passed. See [live evidence and limits](DEVNET_V5_VERIFICATION.md); existing V3 evidence and mocked tests alone do not verify V5.
 
 ```bash
 NO_DNA=1 anchor build --ignore-keys

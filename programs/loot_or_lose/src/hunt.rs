@@ -1,4 +1,4 @@
-//! V5 demo credits only. No SOL/SPL custody or redeemable balances.
+//! Versioned V5/V6 demo credits only. No SOL/SPL custody or redeemable balances.
 use super::*;
 use crate::wager::sample;
 use crate::GameError as WagerError;
@@ -19,6 +19,10 @@ pub const HUNT_PLAYER_SEED: &[u8] = b"hunt_player_v5";
 pub const HUNT_SEED: &[u8] = b"hunt_attempt_v5";
 pub const HUNT_TICKET_SEED: &[u8] = b"hunt_ticket_v5";
 pub const HUNT_RULES_VERSION: u8 = 5;
+pub const HUNT_RULES_V6: u8 = 6;
+pub fn supported_hunt_rules(version: u8) -> bool {
+    matches!(version, HUNT_RULES_VERSION | HUNT_RULES_V6)
+}
 pub const NO_QUEST: u8 = 255;
 pub const HUNT_QUESTS: [(u8, u8); 6] = [(4, 2), (3, 7), (8, 7), (8, 2), (12, 2), (12, 7)];
 #[account]
@@ -107,7 +111,7 @@ impl HuntAttempt {
         matches!(self.phase, HuntPhase::Complete | HuntPhase::Cancelled)
     }
     pub fn check(&self, nonce: u64) -> Result<()> {
-        require!(self.rules_version == HUNT_RULES_VERSION, WagerError::Rules);
+        require!(supported_hunt_rules(self.rules_version), WagerError::Rules);
         require!(self.phase == HuntPhase::Active, WagerError::Phase);
         require_eq!(self.nonce, nonce, WagerError::Nonce);
         Ok(())
@@ -117,13 +121,17 @@ impl HuntAttempt {
         Ok(())
     }
 }
-pub fn hunt_reward(stake: u64, bucket: u8) -> Result<u64> {
-    let (n, d) = match bucket {
-        0..=39 => (0, 1),
-        40..=69 => (1, 4),
-        70..=89 => (1, 2),
-        90..=97 => (1, 1),
-        98..=99 => (5, 3),
+pub fn hunt_reward(stake: u64, bucket: u8, version: u8) -> Result<u64> {
+    let (n, d) = match (version, bucket) {
+        (5, 0..=39) => (0, 1),
+        (5, 40..=69) => (1, 4),
+        (5, 70..=89) => (1, 2),
+        (5, 90..=97) => (1, 1),
+        (5, 98..=99) => (5, 3),
+        (6, 0..=9) => (0, 1),
+        (6, 10..=39) => (1, 4),
+        (6, 40..=98) => (2, 5),
+        (6, 99) => (3, 4),
         _ => return err!(WagerError::Rules),
     };
     stake
@@ -131,8 +139,8 @@ pub fn hunt_reward(stake: u64, bucket: u8) -> Result<u64> {
         .map(|v| v / d)
         .ok_or_else(|| error!(WagerError::Overflow))
 }
-pub fn hunt_reserve(stake: u64) -> Result<u64> {
-    hunt_reward(stake, 99)?
+pub fn hunt_reserve(stake: u64, version: u8) -> Result<u64> {
+    hunt_reward(stake, 99, version)?
         .checked_mul(3)
         .ok_or_else(|| error!(WagerError::Overflow))
 }
@@ -191,6 +199,7 @@ pub fn prepare_hunt_reveal(
     Ok(())
 }
 pub fn verified_hunt_total(wager: &HuntAttempt) -> Result<u64> {
+    require!(supported_hunt_rules(wager.rules_version), WagerError::Rules);
     if wager.phase == HuntPhase::Cancelled {
         require!(
             wager.reveal_count == 0 && wager.request_nonce == 0 && wager.opened_mask == 0,
@@ -212,7 +221,8 @@ pub fn verified_hunt_total(wager: &HuntAttempt) -> Result<u64> {
         mask |= 1 << reveal.quest_id;
         let bucket = sample(&reveal.randomness, 100) as u8;
         require!(
-            bucket == reveal.bucket && hunt_reward(wager.stake, bucket)? == reveal.reward,
+            bucket == reveal.bucket
+                && hunt_reward(wager.stake, bucket, wager.rules_version)? == reveal.reward,
             WagerError::Rules
         );
         total = total
@@ -241,7 +251,13 @@ pub fn hunt_initialize_player(ctx: Context<InitializeHuntPlayer>) -> Result<()> 
     });
     Ok(())
 }
-pub fn hunt_create(ctx: Context<CreateHuntAttempt>, index: u64, stake: u64) -> Result<()> {
+pub fn hunt_create(
+    ctx: Context<CreateHuntAttempt>,
+    index: u64,
+    stake: u64,
+    version: u8,
+) -> Result<()> {
+    require!(supported_hunt_rules(version), WagerError::Rules);
     let position = START;
     let quest_id = NO_QUEST;
     let player = &mut ctx.accounts.player;
@@ -251,7 +267,7 @@ pub fn hunt_create(ctx: Context<CreateHuntAttempt>, index: u64, stake: u64) -> R
     );
     require!((100..=10_000).contains(&stake), WagerError::Stake);
     require!(player.balance >= stake, WagerError::Balance);
-    let reserve = hunt_reserve(stake)?;
+    let reserve = hunt_reserve(stake, version)?;
     let house = &mut ctx.accounts.house;
     let balance = house
         .balance
@@ -282,7 +298,7 @@ pub fn hunt_create(ctx: Context<CreateHuntAttempt>, index: u64, stake: u64) -> R
         authority: player.authority,
         session_signer: Pubkey::default(),
         index,
-        rules_version: HUNT_RULES_VERSION,
+        rules_version: version,
         stake,
         phase: HuntPhase::Active,
         x: position.0,
@@ -374,11 +390,11 @@ pub fn hunt_resolve(
         WagerError::Request
     );
     require!(
-        quest_id < 6 && wager.rules_version == HUNT_RULES_VERSION,
+        quest_id < 6 && supported_hunt_rules(wager.rules_version),
         WagerError::Rules
     );
     let bucket = sample(&randomness, 100) as u8;
-    let reward = hunt_reward(wager.stake, bucket)?;
+    let reward = hunt_reward(wager.stake, bucket, wager.rules_version)?;
     wager.reveals[reveal_index as usize] = HuntReveal {
         quest_id,
         randomness,
@@ -401,6 +417,7 @@ pub fn hunt_resolve(
 }
 pub fn hunt_cancel(ctx: Context<CancelHuntAttempt>, _index: u64) -> Result<()> {
     let wager = &mut ctx.accounts.wager;
+    require!(supported_hunt_rules(wager.rules_version), WagerError::Rules);
     require!(
         wager.phase == HuntPhase::Active && wager.request_nonce == 0 && wager.reveal_count == 0,
         WagerError::Phase
@@ -410,6 +427,10 @@ pub fn hunt_cancel(ctx: Context<CancelHuntAttempt>, _index: u64) -> Result<()> {
     wager.bump_nonce()
 }
 pub fn hunt_finalize(ctx: Context<FinalizeHuntAttempt>, _index: u64) -> Result<()> {
+    require!(
+        supported_hunt_rules(ctx.accounts.wager.rules_version),
+        WagerError::Rules
+    );
     require!(ctx.accounts.wager.terminal(), WagerError::Phase);
     ctx.accounts.wager.exit(&crate::ID)?;
     MagicIntentBundleBuilder::new(
@@ -422,6 +443,10 @@ pub fn hunt_finalize(ctx: Context<FinalizeHuntAttempt>, _index: u64) -> Result<(
     Ok(())
 }
 pub fn hunt_settle(ctx: Context<SettleHuntAttempt>, index: u64) -> Result<()> {
+    require!(
+        supported_hunt_rules(ctx.accounts.wager.rules_version),
+        WagerError::Rules
+    );
     let ticket = &mut ctx.accounts.ticket;
     if ticket.settled {
         return Ok(());
@@ -434,10 +459,10 @@ pub fn hunt_settle(ctx: Context<SettleHuntAttempt>, index: u64) -> Result<()> {
         WagerError::Phase
     );
     require!(
-        wager.rules_version == HUNT_RULES_VERSION
+        supported_hunt_rules(wager.rules_version)
             && ticket.stake == wager.stake
             && ticket.quest_id == NO_QUEST
-            && ticket.reserve == hunt_reserve(wager.stake)?,
+            && ticket.reserve == hunt_reserve(wager.stake, wager.rules_version)?,
         WagerError::Rules
     );
     let expected = verified_hunt_total(wager)?;

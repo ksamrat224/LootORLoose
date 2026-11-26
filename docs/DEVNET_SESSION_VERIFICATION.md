@@ -1,5 +1,7 @@
 # V5 preparation, subscriptions and session verification
 
+> This records the deployed V5 release. The subsequent [V6 reward implementation](HUNTS_V6.md) changes the local binary only; V6 deployment and live verification are pending.
+
 Verified November 26, 2026, on devnet. All game balances are fictional demo credits. This supplements the [initial V5 verification](DEVNET_V5_VERIFICATION.md).
 
 ## Deployment

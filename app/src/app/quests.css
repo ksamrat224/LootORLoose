@@ -922,3 +922,27 @@
     display: none;
   }
 }
+
+/* Keep the result's main action apart from proof and receipt controls. */
+.q-result-actions {
+  display: grid;
+  gap: 12px;
+  margin: 8px 0 16px;
+}
+.q-result-secondary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 12px;
+}
+.q-result-secondary > .q-quiet,
+.q-result-secondary > a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}

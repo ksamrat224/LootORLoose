@@ -1,12 +1,13 @@
 # Loot or Lose
 
-**Current UI: V5 three-reveal hunts in practice and verified devnet.** Stake once, explore six guardians, open three different quests and collect their combined random loot. The listed reward table averages 86.5% before cent rounding. V5 is deployed and verified on devnet; see [live verification](docs/DEVNET_V5_VERIFICATION.md). See [V5 architecture and rollout](docs/HUNTS_V5.md) and [Nov 26 session/connection verification and Phantom checklist](docs/DEVNET_SESSION_VERIFICATION.md). Earlier V3/V4 recovery remains at `/recovery` and `/recovery/quests`; historical deployment evidence does not verify V5.
+**Current UI: V6 rewards in new practice hunts; verified V5 rewards on devnet.** Stake once, explore six guardians, open three different quests and collect their combined random loot. New practice hunts average **95.55%** before cent rounding; existing V5 hunts retain **86.5%**. V6 program support is implemented locally but **not deployed**; `NEXT_PUBLIC_HUNT_V6_ENABLED=false` keeps devnet creation on V5. See [V6 economy and practice review](docs/HUNTS_V6.md), [V5 architecture](docs/HUNTS_V5.md), and [Nov 26 live session evidence and Phantom checklist](docs/DEVNET_SESSION_VERIFICATION.md). Earlier V3/V4 recovery remains at `/recovery` and `/recovery/quests`.
 
 A dungeon extraction game with a three-gate, simulated-stake prototype. The original free game and its session-key upgrade were verified on Solana devnet through a MagicBlock Ephemeral Rollup and back to base-layer receipts. **The V3 wager program was upgraded on devnet on Nov 23, 2026.** All wager credits are nonredeemable demo units; there are no real deposits or cash prizes.
 
 ## Documentation map
 
-- [docs/HUNTS_V5.md](docs/HUNTS_V5.md) — current three-reveal gameplay, reward math, accounts, recovery and rollout.
+- [docs/HUNTS_V6.md](docs/HUNTS_V6.md) — smoother practice rewards, compatibility and pending devnet rollout.
+- [docs/HUNTS_V5.md](docs/HUNTS_V5.md) — deployed V5 gameplay, accounts and recovery.
 - [docs/QUESTS_V4.md](docs/QUESTS_V4.md) — historical single-quest V4 rules and recovery.
 
 - [about.md](about.md) — product description, rules, UI and honest limitations (start here).
@@ -25,7 +26,7 @@ npm ci
 npm run dev
 ```
 
-Open `http://localhost:3000` and choose **Play** for six independent practice quests. V4 devnet is gated by `NEXT_PUBLIC_QUEST_V4_ENABLED=false`. The following describes the earlier game at `/recovery`: **Risk gates → Local practice** offers $2/$5/custom demo stakes and voluntary 1.25×/2×/3× gates with published odds. Movement is safe, and returns include the stake. Practice uses browser randomness and resets when its game context is discarded; it creates no blockchain receipt. The original free local and devnet game code remains in the repository but is hidden from the landing page.
+Open `http://localhost:3000` and choose **Play** to stake once and open three of six quests with V6 practice rewards. V4 devnet is gated by `NEXT_PUBLIC_QUEST_V4_ENABLED=false`. The following describes the earlier game at `/recovery`: **Risk gates → Local practice** offers $2/$5/custom demo stakes and voluntary 1.25×/2×/3× gates with published odds. Movement is safe, and returns include the stake. Practice uses browser randomness and resets when its game context is discarded; it creates no blockchain receipt. The original free local and devnet game code remains in the repository but is hidden from the landing page.
 
 ## Verify the source
 

@@ -27,6 +27,8 @@ import {
   huntSessionControlEnabled,
   type HuntSessionRecord,
   huntEnabled,
+  newDevnetHuntRules,
+  huntV6Enabled,
   readPlayer,
   readWager,
   settleWager,
@@ -46,7 +48,9 @@ import {
   approachPath,
   practiceBucket,
   huntReward,
-  REWARDS,
+  rewardRules,
+  supportedHuntRules,
+  PRACTICE_RULES_VERSION,
 } from "./hunt-rules";
 import { money, parseStake } from "./wager-rules";
 import { PhaserBoard } from "./PhaserBoard";
@@ -111,6 +115,10 @@ export function HuntGame() {
 
   const journal = `loot-or-lose:hunt-v5:${walletKey}`;
   const balance = live ? liveBalance : practiceBalance;
+  const rulesVersion =
+    attempt?.rulesVersion ??
+    (live ? newDevnetHuntRules() : PRACTICE_RULES_VERSION);
+  const rules = rewardRules(rulesVersion);
   const accept = useCallback((value: Wager) => {
     const previous = state.current;
     if (
@@ -145,7 +153,7 @@ export function HuntGame() {
   };
   const finishPractice = (current: Wager) => {
     const bucket = current.practiceBuckets![current.revealCount];
-    const reward = huntReward(current.stake, bucket);
+    const reward = huntReward(current.stake, bucket, current.rulesVersion);
     const count = current.revealCount + 1;
     accept({
       ...current,
@@ -238,7 +246,7 @@ export function HuntGame() {
       setLiveBalance(null);
       setMessage(
         live
-          ? "Connect a wallet to prepare a V5 quest attempt."
+          ? "Connect a wallet to prepare a hunt."
           : "Choose your stake first, then explore and hunt three different quests.",
       );
       if (!live) {
@@ -250,7 +258,7 @@ export function HuntGame() {
               practiceCredits.current = saved.balance;
               setPracticeBalance(saved.balance);
               if (
-                saved.attempt?.rulesVersion === 5 &&
+                supportedHuntRules(saved.attempt?.rulesVersion) &&
                 saved.attempt.practiceBuckets?.length === 3
               ) {
                 const value = {
@@ -553,7 +561,7 @@ export function HuntGame() {
           address: PublicKey.default,
           index: 0,
           stake,
-          rulesVersion: 5,
+          rulesVersion: PRACTICE_RULES_VERSION,
           questId: UNCHOSEN_QUEST,
           phase: "active",
           ...position.current,
@@ -1402,37 +1410,39 @@ export function HuntGame() {
               </span>
             </div>
             <p className="q-demo">DEMO CREDITS · NO CASH VALUE</p>
-            {attempt.settled ? (
-              <button className="q-button" onClick={returnToDungeon}>
-                Return to dungeon
-              </button>
-            ) : (
-              <button
-                className="q-button"
-                disabled={busy || recovering}
-                onClick={settle}
-              >
-                {busy
-                  ? "Collecting…"
-                  : attempt.phase === "cancelled"
-                  ? "Collect refund"
-                  : "Collect loot"}
-              </button>
-            )}
-            {live && (
-              <>
-                <button className="q-quiet" onClick={() => setPanel("proof")}>
-                  Proof of roll
+            <div className="q-result-actions">
+              {attempt.settled ? (
+                <button className="q-button" onClick={returnToDungeon}>
+                  Return to dungeon
                 </button>
-                <a
-                  href={`https://explorer.solana.com/address/${attempt.address.toBase58()}?cluster=devnet`}
-                  target="_blank"
-                  rel="noreferrer"
+              ) : (
+                <button
+                  className="q-button"
+                  disabled={busy || recovering}
+                  onClick={settle}
                 >
-                  Inspect devnet receipt ↗
-                </a>
-              </>
-            )}
+                  {busy
+                    ? "Collecting…"
+                    : attempt.phase === "cancelled"
+                    ? "Collect refund"
+                    : "Collect loot"}
+                </button>
+              )}
+              {live && (
+                <div className="q-result-secondary">
+                  <button className="q-quiet" onClick={() => setPanel("proof")}>
+                    Proof of roll
+                  </button>
+                  <a
+                    href={`https://explorer.solana.com/address/${attempt.address.toBase58()}?cluster=devnet`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Inspect devnet receipt ↗
+                  </a>
+                </div>
+              )}
+            </div>
             <p className="q-small">
               Rewards include the stake contribution. Your stake is not returned
               a second time.
@@ -1446,8 +1456,9 @@ export function HuntGame() {
         title="Reward rules"
       >
         <p>
-          All six quests share this prize pool. Each of your three reveals is an
-          independent draw, based on your original stake.
+          Rules V{rulesVersion}. All six quests share this prize pool. Each of
+          your three reveals is an independent draw, based on your original
+          stake.
         </p>
         <table>
           <thead>
@@ -1457,7 +1468,7 @@ export function HuntGame() {
             </tr>
           </thead>
           <tbody>
-            {REWARDS.map((r) => (
+            {rules.rewards.map((r) => (
               <tr key={r.limit}>
                 <td>{r.label} of stake</td>
                 <td>{r.chance}</td>
@@ -1467,9 +1478,12 @@ export function HuntGame() {
         </table>
         <p>
           Rewards are rounded down to cents and added together. Three reveals
-          average 86.5% of the stake before rounding. Rewards include the stake
-          contribution. Collect after all three; zero rewards do not remove
-          earlier loot. Cancel for a full refund only before the first request.
+          average {rules.averageReturn} of the stake before rounding. Rewards
+          include the stake contribution. Collect after all three; zero rewards
+          do not remove earlier loot. Cancel for a full refund only before the
+          first request. These are theoretical averages, not guarantees.
+          Repeated play can reduce your demo credits. Demo credits have no cash
+          value.
         </p>
       </QuestDialog>
       <QuestDialog
@@ -1515,13 +1529,18 @@ export function HuntGame() {
         title="Technical details"
       >
         <p>
-          V5 three-reveal hunt rules ·{" "}
+          V{rulesVersion} three-reveal hunt rules ·{" "}
           {live ? "devnet VRF" : "practice, no VRF"}
         </p>
         <p>
           {huntEnabled
             ? "Devnet V5 is enabled."
             : "Devnet V5 is disabled until deployment and live verification."}
+        </p>
+        <p>
+          {huntV6Enabled
+            ? "New devnet hunts use V6 rewards."
+            : "V6 devnet creation is disabled pending deployment and live verification."}
         </p>
         {error && <p>Latest error: {error}</p>}
         <p>Attempt: {attempt?.address.toBase58() || "none"}</p>
@@ -1534,8 +1553,8 @@ export function HuntGame() {
           {expiry ? new Date(expiry * 1000).toLocaleTimeString() : "none"}
         </p>
         <p>
-          86.5% theoretical return before cent rounding. Demo credits cannot be
-          redeemed.
+          {rules.averageReturn} theoretical return before cent rounding. Demo
+          credits cannot be redeemed.
         </p>
         <Link href="/recovery">Recover an earlier V3 run</Link>
         <Link href="/recovery/quests">Recover an earlier V4 quest</Link>

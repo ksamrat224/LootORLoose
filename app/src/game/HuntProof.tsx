@@ -1,15 +1,22 @@
 "use client";
 import { useState } from "react";
 import type { Wager } from "@/lib/hunt-chain";
-import { QUESTS, huntReward } from "./hunt-rules";
+import { QUESTS, huntReward, supportedHuntRules } from "./hunt-rules";
 import { sampleRandomness, toHex } from "./verify-roll";
 import { money } from "./wager-rules";
 export async function verifyHunt(
   attempt: Pick<
     Wager,
-    "reveals" | "revealCount" | "openedMask" | "stake" | "payout" | "phase"
+    | "rulesVersion"
+    | "reveals"
+    | "revealCount"
+    | "openedMask"
+    | "stake"
+    | "payout"
+    | "phase"
   >,
 ) {
+  if (!supportedHuntRules(attempt.rulesVersion)) return false;
   if (attempt.phase === "cancelled")
     return (
       attempt.revealCount === 0 &&
@@ -28,7 +35,7 @@ export async function verifyHunt(
   for (const reveal of attempt.reveals) {
     if (!QUESTS[reveal.questId] || mask & (1 << reveal.questId)) return false;
     const { value } = await sampleRandomness(reveal.randomness, 100);
-    const reward = huntReward(attempt.stake, value);
+    const reward = huntReward(attempt.stake, value, attempt.rulesVersion);
     if (value !== reveal.bucket || reward !== reveal.reward) return false;
     mask |= 1 << reveal.questId;
     total += reward;
@@ -41,7 +48,10 @@ export function HuntProof({ attempt }: { attempt: Wager }) {
     return <p>No resolved reveals are available for this hunt.</p>;
   return (
     <div className="quest-proof">
-      <p>MagicBlock VRF · rules V5 · {attempt.revealCount}/3 reveals</p>
+      <p>
+        MagicBlock VRF · rules V{attempt.rulesVersion} · {attempt.revealCount}/3
+        reveals
+      </p>
       {attempt.reveals.map((r, i) => (
         <details key={i}>
           <summary>

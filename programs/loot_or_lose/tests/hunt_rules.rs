@@ -16,6 +16,21 @@ use solana_message::{Message, VersionedMessage};
 use solana_signer::Signer;
 use solana_transaction::versioned::VersionedTransaction;
 
+struct RawData(Vec<u8>);
+impl anchor_lang::Discriminator for RawData {
+    const DISCRIMINATOR: &'static [u8] = &[];
+}
+impl anchor_lang::AnchorSerialize for RawData {
+    fn serialize<W: std::io::Write>(&self, writer: &mut W) -> std::io::Result<()> {
+        writer.write_all(&self.0)
+    }
+}
+impl InstructionData for RawData {
+    fn data(&self) -> Vec<u8> {
+        self.0.clone()
+    }
+}
+
 fn send(
     svm: &mut LiteSVM,
     payer: &Keypair,
@@ -57,6 +72,9 @@ struct Game {
 }
 impl Game {
     fn new(stake: u64) -> Self {
+        Self::with_rules(stake, 5)
+    }
+    fn with_rules(stake: u64, version: u8) -> Self {
         let mut svm = LiteSVM::new();
         svm.add_program(
             loot_or_lose::id(),
@@ -110,10 +128,13 @@ impl Game {
             wager,
             ticket,
         };
-        assert!(game.create(0, stake));
+        assert!(game.create_version(0, stake, version));
         game
     }
     fn create(&mut self, index: u64, stake: u64) -> bool {
+        self.create_version(index, stake, 5)
+    }
+    fn create_version(&mut self, index: u64, stake: u64, version: u8) -> bool {
         let wager = Pubkey::find_program_address(
             &[
                 HUNT_SEED,
@@ -135,7 +156,11 @@ impl Game {
         send(
             &mut self.svm,
             &self.payer,
-            instruction::CreateHuntAttempt { index, stake },
+            RawData(if version == 6 {
+                instruction::CreateHuntAttemptV6 { index, stake }.data()
+            } else {
+                instruction::CreateHuntAttempt { index, stake }.data()
+            }),
             accounts::CreateHuntAttempt {
                 house: self.house,
                 player: self.player,
@@ -258,37 +283,51 @@ fn scoped() -> Pubkey {
 #[test]
 fn all_ordered_three_quest_choices_preserve_loot_and_settle_once() {
     // 120 ordered choices covers every first quest and all 20 combinations.
-    for a in 0..6 {
-        for b in 0..6 {
-            for c in 0..6 {
-                if a == b || a == c || b == c {
-                    continue;
-                }
-                let mut g = Game::new(501);
-                assert_eq!(read::<HuntHouse>(&g.svm, g.house).reserved, 2505);
-                assert!(!g.create(1, 200));
-                for (i, id) in [a, b, c].iter().enumerate() {
-                    g.pending(*id);
-                    let nonce = g.state().request_nonce;
-                    assert!(!g.cancel());
-                    assert!(!g.settle());
-                    assert!(g.callback(seed([40, 0, 99][i]), nonce, *id, i as u8, scoped()));
-                    assert!(!g.callback(seed(99), nonce, *id, i as u8, scoped()));
-                    assert_eq!(g.state().reveal_count, i as u8 + 1);
-                    assert_eq!(g.state().payout, [125, 125, 960][i]);
-                    assert!(!g.cancel());
-                    let mut state = g.state();
-                    let n = state.nonce;
-                    assert!(
-                        loot_or_lose::hunt::prepare_hunt_reveal(&mut state, n, *id, &[], 1)
-                            .is_err()
+    for version in [5, 6] {
+        for a in 0..6 {
+            for b in 0..6 {
+                for c in 0..6 {
+                    if a == b || a == c || b == c {
+                        continue;
+                    }
+                    let mut g = Game::with_rules(501, version);
+                    assert_eq!(
+                        read::<HuntHouse>(&g.svm, g.house).reserved,
+                        loot_or_lose::hunt::hunt_reserve(501, version).unwrap()
                     );
+                    let mut total = 0;
+                    assert!(!g.create(1, 200));
+                    for (i, id) in [a, b, c].iter().enumerate() {
+                        g.pending(*id);
+                        let nonce = g.state().request_nonce;
+                        assert!(!g.cancel());
+                        assert!(!g.settle());
+                        assert!(g.callback(seed([40, 0, 99][i]), nonce, *id, i as u8, scoped()));
+                        assert!(!g.callback(seed(99), nonce, *id, i as u8, scoped()));
+                        assert_eq!(g.state().reveal_count, i as u8 + 1);
+                        total += hunt_reward(501, [40, 0, 99][i], version).unwrap();
+                        assert_eq!(g.state().payout, total);
+                        assert!(!g.cancel());
+                        let mut state = g.state();
+                        let n = state.nonce;
+                        assert!(loot_or_lose::hunt::prepare_hunt_reveal(
+                            &mut state,
+                            n,
+                            *id,
+                            &[],
+                            1
+                        )
+                        .is_err());
+                    }
+                    assert_eq!(g.state().phase, HuntPhase::Complete);
+                    assert!(g.settle());
+                    assert!(g.settle());
+                    assert_eq!(
+                        read::<HuntPlayer>(&g.svm, g.player).balance,
+                        10000 - 501 + total
+                    );
+                    assert_eq!(read::<HuntHouse>(&g.svm, g.house).reserved, 0);
                 }
-                assert_eq!(g.state().phase, HuntPhase::Complete);
-                assert!(g.settle());
-                assert!(g.settle());
-                assert_eq!(read::<HuntPlayer>(&g.svm, g.player).balance, 10459);
-                assert_eq!(read::<HuntHouse>(&g.svm, g.house).reserved, 0);
             }
         }
     }
@@ -307,12 +346,16 @@ fn exact_buckets_rounding_reserves_and_expected_return() {
         (98, 5, 3),
         (99, 5, 3),
     ] {
-        assert_eq!(hunt_reward(101, bucket).unwrap(), 101 * n / d);
+        assert_eq!(hunt_reward(101, bucket, 5).unwrap(), 101 * n / d);
     }
-    assert!(hunt_reward(200, 100).is_err());
-    assert_eq!(loot_or_lose::hunt::hunt_reserve(101).unwrap(), 504);
+    assert!(hunt_reward(200, 100, 5).is_err());
+    assert_eq!(loot_or_lose::hunt::hunt_reserve(101, 5).unwrap(), 504);
     assert_eq!(
-        (0..100).map(|b| hunt_reward(1200, b).unwrap()).sum::<u64>() * 3 * 2,
+        (0..100)
+            .map(|b| hunt_reward(1200, b, 5).unwrap())
+            .sum::<u64>()
+            * 3
+            * 2,
         1200 * 173
     );
 }
@@ -549,15 +592,38 @@ fn wallet_can_block_session_while_callback_keeps_original_identity() {
     let mut g = Game::new(500);
     let signer = Keypair::new();
     g.svm.airdrop(&signer.pubkey(), 1_000_000_000).unwrap();
-    assert!(send(&mut g.svm, &g.payer, instruction::AuthorizeHuntSession {
-        _index: 0, session_signer: signer.pubkey(),
-    }, accounts::CancelHuntAttempt { wager: g.wager, authority: g.payer.pubkey() }));
-    assert!(!send(&mut g.svm, &signer, instruction::RevokeHuntSession { _index: 0 },
-        accounts::CancelHuntAttempt { wager: g.wager, authority: signer.pubkey() }));
+    assert!(send(
+        &mut g.svm,
+        &g.payer,
+        instruction::AuthorizeHuntSession {
+            _index: 0,
+            session_signer: signer.pubkey(),
+        },
+        accounts::CancelHuntAttempt {
+            wager: g.wager,
+            authority: g.payer.pubkey()
+        }
+    ));
+    assert!(!send(
+        &mut g.svm,
+        &signer,
+        instruction::RevokeHuntSession { _index: 0 },
+        accounts::CancelHuntAttempt {
+            wager: g.wager,
+            authority: signer.pubkey()
+        }
+    ));
     g.pending(5);
     let before = g.state();
-    assert!(send(&mut g.svm, &g.payer, instruction::RevokeHuntSession { _index: 0 },
-        accounts::CancelHuntAttempt { wager: g.wager, authority: g.payer.pubkey() }));
+    assert!(send(
+        &mut g.svm,
+        &g.payer,
+        instruction::RevokeHuntSession { _index: 0 },
+        accounts::CancelHuntAttempt {
+            wager: g.wager,
+            authority: g.payer.pubkey()
+        }
+    ));
     let blocked = g.state();
     assert_eq!(blocked.session_signer, Pubkey::default());
     assert_eq!(blocked.nonce, before.nonce + 1);
@@ -570,10 +636,26 @@ fn wallet_can_block_session_while_callback_keeps_original_identity() {
     assert_eq!(g.state().session_signer, Pubkey::default());
     assert!(!g.callback(seed(99), before.request_nonce, 5, 0, scoped()));
     // A still-valid session token is insufficient after its hunt permission was cleared.
-    let token = Pubkey::find_program_address(&[b"session_token_v2", loot_or_lose::id().as_ref(), signer.pubkey().as_ref(), g.payer.pubkey().as_ref()], &session_keys::id()).0;
-    let value = session_keys::SessionTokenV2 { authority: g.payer.pubkey(), target_program: loot_or_lose::id(), session_signer: signer.pubkey(), fee_payer: g.payer.pubkey(), valid_until: i64::MAX };
+    let token = Pubkey::find_program_address(
+        &[
+            b"session_token_v2",
+            loot_or_lose::id().as_ref(),
+            signer.pubkey().as_ref(),
+            g.payer.pubkey().as_ref(),
+        ],
+        &session_keys::id(),
+    )
+    .0;
+    let value = session_keys::SessionTokenV2 {
+        authority: g.payer.pubkey(),
+        target_program: loot_or_lose::id(),
+        session_signer: signer.pubkey(),
+        fee_payer: g.payer.pubkey(),
+        valid_until: i64::MAX,
+    };
     let mut account = g.svm.get_account(&g.wager).unwrap();
-    account.owner = session_keys::id(); account.data = vec![];
+    account.owner = session_keys::id();
+    account.data = vec![];
     value.try_serialize(&mut account.data).unwrap();
     g.svm.set_account(token, account).unwrap();
     let rejected = hunt_session_risk(&mut g, &signer, token);
@@ -584,10 +666,19 @@ fn wallet_can_block_session_while_callback_keeps_original_identity() {
 fn revoke_is_allowed_in_active_and_terminal_hunts_without_changing_settlement() {
     let mut g = Game::new(500);
     for terminal in [false, true] {
-        if terminal { assert!(g.cancel()); }
+        if terminal {
+            assert!(g.cancel());
+        }
         let before = g.state();
-        assert!(send(&mut g.svm, &g.payer, instruction::RevokeHuntSession { _index: 0 },
-            accounts::CancelHuntAttempt { wager: g.wager, authority: g.payer.pubkey() }));
+        assert!(send(
+            &mut g.svm,
+            &g.payer,
+            instruction::RevokeHuntSession { _index: 0 },
+            accounts::CancelHuntAttempt {
+                wager: g.wager,
+                authority: g.payer.pubkey()
+            }
+        ));
         assert_eq!(g.state().phase, before.phase);
         assert_eq!(g.state().payout, before.payout);
         assert_eq!(g.state().nonce, before.nonce + 1);
@@ -605,22 +696,59 @@ fn failed_combined_preparation_rolls_back_ledger_stake_and_reservation() {
         let index = 0u64.to_le_bytes();
         let authority = wallet.pubkey();
         let mut seeds = vec![seed, authority.as_ref()];
-        if indexed { seeds.push(&index); }
+        if indexed {
+            seeds.push(&index);
+        }
         Pubkey::find_program_address(&seeds, &loot_or_lose::id()).0
     };
     let player = pda(HUNT_PLAYER_SEED, false);
     let wager = pda(HUNT_SEED, true);
     let ticket = pda(HUNT_TICKET_SEED, true);
-    let ix = |data: Vec<u8>, metas: Vec<anchor_lang::solana_program::instruction::AccountMeta>| Instruction::new_with_bytes(loot_or_lose::id(), &data, metas);
-    let common = accounts::CancelHuntAttempt { wager, authority: wallet.pubkey() };
+    let ix = |data: Vec<u8>, metas: Vec<anchor_lang::solana_program::instruction::AccountMeta>| {
+        Instruction::new_with_bytes(loot_or_lose::id(), &data, metas)
+    };
+    let common = accounts::CancelHuntAttempt {
+        wager,
+        authority: wallet.pubkey(),
+    };
     let instructions = [
-        ix(instruction::InitializeHuntPlayer {}.data(), accounts::InitializeHuntPlayer { player, authority: wallet.pubkey(), system_program: anchor_lang::system_program::ID }.to_account_metas(None)),
-        ix(instruction::CreateHuntAttempt { index: 0, stake: 200 }.data(), accounts::CreateHuntAttempt { house: g.house, player, ticket, wager, authority: wallet.pubkey(), system_program: anchor_lang::system_program::ID }.to_account_metas(None)),
+        ix(
+            instruction::InitializeHuntPlayer {}.data(),
+            accounts::InitializeHuntPlayer {
+                player,
+                authority: wallet.pubkey(),
+                system_program: anchor_lang::system_program::ID,
+            }
+            .to_account_metas(None),
+        ),
+        ix(
+            instruction::CreateHuntAttempt {
+                index: 0,
+                stake: 200,
+            }
+            .data(),
+            accounts::CreateHuntAttempt {
+                house: g.house,
+                player,
+                ticket,
+                wager,
+                authority: wallet.pubkey(),
+                system_program: anchor_lang::system_program::ID,
+            }
+            .to_account_metas(None),
+        ),
         // Wrong index fails only after both prior instructions executed.
-        ix(instruction::RevokeHuntSession { _index: 1 }.data(), common.to_account_metas(None)),
+        ix(
+            instruction::RevokeHuntSession { _index: 1 }.data(),
+            common.to_account_metas(None),
+        ),
     ];
     let before = read::<HuntHouse>(&g.svm, g.house);
-    let message = Message::new_with_blockhash(&instructions, Some(&wallet.pubkey()), &g.svm.latest_blockhash());
+    let message = Message::new_with_blockhash(
+        &instructions,
+        Some(&wallet.pubkey()),
+        &g.svm.latest_blockhash(),
+    );
     let tx = VersionedTransaction::try_new(VersionedMessage::Legacy(message), &[&wallet]).unwrap();
     assert!(g.svm.send_transaction(tx).is_err());
     assert!(g.svm.get_account(&player).is_none());
@@ -629,4 +757,158 @@ fn failed_combined_preparation_rolls_back_ledger_stake_and_reservation() {
     let after = read::<HuntHouse>(&g.svm, g.house);
     assert_eq!(after.balance, before.balance);
     assert_eq!(after.reserved, before.reserved);
+}
+
+#[test]
+fn v6_all_stakes_buckets_floor_and_fit_reserved_maximum() {
+    use loot_or_lose::hunt::hunt_reserve;
+    for stake in 100..=10000 {
+        for version in [5, 6] {
+            let reserve = hunt_reserve(stake, version).unwrap();
+            let maximum = if version == 5 {
+                stake * 5 / 3
+            } else {
+                stake * 3 / 4
+            };
+            assert_eq!(reserve, 3 * maximum);
+            for bucket in 0..100 {
+                let (n, d) = match (version, bucket) {
+                    (5, 0..=39) | (6, 0..=9) => (0, 1),
+                    (5, 40..=69) | (6, 10..=39) => (1, 4),
+                    (5, 70..=89) => (1, 2),
+                    (5, 90..=97) => (1, 1),
+                    (5, 98..=99) => (5, 3),
+                    (6, 40..=98) => (2, 5),
+                    (6, 99) => (3, 4),
+                    _ => unreachable!(),
+                };
+                let reward = hunt_reward(stake, bucket, version).unwrap();
+                assert_eq!(reward, stake * n / d);
+                assert!(reward <= maximum);
+            }
+        }
+    }
+    assert!(hunt_reward(100, 100, 6).is_err());
+    assert!(hunt_reward(100, 10, 7).is_err());
+    assert!(hunt_reserve(100, 7).is_err());
+}
+
+#[test]
+fn v6_exhaustive_three_draw_economy() {
+    let stake = 6000; // divisible by all denominators; no cent rounding
+    let rewards: Vec<u64> = (0..100)
+        .map(|b| hunt_reward(stake, b, 6).unwrap())
+        .collect();
+    let (mut loss, mut even, mut win, mut zero, mut sum) = (0, 0, 0, 0, 0u64);
+    for a in &rewards {
+        for b in &rewards {
+            for c in &rewards {
+                let total = a + b + c;
+                sum += total;
+                if total < stake {
+                    loss += 1;
+                } else if total == stake {
+                    even += 1;
+                } else {
+                    win += 1;
+                }
+                if total == 0 {
+                    zero += 1;
+                }
+            }
+        }
+    }
+    assert_eq!((loss, even, win, zero), (451930, 1800, 546270, 1000));
+    assert_eq!(sum * 10000, stake * 1_000_000 * 9555);
+}
+
+#[test]
+fn v6_shares_ledger_index_and_allocation_with_v5() {
+    let mut g = Game::new(200);
+    assert!(g.cancel());
+    assert!(g.settle());
+    assert!(g.create_version(1, 200, 6));
+    let player: HuntPlayer = read(&g.svm, g.player);
+    assert_eq!(player.balance, 9800);
+    assert_eq!(player.next_index, 2);
+    assert_eq!(player.active_index, 1);
+    assert!(!g.create_version(2, 200, 6));
+    let wager = Pubkey::find_program_address(
+        &[HUNT_SEED, g.payer.pubkey().as_ref(), &1u64.to_le_bytes()],
+        &loot_or_lose::id(),
+    )
+    .0;
+    assert_eq!(read::<HuntAttempt>(&g.svm, wager).rules_version, 6);
+}
+
+#[test]
+fn v6_cancel_and_revocation_preserve_pending_callback_and_credit_once() {
+    for version in [5, 6] {
+        let mut g = Game::with_rules(201, version);
+        assert!(g.cancel());
+        assert!(g.settle());
+        assert!(g.settle());
+        assert_eq!(read::<HuntPlayer>(&g.svm, g.player).balance, 10000);
+        let mut g = Game::with_rules(201, version);
+        let signer = Pubkey::new_unique();
+        assert!(send(
+            &mut g.svm,
+            &g.payer,
+            instruction::AuthorizeHuntSession {
+                _index: 0,
+                session_signer: signer
+            },
+            accounts::CancelHuntAttempt {
+                wager: g.wager,
+                authority: g.payer.pubkey()
+            }
+        ));
+        for (i, quest) in [0, 2, 5].iter().enumerate() {
+            g.pending(*quest);
+            let before = g.state();
+            assert!(send(
+                &mut g.svm,
+                &g.payer,
+                instruction::RevokeHuntSession { _index: 0 },
+                accounts::CancelHuntAttempt {
+                    wager: g.wager,
+                    authority: g.payer.pubkey()
+                }
+            ));
+            assert_eq!(g.state().request_nonce, before.request_nonce);
+            assert_eq!(g.state().rules_version, version);
+            assert!(!g.cancel());
+            assert!(g.callback(seed(99), before.request_nonce, *quest, i as u8, scoped()));
+        }
+        let expected = 3 * hunt_reward(201, 99, version).unwrap();
+        assert!(g.settle());
+        assert!(g.settle());
+        assert_eq!(
+            read::<HuntPlayer>(&g.svm, g.player).balance,
+            10000 - 201 + expected
+        );
+        assert_eq!(read::<HuntHouse>(&g.svm, g.house).reserved, 0);
+    }
+}
+
+#[test]
+fn unsupported_and_substituted_rules_cannot_change_a_hunt_payout() {
+    let mut g = Game::with_rules(200, 6);
+    let mut v = g.state();
+    v.rules_version = 7;
+    fixture(&mut g.svm, g.wager, &v);
+    assert!(!g.cancel());
+    assert!(loot_or_lose::hunt::verified_hunt_total(&v).is_err());
+    v.rules_version = 6;
+    fixture(&mut g.svm, g.wager, &v);
+    for (i, quest) in [0, 1, 2].iter().enumerate() {
+        g.pending(*quest);
+        let n = g.state().request_nonce;
+        assert!(g.callback(seed(99), n, *quest, i as u8, scoped()));
+    }
+    let mut v = g.state();
+    v.rules_version = 5;
+    fixture(&mut g.svm, g.wager, &v);
+    assert!(!g.settle());
+    assert_eq!(read::<HuntPlayer>(&g.svm, g.player).balance, 9800);
 }

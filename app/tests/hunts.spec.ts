@@ -44,6 +44,8 @@ for (const first of QUESTS)
   test(`stake once and hunt three with ${first.name} first`, async ({
     page,
   }) => {
+    // Three full walking paths plus dialogs can exceed 30s on busy CI hosts.
+    test.setTimeout(60000);
     await start(page);
     await expect(page.getByLabel("Demo amounts")).toContainText("$98.00");
     await expect(page.getByLabel("Demo amounts")).toContainText("Unrevealed");
@@ -57,7 +59,7 @@ for (const first of QUESTS)
         await expect(reveal).toBeVisible();
         if (i === 1) await expect(reveal).toContainText("No loot found");
         await reveal.getByRole("button", { name: "Continue hunt" }).click();
-        await expect(page.getByLabel("Demo amounts")).toContainText("$0.50");
+        await expect(page.getByLabel("Demo amounts")).toContainText("$0.80");
         await expect(
           page.getByRole("button", { name: "Cancel hunt · full refund" }),
         ).toHaveCount(0);
@@ -77,13 +79,13 @@ for (const first of QUESTS)
       name: "Loot frozen · collect to credit",
     });
     await expect(result).toBeVisible();
-    await expect(result.locator(".q-result-amounts")).toContainText("$3.83");
+    await expect(result.locator(".q-result-amounts")).toContainText("$2.30");
     await result
       .getByRole("button", { name: "Collect loot", exact: true })
       .click();
     await expect(
       page.getByRole("dialog", { name: "LOOT COLLECTED" }),
-    ).toContainText("$101.83");
+    ).toContainText("$100.30");
     await page.getByRole("button", { name: "Return to dungeon" }).click();
     await expect(
       page.getByRole("button", { name: "Choose stake", exact: true }),
@@ -177,16 +179,17 @@ test("reward boundaries, rounding and complete proof totals", async () => {
     [98, 168],
     [99, 168],
   ])
-    expect(huntReward(101, b)).toBe(value);
-  expect(huntReserve(101)).toBe(504);
-  expect(() => huntReward(100, 100)).toThrow();
+    expect(huntReward(101, b, 5)).toBe(value);
+  expect(huntReserve(101, 5)).toBe(504);
+  expect(() => huntReward(100, 100, 5)).toThrow();
   const reveals = [0, 40, 99].map((bucket, questId) => ({
     questId,
     bucket,
-    reward: huntReward(200, bucket),
+    reward: huntReward(200, bucket, 5),
     randomness: [bucket, ...Array(31).fill(0)],
   }));
   const hunt = {
+    rulesVersion: 5,
     stake: 200,
     revealCount: 3,
     openedMask: 7,
@@ -213,7 +216,7 @@ test("practice reload retains loot and completes the same pending draw", async (
   ).toBeVisible();
   await page.reload();
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await expect(page.getByLabel("Demo amounts")).toContainText("$0.50");
+  await expect(page.getByLabel("Demo amounts")).toContainText("$0.80");
   await expect(page.getByLabel("Demo amounts")).toContainText("1/3");
   for (const step of approachPath(QUESTS[1], QUESTS[0]))
     await page.getByRole("button", { name: moves[step], exact: true }).click();
@@ -225,7 +228,7 @@ test("practice reload retains loot and completes the same pending draw", async (
   await page.reload();
   await page.getByRole("button", { name: "Play", exact: true }).click();
   await expect(page.getByLabel("Demo amounts")).toContainText("2/3");
-  await expect(page.getByLabel("Demo amounts")).toContainText("$3.83");
+  await expect(page.getByLabel("Demo amounts")).toContainText("$2.30");
   await expect(
     page.getByRole("button", { name: "Cancel hunt · full refund" }),
   ).toHaveCount(0);

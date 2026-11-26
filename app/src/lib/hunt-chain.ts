@@ -1,3 +1,4 @@
+import { supportedHuntRules } from "../game/hunt-rules";
 import { BN } from "@coral-xyz/anchor";
 import { Buffer } from "buffer";
 import {
@@ -23,6 +24,8 @@ import {
   type GameSession,
 } from "./chain";
 
+export const huntV6Enabled = process.env.NEXT_PUBLIC_HUNT_V6_ENABLED === "true";
+export const newDevnetHuntRules = () => (huntV6Enabled ? 6 : 5);
 export const huntEnabled = process.env.NEXT_PUBLIC_HUNT_V5_ENABLED === "true";
 export const huntSessionControlEnabled =
   process.env.NEXT_PUBLIC_HUNT_SESSION_CONTROL_ENABLED === "true";
@@ -201,7 +204,7 @@ function decodeHunt(
   if (
     !value.authority.equals(wallet.publicKey) ||
     value.index.toNumber() !== index ||
-    value.rulesVersion !== 5
+    !supportedHuntRules(value.rulesVersion)
   )
     throw new Error(
       "Hunt account does not match the requested wallet and index",
@@ -246,7 +249,10 @@ export async function createWager(
     base,
     wallet,
     await program(base, wallet)
-      .methods.createHuntAttempt(new BN(index), new BN(stake))
+      .methods[huntV6Enabled ? "createHuntAttemptV6" : "createHuntAttempt"](
+        new BN(index),
+        new BN(stake),
+      )
       .accountsPartial({
         house: houseAddress(),
         player: playerAddress(authority),
@@ -591,8 +597,9 @@ export async function buildHuntPreparation(
         .instruction(),
     );
   setup.add(
-    await client.methods
-      .createHuntAttempt(new BN(index), new BN(stake))
+    await client.methods[
+      huntV6Enabled ? "createHuntAttemptV6" : "createHuntAttempt"
+    ](new BN(index), new BN(stake))
       .accountsPartial({
         ...common,
         house: houseAddress(),

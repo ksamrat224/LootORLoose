@@ -17,14 +17,30 @@ export const QUESTS = OLD_QUESTS.map(({ id, name, x, y }) => ({
     "Seek the dragon's chamber in the southeast.",
   ][id],
 }));
-export const REWARDS = [
+const V5_REWARDS = [
   { limit: 40, n: 0, d: 1, label: "0×", chance: "40%" },
   { limit: 70, n: 1, d: 4, label: "0.25×", chance: "30%" },
   { limit: 90, n: 1, d: 2, label: "0.5×", chance: "20%" },
   { limit: 98, n: 1, d: 1, label: "1×", chance: "8%" },
   { limit: 100, n: 5, d: 3, label: "5/3×", chance: "2%" },
 ] as const;
-export function huntReward(stake: number, bucket: number) {
+export const PRACTICE_RULES_VERSION = 6;
+const V6_REWARDS = [
+  { limit: 10, n: 0, d: 1, label: "0×", chance: "10%" },
+  { limit: 40, n: 1, d: 4, label: "0.25×", chance: "30%" },
+  { limit: 99, n: 2, d: 5, label: "0.4×", chance: "59%" },
+  { limit: 100, n: 3, d: 4, label: "0.75×", chance: "1%" },
+] as const;
+export function supportedHuntRules(version: number): version is 5 | 6 {
+  return version === 5 || version === 6;
+}
+export function rewardRules(version: number) {
+  if (!supportedHuntRules(version)) throw new Error("Unsupported hunt rules");
+  return version === 5
+    ? { rewards: V5_REWARDS, averageReturn: "86.5%" }
+    : { rewards: V6_REWARDS, averageReturn: "95.55%" };
+}
+export function huntReward(stake: number, bucket: number, version: number) {
   if (
     !Number.isSafeInteger(stake) ||
     stake < 100 ||
@@ -34,10 +50,11 @@ export function huntReward(stake: number, bucket: number) {
     bucket > 99
   )
     throw new Error("Invalid stake or reward bucket");
-  const rule = REWARDS.find((r) => bucket < r.limit)!;
+  const rule = rewardRules(version).rewards.find((r) => bucket < r.limit)!;
   return Math.floor((stake * rule.n) / rule.d);
 }
-export const huntReserve = (stake: number) => 3 * huntReward(stake, 99);
+export const huntReserve = (stake: number, version: number) =>
+  3 * huntReward(stake, 99, version);
 export function practiceBucket() {
   const limit = 0x100000000 - (0x100000000 % 100),
     bytes = new Uint32Array(1);

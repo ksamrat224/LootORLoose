@@ -1,6 +1,6 @@
 # Current MVP direction: stake once, hunt three
 
-The current implementation follows [HUNTS_V5.md](docs/HUNTS_V5.md): one stake, three distinct quests chosen from six, independent random rewards and one final collection. The shared table averages 86.5% before rounding. V5 devnet is deployed and verified; see [live verification](docs/DEVNET_V5_VERIFICATION.md). Earlier versions below remain historical context.
+The current implementation uses one stake, three distinct quests chosen from six, independent random rewards and one final collection. New practice hunts use [V6 rewards](docs/HUNTS_V6.md), averaging 95.55% before rounding. Existing V5 hunts and deployed devnet retain [V5 rules](docs/HUNTS_V5.md) and their 86.5% average. V6 devnet creation stays disabled pending deployment and live verification. Earlier versions below remain historical context.
 
 ---
 

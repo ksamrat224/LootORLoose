@@ -1,4 +1,4 @@
-> Current gameplay is V5: stake once, hunt three different quests from six, and collect their combined random loot. See [HUNTS_V5.md](docs/HUNTS_V5.md). V5 is deployed and verified on devnet; see [live verification](docs/DEVNET_V5_VERIFICATION.md). V3/V4 recovery is preserved.
+> Current gameplay: new practice hunts use [V6 rewards](docs/HUNTS_V6.md), averaging 95.55% before rounding. Existing V5 hunts and deployed devnet retain [V5 rules](docs/HUNTS_V5.md). V6 devnet creation stays disabled pending deployment and live verification. V3/V4 recovery is preserved.
 
 # Loot or Lose — V3 demo-credit dungeon
 

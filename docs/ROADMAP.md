@@ -1,6 +1,15 @@
-> Current gameplay is V5: stake once, hunt three different quests from six, and collect their combined random loot. See [HUNTS_V5.md](HUNTS_V5.md). V5 is deployed and verified on devnet; see [live verification](DEVNET_V5_VERIFICATION.md). V3/V4 recovery is preserved.
+> New practice hunts use [V6 rewards](HUNTS_V6.md); deployed devnet and existing V5 hunts keep [V5 rules](HUNTS_V5.md). Stake once, hunt three different quests from six, then collect their combined loot. V6 deployment and live verification remain pending; V3/V4 recovery is preserved.
 
 # Loot or Lose — Roadmap, issues and fixes
+
+## V6 reward rollout — Nov 26, 2026
+
+- [x] New practice hunts use the smoother 95.55% reward table; existing V5 hunts retain their rewards.
+- [x] Implement version-aware program creation, reservations, callbacks, proofs and settlement without account migration or a second allocation.
+- [ ] Complete the [V6 practice review](HUNTS_V6.md#practice-review).
+- [ ] Deploy the compatible binary; verify base and ER bytes, authenticated V6 reveals, V5 recovery and fresh-wallet settlement.
+- [ ] Enable `NEXT_PUBLIC_HUNT_V6_ENABLED` only after those live checks. Currently false; existing V5 devnet remains available.
+
 
 _Written Nov 25, 2026. Demo target: **Nov 27, 2026**. Audience: the team. Read with [mvp.md](../mvp.md) (what the finished MVP is) and [UI_DIRECTION.md](UI_DIRECTION.md) (what the UI should become)._
 

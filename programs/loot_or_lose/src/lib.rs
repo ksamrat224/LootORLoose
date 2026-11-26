@@ -212,7 +212,15 @@ pub mod loot_or_lose {
         index: u64,
         stake: u64,
     ) -> Result<()> {
-        hunt::hunt_create(ctx, index, stake)
+        hunt::hunt_create(ctx, index, stake, hunt::HUNT_RULES_VERSION)
+    }
+    /// Smoother rewards on the same ledger; the original entrypoint remains V5.
+    pub fn create_hunt_attempt_v6(
+        ctx: Context<CreateHuntAttempt>,
+        index: u64,
+        stake: u64,
+    ) -> Result<()> {
+        hunt::hunt_create(ctx, index, stake, hunt::HUNT_RULES_V6)
     }
     pub fn delegate_hunt_attempt(ctx: Context<DelegateHuntAttempt>, index: u64) -> Result<()> {
         hunt::hunt_delegate(ctx, index)
@@ -256,6 +264,10 @@ pub mod loot_or_lose {
             ctx.accounts.wager.phase == HuntPhase::Active,
             GameError::WrongPhase
         );
+        require!(
+            hunt::supported_hunt_rules(ctx.accounts.wager.rules_version),
+            GameError::Rules
+        );
         ctx.accounts.wager.session_signer = session_signer;
         Ok(())
     }
@@ -265,6 +277,10 @@ pub mod loot_or_lose {
     /// Removes application permission even when the base session token is still ER-cached.
     /// Accepted VRF requests retain their identity and may finish after revocation.
     pub fn revoke_hunt_session(ctx: Context<CancelHuntAttempt>, _index: u64) -> Result<()> {
+        require!(
+            hunt::supported_hunt_rules(ctx.accounts.wager.rules_version),
+            GameError::Rules
+        );
         ctx.accounts.wager.session_signer = Pubkey::default();
         ctx.accounts.wager.bump_nonce()
     }

@@ -51,6 +51,7 @@ async function main() {
       index: ticket.index.toNumber(),
       reservedCents: ticket.reserve.toNumber(),
       phase: hunt?.phase ?? "unavailable",
+      rulesVersion: hunt?.rulesVersion,
       reveals: hunt?.revealCount,
       requestNonce: hunt?.requestNonce,
       requestedAt: hunt?.requestedAt,

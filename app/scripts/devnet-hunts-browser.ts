@@ -199,7 +199,8 @@ async function main() {
       process.argv.includes("--reject-binding") &&
       !bindingRejected &&
       names.includes("authorizeHuntSession") &&
-      !names.includes("createHuntAttempt")
+      !names.includes("createHuntAttempt") &&
+      !names.includes("createHuntAttemptV6")
     ) {
       bindingRejected = true;
       console.log("CONTROLLED_APPROVAL_REJECTION", "authorizeHuntSession");

@@ -72,7 +72,7 @@ test("fresh preparation fits one packet and authorizes before delegating", async
   }
 });
 
-async function fixture() {
+async function fixture(version = 5) {
   let nonce = 0,
     route = 0,
     gets = 0,
@@ -90,7 +90,7 @@ async function fixture() {
       authority: wallet.publicKey,
       sessionSigner: PublicKey.default,
       index: new BN(0),
-      rulesVersion: 5,
+      rulesVersion: version,
       stake: new BN(200),
       phase: { active: {} },
       x: 1,
@@ -269,5 +269,20 @@ test("preflight and wallet rejection never upload a preparation", async () => {
     expect(uploads).toBe(0);
   } finally {
     base.getAccountInfo = original;
+  }
+});
+
+test("account decoding recovers V6 independently of the creation flag and rejects unknown rules", async () => {
+  for (const version of [5, 6, 7]) {
+    const f = await fixture(version);
+    const info = await f.info();
+    if (version === 7)
+      expect(() =>
+        decodeHuntAccount(wallet, 0, info, { delegated: true }),
+      ).toThrow();
+    else
+      expect(
+        decodeHuntAccount(wallet, 0, info, { delegated: true }).rulesVersion,
+      ).toBe(version);
   }
 });

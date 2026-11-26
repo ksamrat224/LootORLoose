@@ -18,6 +18,7 @@ import {
   createWager,
   delegateWager,
   initializeLedger,
+  newDevnetHuntRules,
   readHouse,
   readPlayer,
   readWager,
@@ -126,7 +127,7 @@ async function main() {
       "Recover unresolved V3/V4 accounts before creating V5 credits",
     );
   console.log(
-    "V5: up to 12 normally completed $2 demo hunts; 0.002 devnet SOL/session plus network fees. Never reroll a pending reveal.",
+    `Rules V${newDevnetHuntRules()}: up to 12 normally completed $2 demo hunts; 0.002 devnet SOL/session plus network fees. Never reroll a pending reveal.`,
   );
   await initializeLedger(wallet);
   const observed = new Set<string>();
@@ -170,7 +171,9 @@ async function main() {
       value = await waitForResult(index, value.revealCount + 1);
     }
     if (!(await verifyHunt(value)))
-      throw new Error("V5 reward proof mismatch before settlement");
+      throw new Error(
+        `V${value.rulesVersion} reward proof mismatch before settlement`,
+      );
     const before = await readPlayer(wallet);
     await settleWager(wallet, value, console.log);
     const receipt = await readWager(wallet, index, true),
@@ -184,17 +187,17 @@ async function main() {
       house.balance.lt(house.reserved) ||
       !(await verifyHunt(receipt))
     )
-      throw new Error("V5 settlement invariant or proof mismatch");
+      throw new Error("Versioned hunt settlement invariant or proof mismatch");
     if (
       !value.settled &&
       before &&
       after.balance.toNumber() !== before.balance.toNumber() + receipt.payout
     )
-      throw new Error("V5 balance credit mismatch");
+      throw new Error("Hunt balance credit mismatch");
     for (const reveal of receipt.reveals)
       observed.add(reveal.reward ? "positive" : "zero");
     console.log(
-      `VERIFIED hunt ${receipt.address}: ${receipt.revealCount} reveals, payout ${receipt.payout}, balance ${after.balance}, reserve ${house.reserved}`,
+      `VERIFIED rules V${receipt.rulesVersion} hunt ${receipt.address}: ${receipt.revealCount} reveals, payout ${receipt.payout}, balance ${after.balance}, reserve ${house.reserved}`,
     );
   }
   if (observed.size !== 2)
