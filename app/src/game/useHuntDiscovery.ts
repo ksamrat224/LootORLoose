@@ -123,10 +123,17 @@ export function useHuntDiscovery(
     try {
       localStorage.setItem(`${scope}:practice-hunt`, practiceId.current);
     } catch {}
+    return practiceId.current;
   };
   const visible =
     view.scope === scope
       ? view
       : { progress: emptyProgress(), tiles: [], persistent: true };
-  return { ...visible, loaded: view.scope === scope, guide, startPracticeHunt };
+  return {
+    ...visible,
+    huntId: view.scope === scope ? view.hunt : "",
+    loaded: view.scope === scope,
+    guide,
+    startPracticeHunt,
+  };
 }

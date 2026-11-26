@@ -449,6 +449,7 @@ async function fixture(page: Page, sessionControls = false) {
     ).toBeVisible();
   };
   return {
+    walletAddress: authority.toBase58(),
     connect,
     readyState: () => {
       playerActive = false;
@@ -936,8 +937,30 @@ test("journal separates practice, connected wallet and disconnected contexts", a
       }),
     ),
   );
+  await page.addInitScript(
+    ({ wallet, program }) => {
+      localStorage.setItem(
+        "loot-daily-route:v1:loot-discovery:v1:practice",
+        JSON.stringify({
+          version: 1,
+          current: null,
+          stamps: { "2026-11-20": { best: 30 } },
+        }),
+      );
+      localStorage.setItem(
+        `loot-daily-route:v1:loot-discovery:v1:devnet:devnet:${program}:${wallet}`,
+        JSON.stringify({
+          version: 1,
+          current: null,
+          stamps: { "2026-11-20": { best: 22 }, "2026-11-21": { best: 19 } },
+        }),
+      );
+    },
+    { wallet: f.walletAddress, program: idl.address },
+  );
   await f.connect();
   await openDashboardPanel(page, "Journal");
+  await expect(page.getByRole("dialog")).toContainText("2 daily stamps");
   await expect(page.getByRole("dialog")).toContainText("1/6");
   await expect(
     page.getByRole("dialog").getByText("Earned", { exact: true }),
@@ -947,10 +970,12 @@ test("journal separates practice, connected wallet and disconnected contexts", a
   await page.getByText("Disconnect", { exact: true }).click();
   await openDashboardPanel(page, "Journal");
   await expect(page.getByRole("dialog")).toContainText("0/6");
+  await expect(page.getByRole("dialog")).toContainText("0 daily stamps");
   await page.keyboard.press("Escape");
   await page.getByRole("radio", { name: "Practice", exact: true }).check();
   await openDashboardPanel(page, "Journal");
   await expect(page.getByRole("dialog")).toContainText("6/6");
+  await expect(page.getByRole("dialog")).toContainText("1 daily stamps");
   expect(f.uploads()).toBe(0);
 });
 

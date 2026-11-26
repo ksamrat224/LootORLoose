@@ -67,6 +67,9 @@ import {
 } from "./hunt-discovery";
 import { useHuntDiscovery } from "./useHuntDiscovery";
 import { HuntJournal } from "./HuntJournal";
+import { useDailyRoute } from "./useDailyRoute";
+import { utcDay } from "./daily-route";
+import { DailyRouteCard } from "./DailyRouteCard";
 
 type Panel =
   | "menu"
@@ -131,6 +134,18 @@ export function HuntGame() {
     attempt,
     point,
     loaded && attemptIdentity === identity,
+  );
+  const daily = useDailyRoute(
+    discoveryScope(
+      live,
+      walletKey,
+      process.env.NEXT_PUBLIC_NETWORK || "devnet",
+      PROGRAM_ID.toBase58(),
+    ),
+    live && attempt ? `hunt:${attempt.index}` : discovery.huntId,
+    attempt,
+    loaded && attemptIdentity === identity,
+    now,
   );
   const journal = `loot-or-lose:hunt-v5:${walletKey}`;
   const balance = live ? liveBalance : practiceBalance;
@@ -530,6 +545,7 @@ export function HuntGame() {
     const [dx, dy] = STEP_DELTAS[direction],
       next = { x: position.current.x + dx, y: position.current.y + dy };
     if (isWalkable(next.x, next.y)) {
+      daily.move();
       position.current = next;
       setPoint(next);
       if (!live && state.current) {
@@ -585,9 +601,10 @@ export function HuntGame() {
     }
     setAmountError("");
     setPanel(null);
+    const routeDay = utcDay();
     void operate(async (guard) => {
       if (!live) {
-        discovery.startPracticeHunt();
+        daily.start(discovery.startPracticeHunt(), routeDay);
         creditPractice(-stake);
         accept({
           address: PublicKey.default,
@@ -631,6 +648,7 @@ export function HuntGame() {
         },
       );
       guard();
+      daily.start(`hunt:${prepared.index}`, routeDay);
       localStorage.setItem(journal, String(prepared.index));
       session.current = prepared.session;
       setHasSessionKey(true);
@@ -941,8 +959,11 @@ export function HuntGame() {
   };
   const navigation = (
     <nav className="q-tools" aria-label="Game navigation">
-      <button className="q-quiet" onClick={() => setPanel("journal")}>
+      <button className="q-quiet" aria-label="Journal" onClick={() => setPanel("journal")}>
         Journal
+        <span className="hunt-route-badge" aria-label="Daily route progress">
+          {daily.current?.awarded ? "✓" : `${daily.current ? daily.ids.filter((id) => confirmedMask(attempt?.reveals ?? []) & (1 << id)).length : 0}/3`}
+        </span>
       </button>
       <button className="q-quiet" onClick={() => setPanel("quests")}>
         Quests
@@ -1341,6 +1362,10 @@ export function HuntGame() {
         onClose={() => setPanel(null)}
         title="Discovery journal"
       >
+        <DailyRouteCard
+          route={daily}
+          mask={daily.current ? confirmedMask(attempt?.reveals ?? []) : 0}
+        />
         <HuntJournal
           progress={discovery.progress}
           mask={confirmedMask(attempt?.reveals ?? [])}
@@ -1494,6 +1519,11 @@ export function HuntGame() {
             ? " · V5 and V6 hunts share one one-time $100 demo allocation."
             : " · practice credits"}
         </p>
+        <p className="q-small" aria-label="Today’s route">
+          Optional Daily Route ({daily.day} UTC):{" "}
+          {daily.ids.map((id) => QUESTS[id].name).join(" · ")}. Any order; any
+          three quests are still allowed.
+        </p>
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -1604,6 +1634,15 @@ export function HuntGame() {
                   ))}
                 </div>
               )}
+            {daily.current?.awarded && (
+              <p aria-label="Daily stamp earned">
+                Daily Route stamp · {daily.day} ·{" "}
+                {daily.current.ranked
+                  ? `${daily.current.steps} steps`
+                  : "Unranked after recovery"}{" "}
+                · Local to this browser
+              </p>
+            )}
             <div className="q-result-amounts">
               <span>
                 Stake<b>{money(attempt.stake)}</b>

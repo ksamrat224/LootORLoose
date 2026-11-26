@@ -9,6 +9,7 @@ Updated Nov 26, 2026. Current loop: stake once → explore six guardians → ope
 - Combined preparation, ER subscriptions with polling fallback, and separate hunt-key/token revocation confirmation.
 - Discovery lighting with visible paths and quest markers; six original guardian stories in a browser-local journal.
 - Optional North Trail, South Trail and Across the Vault badges, earned only after confirmed collection. No reward changes or additional transactions.
+- Optional Daily Route rotating through all 20 guardian combinations by UTC day, with compact progress on the Journal button and full targets inside the Journal. Browser-local stamps and personal step records follow confirmed collection. Reloaded scores are unranked; the route date remains pinned. [Implementation and verification](../dungeon-upgrade-phases.md).
 - Contextual, dismissible guide; shared dialog spacing and internally scrolling secondary information. [Polish verification](HUNT_POLISH.md): lint/build and 103 browser tests passed.
 
 ## Dashboard presentation

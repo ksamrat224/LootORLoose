@@ -227,6 +227,7 @@ test("unavailable local storage leaves practice playable and the journal usable"
   await begin(page);
   const dialog = await journal(page);
   await expect(dialog).toContainText("Browser storage is unavailable");
+  await expect(dialog).toContainText("Route storage is unavailable");
   await expect(
     dialog.getByRole("button", { name: "Replay guide" }),
   ).toBeEnabled();

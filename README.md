@@ -2,6 +2,8 @@
 
 **Current UI: V6 rewards in new practice hunts; verified V5 rewards on devnet.** Stake once, explore six guardians, open three different quests and collect their combined random loot. New practice hunts average **95.55%** before cent rounding; existing V5 hunts retain **86.5%**. The compatible V6 program is deployed and live automated checks passed; `NEXT_PUBLIC_HUNT_V6_ENABLED=false` keeps normal devnet creation on V5 until guided Phantom verification passes. See [V6 release evidence](docs/DEVNET_V6_VERIFICATION.md). See [V6 economy and practice review](docs/HUNTS_V6.md), [V5 architecture](docs/HUNTS_V5.md), and [Nov 26 live session evidence and Phantom checklist](docs/DEVNET_SESSION_VERIFICATION.md). Earlier V3/V4 recovery remains at `/recovery` and `/recovery/quests`.
 
+An optional **Daily Route** names three guardians each UTC day. The Journal button shows compact route progress; open the Journal for the three target names. Opening all three in any order and collecting earns a browser-local stamp; successful walking steps can set a personal best. Routes never change loot or credits, and recovered walking scores are unranked. See [the current gameplay roadmap](dungeon-upgrade-phases.md).
+
 A dungeon extraction game with a three-gate, simulated-stake prototype. The original free game and its session-key upgrade were verified on Solana devnet through a MagicBlock Ephemeral Rollup and back to base-layer receipts. **The V3 wager program was upgraded on devnet on Nov 23, 2026.** All wager credits are nonredeemable demo units; there are no real deposits or cash prizes.
 
 ## Documentation map

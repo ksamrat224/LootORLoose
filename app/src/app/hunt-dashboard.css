@@ -171,6 +171,17 @@
 }
 .hunt-game .q-world {
   min-height: 0;
+  position: relative;
+}
+.hunt-game .hunt-route-badge {
+  margin-left: 6px;
+  padding: 2px 5px;
+  border-radius: 5px;
+  background: var(--background);
+  color: var(--primary-light);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 .hunt-game .q-board {
   min-height: 0;
@@ -901,4 +912,22 @@
   .hunt-game .hunt-wallet-card .wallet-adapter-dropdown-list-active {
     transform: translateY(-50%);
   }
+}
+
+.hunt-game .q-daily-route {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid #57472b;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+.hunt-game .q-daily-route h3 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+}
+.hunt-game .q-daily-route ul {
+  padding-left: 20px;
 }
