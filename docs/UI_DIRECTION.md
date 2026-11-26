@@ -1,3 +1,5 @@
+> Hunt polish update (Nov 26, 2026): keep every quest marker, wall and path visible. Dim only unexplored floor detail; reveal within two Manhattan steps. Journal lore unlocks from confirmed reveals, including zero; North/South/Across route badges unlock after confirmed collection. These are browser-local cosmetic features with separate practice and devnet-wallet progress. Contextual guidance is dismissible and replayable from Journal. Do not change payouts, approvals or legacy recovery to support these features.
+
 > Current gameplay: new practice hunts use [V6 rewards](HUNTS_V6.md), averaging 95.55% before rounding. Existing V5 hunts and deployed devnet retain [V5 rules](HUNTS_V5.md). The compatible V6 upgrade and automated live checks passed; V6 creation stays disabled in the normal app pending manual Phantom verification. V3/V4 recovery is preserved.
 
 # Loot or Lose — UI direction

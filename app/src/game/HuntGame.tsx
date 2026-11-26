@@ -5,6 +5,7 @@ import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
 import {
+  PROGRAM_ID,
   buildGameSession,
   isGameSessionReady,
   base,
@@ -56,8 +57,18 @@ import { money, parseStake } from "./wager-rules";
 import { PhaserBoard } from "./PhaserBoard";
 import { QuestDialog } from "./QuestDialog";
 import { HuntProof } from "./HuntProof";
+import {
+  BADGES,
+  GUARDIANS,
+  confirmedMask,
+  discoveryScope,
+  routeBadges,
+} from "./hunt-discovery";
+import { useHuntDiscovery } from "./useHuntDiscovery";
+import { HuntJournal } from "./HuntJournal";
 
 type Panel =
+  | "journal"
   | "session"
   | "quests"
   | "rules"
@@ -68,12 +79,6 @@ type Panel =
   | "details"
   | "result"
   | null;
-const STEPS = [
-  "Prepare demo credits",
-  "Reserve hunt stake",
-  "Connect the dungeon",
-  "Authorize gameplay",
-];
 export function HuntGame() {
   const wallet = useAnchorWallet(),
     walletKey = wallet?.publicKey.toBase58() || "";
@@ -86,6 +91,7 @@ export function HuntGame() {
   const [practiceBalance, setPracticeBalance] = useState(10000);
   const [liveBalance, setLiveBalance] = useState<number | null>(null);
   const [attempt, setAttempt] = useState<Wager | null>(null);
+  const [attemptIdentity, setAttemptIdentity] = useState("");
   const [busy, setBusy] = useState(false);
   const [stage, setStage] = useState("");
   const [recovering, setRecovering] = useState(false);
@@ -113,40 +119,55 @@ export function HuntGame() {
     generationKey = useRef("");
   const identity = `${live}:${walletKey}`;
 
+  const discovery = useHuntDiscovery(
+    discoveryScope(
+      live,
+      walletKey,
+      process.env.NEXT_PUBLIC_NETWORK || "devnet",
+      PROGRAM_ID.toBase58(),
+    ),
+    attempt,
+    point,
+    loaded && attemptIdentity === identity,
+  );
   const journal = `loot-or-lose:hunt-v5:${walletKey}`;
   const balance = live ? liveBalance : practiceBalance;
   const rulesVersion =
     attempt?.rulesVersion ??
     (live ? newDevnetHuntRules() : PRACTICE_RULES_VERSION);
   const rules = rewardRules(rulesVersion);
-  const accept = useCallback((value: Wager) => {
-    const previous = state.current;
-    if (
-      previous?.address.equals(value.address) &&
-      (previous.nonce > value.nonce || (previous.settled && !value.settled))
-    )
-      return;
-    state.current = value;
-    setAttempt(value);
-    if (value.address.equals(PublicKey.default)) {
-      try {
-        sessionStorage.setItem(
-          "loot-hunt-v5-practice",
-          JSON.stringify({
-            attempt: value,
-            balance: practiceCredits.current,
-            point: position.current,
-          }),
-        );
-      } catch {}
-    }
-    if (value.questId < QUESTS.length && value.phase === "randomnessPending")
-      setSelected(value.questId);
-    if (!previous || value.phase !== "active") {
-      position.current = { x: value.x, y: value.y };
-      setPoint(position.current);
-    }
-  }, []);
+  const accept = useCallback(
+    (value: Wager) => {
+      const previous = state.current;
+      if (
+        previous?.address.equals(value.address) &&
+        (previous.nonce > value.nonce || (previous.settled && !value.settled))
+      )
+        return;
+      state.current = value;
+      setAttemptIdentity(generationKey.current);
+      setAttempt(value);
+      if (value.address.equals(PublicKey.default)) {
+        try {
+          sessionStorage.setItem(
+            "loot-hunt-v5-practice",
+            JSON.stringify({
+              attempt: value,
+              balance: practiceCredits.current,
+              point: position.current,
+            }),
+          );
+        } catch {}
+      }
+      if (value.questId < QUESTS.length && value.phase === "randomnessPending")
+        setSelected(value.questId);
+      if (!previous || value.phase !== "active") {
+        position.current = { x: value.x, y: value.y };
+        setPoint(position.current);
+      }
+    },
+    [setAttemptIdentity, setAttempt, setSelected, setPoint],
+  );
   const creditPractice = (delta: number) => {
     practiceCredits.current += delta;
     setPracticeBalance(practiceCredits.current);
@@ -222,7 +243,15 @@ export function HuntGame() {
         );
     }
     setLoaded(true);
-  }, [wallet, journal, accept]);
+  }, [
+    wallet,
+    journal,
+    accept,
+    setLegacy,
+    setLoaded,
+    setLiveBalance,
+    setMessage,
+  ]);
   useEffect(() => {
     generationKey.current = identity;
     epoch.current++;
@@ -556,6 +585,7 @@ export function HuntGame() {
     setPanel(null);
     void operate(async (guard) => {
       if (!live) {
+        discovery.startPracticeHunt();
         creditPractice(-stake);
         accept({
           address: PublicKey.default,
@@ -744,14 +774,14 @@ export function HuntGame() {
       return;
     }
     void operate(async (guard) => {
-      setStage(STEPS[2]);
+      setStage("Check dungeon connection");
       if (!current.delegated) {
         await delegateWager(wallet, current.index, guard);
         guard();
         await waitForEr(wallet, current.index);
         guard();
       }
-      setStage(STEPS[3]);
+      setStage("Check gameplay session");
       let candidate = session.current;
       let createdNow = false;
       if (!candidate || !(await isGameSessionReady(wallet, candidate))) {
@@ -929,6 +959,9 @@ export function HuntGame() {
           >
             Sound {sound ? "on" : "off"}
           </button>
+          <button className="q-quiet" onClick={() => setPanel("journal")}>
+            Journal
+          </button>
           <button className="q-quiet" onClick={() => setPanel("quests")}>
             Quests
           </button>
@@ -973,6 +1006,7 @@ export function HuntGame() {
           <div className="q-board">
             <PhaserBoard
               state={board}
+              exploration={{ tiles: discovery.tiles }}
               onMove={move}
               onInteract={interact}
               wagerMode
@@ -1019,7 +1053,7 @@ export function HuntGame() {
             <div className="q-objective">
               <p className="q-eyebrow">
                 {stage
-                  ? "Preparing attempt"
+                  ? "Transaction progress"
                   : recovering
                   ? "Recovery needed"
                   : pendingGate
@@ -1033,7 +1067,7 @@ export function HuntGame() {
               <h1>
                 {stage ||
                   (active
-                    ? q.name
+                    ? nearby?.name || "Choose your path"
                     : frozen
                     ? attempt?.phase === "cancelled"
                       ? "Hunt cancelled"
@@ -1043,19 +1077,58 @@ export function HuntGame() {
               <p className="q-status" role="status" aria-live="polite">
                 {message}
               </p>
+              {discovery.loaded &&
+                (!live ||
+                  (wallet &&
+                    loaded &&
+                    !legacy &&
+                    (attempt?.phase !== "active" || expiry > now))) &&
+                !discovery.progress.guideDismissed &&
+                !stage &&
+                !recovering &&
+                !error &&
+                !pendingGate && (
+                  <div className="q-guide" aria-label="Hunt guide">
+                    <p>
+                      <b>
+                        {!attempt || attempt.settled
+                          ? "Choose a stake"
+                          : frozen
+                          ? attempt.phase === "cancelled"
+                            ? "Collect your refund"
+                            : "Collect your loot"
+                          : nearby && !(attempt.openedMask & (1 << nearby.id))
+                          ? "Open this quest"
+                          : attempt.revealCount
+                          ? "Find another guardian"
+                          : "Walk toward a guardian"}
+                      </b>
+                    </p>
+                    <p>
+                      {!attempt || attempt.settled
+                        ? "Reserve demo credits once for three discoveries."
+                        : frozen
+                        ? attempt.phase === "cancelled"
+                          ? "No quest was opened. Collect once to return your full stake."
+                          : "All three rewards are frozen. Collect once to confirm your balance."
+                        : nearby && !(attempt.openedMask & (1 << nearby.id))
+                        ? "Press Open quest, then confirm. Every guardian shares the same reward pool."
+                        : attempt.revealCount
+                        ? `${
+                            3 - attempt.revealCount
+                          } quests left. Earlier loot stays safe, even if the next reward is zero.`
+                        : "Walk beside any numbered quest. Arrows, WASD or touch to move."}
+                    </p>
+                    <button
+                      className="q-guide-dismiss"
+                      aria-label="Dismiss guide"
+                      onClick={() => discovery.guide(true)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
             </div>
-            {stage && (
-              <ol className="q-stages">
-                {STEPS.map((step, i) => (
-                  <li
-                    key={step}
-                    aria-current={stage === step ? "step" : undefined}
-                  >
-                    {i + 1}. {step}
-                  </li>
-                ))}
-              </ol>
-            )}
             {legacy ? (
               <>
                 <p>
@@ -1120,7 +1193,11 @@ export function HuntGame() {
                     : "Explore"}
                 </button>
                 {attempt.revealCount === 0 && attempt.requestNonce === 0 && (
-                  <button className="q-quiet" disabled={busy} onClick={cancel}>
+                  <button
+                    className="q-quiet q-cancel"
+                    disabled={busy}
+                    onClick={cancel}
+                  >
                     Cancel hunt · full refund
                   </button>
                 )}
@@ -1167,6 +1244,23 @@ export function HuntGame() {
           </Link>
         </aside>
       </div>
+      <QuestDialog
+        open={panel === "journal"}
+        onClose={() => setPanel(null)}
+        title="Discovery journal"
+      >
+        <HuntJournal
+          progress={discovery.progress}
+          mask={confirmedMask(attempt?.reveals ?? [])}
+          settled={!!attempt?.settled && attempt.phase === "complete"}
+          persistent={discovery.persistent}
+          live={live}
+          onReplay={() => {
+            discovery.guide(false);
+            setPanel(null);
+          }}
+        />
+      </QuestDialog>
       <QuestDialog
         open={panel === "session"}
         onClose={() => setPanel(null)}
@@ -1279,7 +1373,7 @@ export function HuntGame() {
                 setPanel(null);
               }}
             >
-              <b>
+              <b style={{ color: GUARDIANS[quest.id].color }}>
                 {quest.id + 1} · {quest.name}
               </b>
               <span>
@@ -1401,6 +1495,23 @@ export function HuntGame() {
                 </li>
               ))}
             </ol>
+            {attempt.settled &&
+              attempt.phase === "complete" &&
+              routeBadges(confirmedMask(attempt.reveals)).length > 0 && (
+                <div
+                  className="q-earned-badges"
+                  aria-label="Route badges earned"
+                >
+                  <p className="q-eyebrow">
+                    Route badges · Local to this browser
+                  </p>
+                  {BADGES.filter((b) =>
+                    routeBadges(confirmedMask(attempt.reveals)).includes(b.id),
+                  ).map((b) => (
+                    <span key={b.id}>{b.name}</span>
+                  ))}
+                </div>
+              )}
             <div className="q-result-amounts">
               <span>
                 Stake<b>{money(attempt.stake)}</b>
@@ -1575,7 +1686,7 @@ export function HuntGame() {
         <p>
           {huntV6Enabled
             ? "New devnet hunts use V6 rewards."
-            : "V6 devnet creation is disabled pending deployment and live verification."}
+            : "V6 devnet creation is disabled until the remaining live and manual Phantom release checks pass."}
         </p>
         {error && <p>Latest error: {error}</p>}
         <p>Attempt: {attempt?.address.toBase58() || "none"}</p>

@@ -179,6 +179,41 @@ async function fixture(page: Page, sessionControls = false) {
     },
     { address: authority.toBase58(), bytes: Array.from(authority.toBytes()) },
   );
+  // Keep confirmation traffic inside the fixture too: real provider sockets
+  // make an otherwise mocked lifecycle depend on external network timing.
+  await page.routeWebSocket(/wss:\/\/[^/]*magicblock\.app/, (socket) => {
+    let subscription = 0;
+    socket.onMessage((message) => {
+      const rpc = JSON.parse(String(message));
+      if (rpc.method === "signatureSubscribe") {
+        const id = ++subscription;
+        socket.send(JSON.stringify({ jsonrpc: "2.0", id: rpc.id, result: id }));
+        socket.send(
+          JSON.stringify({
+            jsonrpc: "2.0",
+            method: "signatureNotification",
+            params: {
+              subscription: id,
+              result: { context: { slot: 1 }, value: { err: null } },
+            },
+          }),
+        );
+      } else if (rpc.method?.endsWith("Unsubscribe")) {
+        socket.send(
+          JSON.stringify({ jsonrpc: "2.0", id: rpc.id, result: true }),
+        );
+      } else if (rpc.method === "accountSubscribe") {
+        // No pushed account changes: the snapshot watchdog exercises recovery.
+        socket.send(
+          JSON.stringify({
+            jsonrpc: "2.0",
+            id: rpc.id,
+            result: ++subscription,
+          }),
+        );
+      }
+    });
+  });
   await page.route(/https:\/\/[^/]*magicblock\.app\//, async (route) => {
     if (outage) return route.abort("failed");
     const rpc = route.request().postDataJSON();
@@ -828,4 +863,38 @@ test("an uncertain session-creation response recovers the same funded key", asyn
     "false",
   );
   expect(f.uploads()).toBe(2);
+});
+
+test("journal separates practice, connected wallet and disconnected contexts", async ({
+  page,
+}) => {
+  const f = await fixture(page);
+  f.delayRandomness();
+  await page.addInitScript(() =>
+    localStorage.setItem(
+      "loot-discovery:v1:practice",
+      JSON.stringify({
+        version: 1,
+        unlocked: 63,
+        badges: ["north"],
+        guideDismissed: true,
+      }),
+    ),
+  );
+  await f.connect();
+  await page.getByRole("button", { name: "Journal", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("1/6");
+  await expect(
+    page.getByRole("dialog").getByText("Earned", { exact: true }),
+  ).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: /Fixture Wallet icon/ }).click();
+  await page.getByText("Disconnect", { exact: true }).click();
+  await page.getByRole("button", { name: "Journal", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("0/6");
+  await page.keyboard.press("Escape");
+  await page.getByRole("radio", { name: "Practice", exact: true }).check();
+  await page.getByRole("button", { name: "Journal", exact: true }).click();
+  await expect(page.getByRole("dialog")).toContainText("6/6");
+  expect(f.uploads()).toBe(0);
 });

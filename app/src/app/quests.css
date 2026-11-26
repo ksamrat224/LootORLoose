@@ -1080,3 +1080,217 @@
   color: var(--muted);
   font-size: 13px;
 }
+
+/* Shared rhythm for hunt dialogs, including recovered hunts. */
+.quest-dialog > p + p,
+.quest-dialog > p + form,
+.quest-dialog > p + .q-quest-list,
+.quest-dialog > p + button,
+.quest-dialog > button + button,
+.quest-dialog > button + p {
+  margin-top: 16px;
+}
+.quest-dialog > button {
+  min-height: 48px;
+}
+.quest-dialog > .q-quiet {
+  width: 100%;
+}
+.quest-dialog ol {
+  padding-left: 20px;
+  line-height: 1.6;
+}
+.quest-dialog li + li {
+  margin-top: 8px;
+}
+.quest-dialog form > .q-button {
+  margin-top: 12px;
+}
+.q-journal {
+  display: grid;
+  gap: 24px;
+}
+.q-journal section {
+  display: grid;
+  gap: 12px;
+}
+.q-journal h3,
+.q-journal h4,
+.q-journal p {
+  margin: 0;
+}
+.q-journal h3 {
+  font-size: 17px;
+  line-height: 1.4;
+}
+.q-journal h3 > span {
+  color: var(--primary);
+  margin-left: 8px;
+  font-variant-numeric: tabular-nums;
+}
+.q-journal h4 {
+  font-size: 15px;
+  line-height: 1.5;
+}
+.q-journal-entries {
+  display: grid;
+  gap: 12px;
+}
+.q-journal article {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--line);
+  border-left-width: 3px;
+  background: var(--background);
+  padding: 16px;
+  border-radius: 8px;
+}
+.q-journal article:not(.is-discovered) > .q-small {
+  color: var(--muted);
+}
+.q-journal .is-discovered > .q-small {
+  color: var(--primary);
+}
+.q-badge {
+  display: inline-block;
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 400;
+  margin-left: 8px;
+}
+.q-earned-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0;
+}
+.q-earned-badges > p {
+  flex-basis: 100%;
+}
+.q-earned-badges > span {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 8px 12px;
+  color: var(--primary);
+  font-size: 13px;
+}
+.quest-dialog {
+  overflow-wrap: anywhere;
+}
+.hunt-game .quest-proof {
+  display: grid;
+  gap: 16px;
+}
+.hunt-game .quest-proof p {
+  margin: 0;
+}
+.hunt-game .quest-proof details {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--background);
+  padding: 0 12px 12px;
+}
+.hunt-game .quest-proof summary {
+  min-height: 44px;
+  padding: 12px 0;
+  cursor: pointer;
+  line-height: 1.5;
+}
+.hunt-game .quest-proof details:not([open]) {
+  padding-bottom: 0;
+}
+.hunt-game .quest-proof details > p {
+  margin-top: 12px;
+}
+/* Guidance occupies the objective's existing space, keeping actions and board visible. */
+.q-guide p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.q-guide b {
+  color: var(--primary-light);
+}
+
+.q-objective:has(.q-guide) > h1,
+.q-objective:has(.q-guide) > .q-status {
+  display: none;
+}
+.q-objective .q-guide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 40px;
+  grid-template-areas: "title dismiss" "body dismiss";
+  gap: 6px 8px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+}
+.q-guide > p:first-child {
+  grid-area: title;
+  font-size: 20px;
+  line-height: 1.2;
+}
+.q-guide > p:nth-child(2) {
+  grid-area: body;
+}
+.q-guide .q-guide-dismiss {
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  grid-area: dismiss;
+  align-self: start;
+  justify-self: stretch;
+  min-width: 40px;
+  min-height: 40px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 20px;
+}
+@media (max-width: 700px), (max-height: 500px) {
+  .q-objective .q-guide {
+    gap: 4px 8px;
+  }
+  .q-guide > p:first-child {
+    font-size: 16px;
+    line-height: 18px;
+  }
+  .q-guide > p:nth-child(2) {
+    font-size: 12px;
+    line-height: 16px;
+  }
+}
+@media (max-height: 500px) and (min-width: 701px) {
+  .hunt-game .q-actions {
+    padding: 10px;
+    gap: 8px;
+  }
+  .hunt-game .q-connection {
+    display: flex;
+    gap: 8px;
+    padding-bottom: 8px;
+  }
+  .hunt-game .q-connection .q-mode {
+    flex: 1;
+    min-width: 0;
+  }
+  .hunt-game .q-connection .wallet-adapter-dropdown {
+    max-width: 130px;
+  }
+  .hunt-game .q-hunt-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .hunt-game .q-hunt-controls > * {
+    grid-column: 1 / -1;
+  }
+  .hunt-game .q-hunt-controls:has(.q-cancel) > .q-button,
+  .hunt-game .q-hunt-controls > .q-cancel {
+    grid-column: auto;
+    min-height: 44px;
+    font-size: 12px;
+    padding: 8px;
+  }
+}

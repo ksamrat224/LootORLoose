@@ -1,29 +1,37 @@
-> New practice hunts use [V6 rewards](HUNTS_V6.md); deployed devnet and existing V5 hunts keep [V5 rules](HUNTS_V5.md). Stake once, hunt three different quests from six, then collect their combined loot. The compatible V6 upgrade and automated live checks passed; normal activation awaits Phantom verification. V3/V4 recovery is preserved.
+# Loot or Lose — Current roadmap
 
-# Loot or Lose — Roadmap, issues and fixes
+Updated Nov 26, 2026. Current loop: stake once → explore six guardians → open three distinct quests → collect once. All credits are fictional and have no cash value.
 
-## V6 reward rollout — Nov 26, 2026
+## Implemented
 
-- [x] New practice hunts use the smoother 95.55% reward table; existing V5 hunts retain their rewards.
-- [x] Implement version-aware program creation, reservations, callbacks, proofs and settlement without account migration or a second allocation.
-- [x] Complete the [V6 practice review](HUNTS_V6.md#practice-review): automated checks passed and owner feedback is positive.
-- [x] Deploy compatible binary and verify base/ER bytes, authenticated V6 reveals, pre-upgrade V5 recovery and fresh-wallet browser settlement; see [V6 release evidence](DEVNET_V6_VERIFICATION.md).
-- [ ] Enable `NEXT_PUBLIC_HUNT_V6_ENABLED` only after those live checks. Currently false; existing V5 devnet remains available.
+- V6 practice rewards (95.55% theoretical return before cent rounding), with original V5 saves and proofs retained.
+- Compatible V5/V6 binary deployed; automated base/ER binary, authenticated reveal, session revocation, settlement and V5 recovery checks passed. See [release evidence](DEVNET_V6_VERIFICATION.md).
+- Combined preparation, ER subscriptions with polling fallback, and separate hunt-key/token revocation confirmation.
+- Discovery lighting with visible paths and quest markers; six original guardian stories in a browser-local journal.
+- Optional North Trail, South Trail and Across the Vault badges, earned only after confirmed collection. No reward changes or additional transactions.
+- Contextual, dismissible guide; shared dialog spacing and internally scrolling secondary information. [Polish verification](HUNT_POLISH.md): lint/build and 103 browser tests passed.
 
+## Required before normal V6 activation
 
-_Written Nov 25, 2026. Demo target: **Nov 27, 2026**. Audience: the team. Read with [mvp.md](../mvp.md) (what the finished MVP is) and [UI_DIRECTION.md](UI_DIRECTION.md) (what the UI should become)._
+- [ ] Complete the actual-user [Phantom checklist](DEVNET_V6_VERIFICATION.md#manual-phantom--pending): rejection/retry, preparation, session reveals, reload/renewal, revocation recovery, collection, cancellation and wallet switching.
+- [ ] Record user observations separately from automated results. Pending-request manual revocation remains unobserved if callbacks finish too quickly.
+- [ ] Enable normal V6 creation only after required manual checks pass. Until then, normal devnet creation stays V5; isolated release candidate uses V6.
+- [ ] Review discovery, route goals and pacing with the owner after several hunts. Cosmetic progression alone does not establish retention.
+- [ ] Record the backup demo using [the demo script](HUNT_DEMO.md). A script is not a recorded video.
 
-## Where we are
+## Known limitations
 
-- V5 three-reveal hunts and the fixed-screen UI are implemented locally; see [HUNTS_V5.md](HUNTS_V5.md). V5 is deployed and verified on devnet, including real VRF, settlement and a fresh-wallet browser lifecycle; see [live evidence](DEVNET_V5_VERIFICATION.md). The tasks below originated for V3 and do not verify V5.
+- Journal, badges, guide preferences and discovery maps are local to this browser, separated between practice and devnet wallets. They are not onchain achievements; clearing browser data removes them.
+- Unresolved hunts retain fictional-credit reservations until completed by their wallet. No expiry, forfeiture or administrative refund exists.
+- Controlled client interruptions passed. An actual provider outage is still untested.
+- V3/V4 recovery remains available. No legacy account or reward migration is part of UI polish.
 
-Current V5 integration checks (Nov 26):
+## Historical sequential-gate planning
 
-- [x] Combined preparation, ER subscriptions with fallback, and wallet-only session revocation implemented and verified on devnet.
-- [x] Controlled client connection interruptions after real request/settlement uploads recovered without replacing the hunt.
-- [x] Read-only reservation reconciliation reports retained abandoned hunts; their rules remain unchanged.
-- [ ] Manual Phantom approval checklist in [DEVNET_SESSION_VERIFICATION.md](DEVNET_SESSION_VERIFICATION.md).
-- [ ] Actual provider-outage recovery exercise. Controlled connection failures do not establish provider-outage coverage.
+The notes below concern older V3 gates and are retained for context. Their gate odds, risk ladder, deadlines, acceptance criteria and schedule do not describe the current three-reveal hunt or its release gates.
+
+<details>
+<summary>Archived V3 notes and original roadmap</summary>
 
 Historical V3 implementation notes:
 
@@ -125,3 +133,5 @@ Priority key: **P0** must be done before the demo, **P1** makes the MVP more win
 - [ ] No claim of real money, mainnet, audit or guaranteed returns anywhere in the UI or the pitch.
 - [ ] `assets/LICENSES.md` lists every third-party asset.
 - [ ] Backup video recorded and stored outside the repo.
+
+</details>

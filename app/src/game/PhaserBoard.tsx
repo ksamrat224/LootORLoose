@@ -12,6 +12,7 @@ import {
 } from "./model";
 import { QUESTS } from "./quest-rules";
 import { GATES } from "./wager-rules";
+import { GUARDIANS } from "./hunt-discovery";
 
 type Props = {
   state: DemoState;
@@ -21,6 +22,7 @@ type Props = {
   questMode?: boolean;
   gatePhase?: string;
   gateIndex?: number;
+  exploration?: { tiles: readonly string[] };
 };
 
 export function PhaserBoard({
@@ -31,7 +33,10 @@ export function PhaserBoard({
   questMode = false,
   gatePhase = "active",
   gateIndex = 0,
+  exploration,
 }: Props) {
+  const explorationRef = useRef(exploration);
+  explorationRef.current = exploration;
   const host = useRef<HTMLDivElement>(null);
   const game = useRef<import("phaser").Game | null>(null);
   const callbacks = useRef({ onMove, onInteract });
@@ -47,7 +52,7 @@ export function PhaserBoard({
       if (host.current && game.current && questMode)
         game.current.scale.setParentSize(
           host.current.clientWidth,
-          host.current.clientHeight
+          host.current.clientHeight,
         );
     });
     if (host.current && questMode) observer.observe(host.current);
@@ -56,9 +61,14 @@ export function PhaserBoard({
       const tile = 38;
       const landmarks = questMode ? QUESTS : GATES;
       const reducedMotion = window.matchMedia(
-        "(prefers-reduced-motion: reduce)"
+        "(prefers-reduced-motion: reduce)",
       );
       class Dungeon extends Phaser.Scene {
+        private floors: {
+          image: import("phaser").GameObjects.Image;
+          key: string;
+        }[] = [];
+        private lastTiles?: readonly string[];
         private player?: import("phaser").GameObjects.Image;
         private crown?: import("phaser").GameObjects.Rectangle;
         private chests: import("phaser").GameObjects.Image[] = [];
@@ -75,7 +85,7 @@ export function PhaserBoard({
         }
         create() {
           this.keys = this.input.keyboard?.addKeys(
-            "W,A,S,D,UP,RIGHT,DOWN,LEFT"
+            "W,A,S,D,UP,RIGHT,DOWN,LEFT",
           ) as Record<string, import("phaser").Input.Keyboard.Key> | undefined;
           this.cameras.main.setBackgroundColor("#0e1317");
           MAP.forEach((row, y) =>
@@ -83,8 +93,13 @@ export function PhaserBoard({
               const wall = cell === "#";
               const px = x * tile,
                 py = y * tile;
-              this.add.image(px + 19, py + 19, wall ? "wall-art" : "floor-art");
-            })
+              const image = this.add.image(
+                px + 19,
+                py + 19,
+                wall ? "wall-art" : "floor-art",
+              );
+              if (!wall) this.floors.push({ image, key: `${x},${y}` });
+            }),
           );
           if (!wagerMode) {
             this.add
@@ -93,14 +108,14 @@ export function PhaserBoard({
                 EARLY_EXIT.y * tile + 19,
                 30,
                 30,
-                0x3b746c
+                0x3b746c,
               )
               .setStrokeStyle(2, 0xa7ead1);
             this.add.text(
               EARLY_EXIT.x * tile + 11,
               EARLY_EXIT.y * tile + 10,
               "↖",
-              { fontSize: "20px", color: "#e6fffa" }
+              { fontSize: "20px", color: "#e6fffa" },
             );
             this.add
               .rectangle(
@@ -108,7 +123,7 @@ export function PhaserBoard({
                 EXIT.y * tile + 19,
                 30,
                 30,
-                0x246c79
+                0x246c79,
               )
               .setStrokeStyle(2, 0x9df4e8);
             this.add.text(EXIT.x * tile + 11, EXIT.y * tile + 10, "↗", {
@@ -123,13 +138,13 @@ export function PhaserBoard({
                 chest.y * tile + 25,
                 28,
                 5,
-                0x12171b
+                0x12171b,
               )
               .setAlpha(0.55);
             const box = this.add.image(
               chest.x * tile + 19,
               chest.y * tile + 17,
-              "door-art"
+              "door-art",
             );
             this.chests.push(box);
             if (wagerMode) {
@@ -149,7 +164,7 @@ export function PhaserBoard({
                 chest.x * tile + 30,
                 chest.y * tile + 29,
                 6,
-                colors[id]
+                colors[id],
               );
               if (!reducedMotion.matches)
                 this.tweens.add({
@@ -168,7 +183,7 @@ export function PhaserBoard({
               ENEMY.y * tile + 19,
               17,
               0x9c5559,
-              0.14
+              0.14,
             );
             this.add
               .circle(ENEMY.x * tile + 19, ENEMY.y * tile + 19, 12, 0x9c5559)
@@ -189,7 +204,7 @@ export function PhaserBoard({
                 y * tile + 19,
                 75,
                 0xe0a34f,
-                0.06
+                0.06,
               );
               this.add.circle(x * tile + 19, y * tile + 19, 24, 0xffbf67, 0.09);
               if (!reducedMotion.matches)
@@ -206,13 +221,13 @@ export function PhaserBoard({
             if (
               document.querySelector("dialog[open]") ||
               document.activeElement?.matches(
-                "button,input,textarea,select,[contenteditable=true]"
+                "button,input,textarea,select,[contenteditable=true]",
               )
             )
               return;
             if (
               ["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft", " "].includes(
-                event.key
+                event.key,
               )
             )
               event.preventDefault();
@@ -222,6 +237,14 @@ export function PhaserBoard({
         }
         update(time: number) {
           const current = stateRef.current;
+          const tiles = explorationRef.current?.tiles;
+          if (tiles !== this.lastTiles) {
+            const visible = new Set(tiles);
+            this.floors.forEach(({ image, key }) =>
+              image.setTint(!tiles || visible.has(key) ? 0xffffff : 0x85817b),
+            );
+            this.lastTiles = tiles;
+          }
           if (this.player) {
             const speed = reducedMotion.matches ? 1 : 0.42;
             this.player.x += (current.x * tile + 19 - this.player.x) * speed;
@@ -234,8 +257,12 @@ export function PhaserBoard({
               return;
             }
             const { phase, index } = gateRef.current;
+            const accent = explorationRef.current
+              ? parseInt(GUARDIANS[id].color.slice(1), 16)
+              : 0x777168;
             const cleared = questMode
-              ? !!(current.opened & (1 << id)) || (id === index && phase === "succeeded")
+              ? !!(current.opened & (1 << id)) ||
+                (id === index && phase === "succeeded")
               : id < index;
             const failed = phase === "lost" && id === index;
             const ready =
@@ -253,14 +280,14 @@ export function PhaserBoard({
                 ? 0xffd47e
                 : id === index
                 ? 0xd9a452
-                : 0x777168
+                : accent,
             );
             box.setAlpha(
               !reducedMotion.matches &&
                 phase === "randomnessPending" &&
                 id === index
                 ? 0.65 + Math.sin(time / 220) * 0.2
-                : 1
+                : 1,
             );
           });
           if (
@@ -271,7 +298,7 @@ export function PhaserBoard({
             return;
           if (
             document.activeElement?.matches(
-              "input,textarea,select,[contenteditable=true]"
+              "input,textarea,select,[contenteditable=true]",
             )
           )
             return;
@@ -307,7 +334,7 @@ export function PhaserBoard({
       if (questMode && host.current)
         game.current.scale.setParentSize(
           host.current.clientWidth,
-          host.current.clientHeight
+          host.current.clientHeight,
         );
     });
     return () => {
