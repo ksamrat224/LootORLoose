@@ -88,9 +88,37 @@
   color: var(--foreground);
 }
 .quest-welcome-copy > .q-button {
-  width: 220px;
-  display: flex;
-  justify-content: space-between;
+  width: min(100%, 280px);
+  min-height: 56px;
+  padding: 16px 24px;
+  display: inline-flex;
+  justify-content: center;
+  gap: 12px;
+  border-radius: 10px;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.quest-welcome-copy > .q-button svg {
+  flex: none;
+}
+.quest-welcome-copy > .q-button:hover {
+  background: var(--primary-light);
+  border-color: var(--primary-light);
+}
+.quest-welcome-copy > .q-button:active {
+  background: var(--primary);
+}
+@media (max-width: 700px) {
+  .quest-welcome-copy > .q-button {
+    width: 100%;
+  }
+}
+@media (max-height: 500px) and (min-width: 701px) {
+  .quest-welcome-copy > .q-button {
+    min-height: 48px;
+    padding: 12px 24px;
+  }
 }
 .quest-welcome-copy > a {
   color: var(--muted);

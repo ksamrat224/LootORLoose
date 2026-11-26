@@ -1,3 +1,9 @@
+import {
+  enableReleaseReadRetries,
+  expectedRules,
+  assertRules,
+  verifyRuntimeBinary,
+} from "./hunt-release";
 import { QUESTS, approachPath } from "../src/game/hunt-rules";
 import { verifyHunt } from "../src/game/HuntProof";
 import { readPlayer as readV4Player } from "../src/lib/quest-chain";
@@ -5,10 +11,8 @@ import { readPlayer as readV3Player } from "../src/lib/wager-chain";
 /** Bounded live verification. Every attempt is a new, normally settled wager; never reroll a gate. */
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
 import {
   Keypair,
-  PublicKey,
   Transaction,
   type VersionedTransaction,
 } from "@solana/web3.js";
@@ -77,30 +81,7 @@ async function main() {
   console.log(
     `DEVNET ONLY · program ${PROGRAM_ID} · wallet ${payer.publicKey}`,
   );
-  const deployed = await base.getAccountInfo(PROGRAM_ID);
-  if (
-    !deployed?.executable ||
-    deployed.data.length !== 36 ||
-    deployed.data.readUInt32LE(0) !== 2
-  )
-    throw new Error("Expected the upgradeable base-layer program");
-  const programData = await base.getAccountInfo(
-    new PublicKey(deployed.data.subarray(4, 36)),
-  );
-  const binary = readFileSync(
-    new URL("../../target/deploy/loot_or_lose.so", import.meta.url),
-  );
-  const hash = (value: Uint8Array) =>
-    createHash("sha256").update(value).digest("hex");
-  if (
-    !programData ||
-    !programData.owner.equals(deployed.owner) ||
-    programData.data.length < binary.length + 45 ||
-    hash(programData.data.subarray(45, 45 + binary.length)) !== hash(binary)
-  )
-    throw new Error(
-      "The local hunt binary is not deployed on base devnet. No hunt transactions were sent.",
-    );
+  await verifyRuntimeBinary(base);
 
   if (!process.argv.includes("--send")) {
     console.log(
@@ -108,6 +89,8 @@ async function main() {
     );
     return;
   }
+  const expected = expectedRules(process.argv);
+  enableReleaseReadRetries();
   const option = process.argv.find((arg) => arg.startsWith("--quests="));
   const order = option ? option.slice(9).split(",").map(Number) : [0, 1, 2];
   if (
@@ -138,6 +121,7 @@ async function main() {
       ? player.activeIndex.toNumber()
       : await createWager(wallet, 200);
     let value = await state(index);
+    assertRules(value, expected);
     let session:
       | Awaited<ReturnType<typeof createGameSession>>["session"]
       | null = null;
@@ -170,6 +154,7 @@ async function main() {
       );
       value = await waitForResult(index, value.revealCount + 1);
     }
+    assertRules(value, expected);
     if (!(await verifyHunt(value)))
       throw new Error(
         `V${value.rulesVersion} reward proof mismatch before settlement`,
@@ -188,6 +173,7 @@ async function main() {
       !(await verifyHunt(receipt))
     )
       throw new Error("Versioned hunt settlement invariant or proof mismatch");
+    assertRules(receipt, expected);
     if (
       !value.settled &&
       before &&

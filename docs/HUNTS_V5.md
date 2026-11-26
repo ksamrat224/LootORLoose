@@ -40,7 +40,7 @@ Historical interfaces remain at `/recovery` (V3) and `/recovery/quests` (V4). Th
 
 ## Rollout and verification
 
-V5 was deployed and verified on devnet on Nov 25, 2026. `NEXT_PUBLIC_HUNT_V5_ENABLED=true` in the example environment enables it; unset or false still disables it. The verified V5 release bytes matched its build; the current local V6 build is not deployed. In that V5 release, real VRF includes zero and positive rewards, base settlement and duplicate-settlement safety passed, and a fresh-wallet browser lifecycle passed. See [live evidence and limits](DEVNET_V5_VERIFICATION.md); existing V3 evidence and mocked tests alone do not verify V5.
+V5 was deployed and verified on devnet on Nov 25, 2026. `NEXT_PUBLIC_HUNT_V5_ENABLED=true` in the example environment enables it; unset or false still disables it. The verified V5 release bytes matched its build. The subsequent [compatible V6 upgrade](DEVNET_V6_VERIFICATION.md) is deployed; normal creation remains V5 pending manual Phantom checks. In that V5 release, real VRF includes zero and positive rewards, base settlement and duplicate-settlement safety passed, and a fresh-wallet browser lifecycle passed. See [live evidence and limits](DEVNET_V5_VERIFICATION.md); existing V3 evidence and mocked tests alone do not verify V5.
 
 ```bash
 NO_DNA=1 anchor build --ignore-keys
@@ -51,11 +51,11 @@ npm run build
 npm test
 ```
 
-`npm run verify:devnet-hunts` is a read-only binary comparison. Explicit `--send --quests=0,1,2` enables up to 12 ordinary $2 demo hunts with the configured CLI wallet, session funding (0.002 devnet SOL each) and transaction fees. It resumes partial/pending hunts, settles before creating another and recomputes all proofs. It never forces a prize or rerolls a request. Do not run live sends before an authorized matching deployment.
+`npm run verify:devnet-hunts` is a read-only binary comparison. Explicit `--send --expect-rules=5 --quests=0,1,2` enables up to 12 ordinary $2 demo hunts with the configured CLI wallet, session funding (0.002 devnet SOL each) and transaction fees. It resumes partial/pending hunts, settles before creating another and recomputes all proofs. It never forces a prize or rerolls a request. Do not run live sends before an authorized matching deployment.
 
 Program tests use controlled callback fixtures in LiteSVM; signature verification is disabled only for those fixture callbacks. Request-transition unit checks and session rejection tests do not replace a successful live VRF CPI. Browser fixtures intercept RPC and do not send real devnet transactions. Viewport checks cover 375×667, 768×900, 1280×720 and 844×390, including reduced motion and dialog focus.
 
-The separate live browser check is `npm run verify:devnet-hunts-browser -- --send`, against a local app started with `NEXT_PUBLIC_HUNT_V5_ENABLED=true` on port 3230. It uses real RPC with an automated Wallet Standard signer, funds a fresh test wallet with 0.05 devnet SOL, exercises reload/session recovery, three reveals, proofs, collection and cancellation, and returns remaining liquid SOL. It prints a public wallet tag; the signer can be reconstructed in memory from that tag and the same configured CLI key using HMAC-SHA256 with domain `loot-or-lose:devnet-browser:v1:`. No additional private key file is stored. Driver failures are not browser passes.
+The separate live browser check is `npm run verify:devnet-hunts-browser -- --send --expect-rules=5`, against a local app started with `NEXT_PUBLIC_HUNT_V5_ENABLED=true` on port 3230. It uses real RPC with an automated Wallet Standard signer, funds a fresh test wallet with 0.05 devnet SOL, exercises reload/session recovery, three reveals, proofs, collection and cancellation, and returns remaining liquid SOL. It prints a public wallet tag; the signer can be reconstructed in memory from that tag and the same configured CLI key using HMAC-SHA256 with domain `loot-or-lose:devnet-browser:v1:`. No additional private key file is stored. Driver failures are not browser passes.
 
 ## November 26 integration update
 

@@ -1,4 +1,4 @@
-> Current gameplay: new practice hunts use [V6 rewards](docs/HUNTS_V6.md), averaging 95.55% before rounding. Existing V5 hunts and deployed devnet retain [V5 rules](docs/HUNTS_V5.md). V6 devnet creation stays disabled pending deployment and live verification. V3/V4 recovery is preserved.
+> Current gameplay: new practice hunts use [V6 rewards](docs/HUNTS_V6.md), averaging 95.55% before rounding. Existing V5 hunts and deployed devnet retain [V5 rules](docs/HUNTS_V5.md). The compatible V6 upgrade and automated live checks passed; V6 creation stays disabled in the normal app pending manual Phantom verification. V3/V4 recovery is preserved.
 
 # Loot or Lose — V3 demo-credit dungeon
 

@@ -1,3 +1,9 @@
+import {
+  enableReleaseReadRetries,
+  expectedRules,
+  assertRules,
+  verifyRuntimeBinary,
+} from "./hunt-release";
 /** Devnet-only session revocation/propagation check. Every accepted request is preserved. */
 import {
   Keypair,
@@ -9,7 +15,7 @@ import {
 import { BN } from "@coral-xyz/anchor";
 import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
-import { createHash, createHmac, randomUUID } from "node:crypto";
+import { createHmac, randomUUID } from "node:crypto";
 import {
   base,
   program,
@@ -23,6 +29,10 @@ import {
   prepareHunt,
   readWager,
   readPlayer,
+  readHouse,
+  houseAddress,
+  playerAddress,
+  ticketAddress,
   settleWager,
   wagerAction,
   authorizeWagerSession,
@@ -40,21 +50,9 @@ async function main() {
     throw new Error(
       "Use --send on devnet only; funds one temporary wallet with 0.03 devnet SOL",
     );
-  const deployed = await base.getAccountInfo(PROGRAM_ID);
-  if (!deployed?.executable || deployed.data.readUInt32LE(0) !== 2)
-    throw new Error("Expected upgradeable program");
-  const data = await base.getAccountInfo(
-    new PublicKey(deployed.data.subarray(4, 36)),
-  );
-  const binary = readFileSync(
-    new URL("../../target/deploy/loot_or_lose.so", import.meta.url),
-  );
-  const hash = (v: Uint8Array) => createHash("sha256").update(v).digest("hex");
-  if (
-    !data ||
-    hash(data.data.subarray(45, 45 + binary.length)) !== hash(binary)
-  )
-    throw new Error("Binary mismatch; no funding sent");
+  const expected = expectedRules(process.argv);
+  enableReleaseReadRetries();
+  await verifyRuntimeBinary(base);
   const path =
     process.env.SOLANA_KEYPAIR ||
     execFileSync("solana", ["config", "get"], { encoding: "utf8" })
@@ -96,6 +94,54 @@ async function main() {
   );
   let player = await readPlayer(wallet);
   if (player && !player.active) {
+    const previous = await readWager(
+      wallet,
+      player.nextIndex.toNumber() - 1,
+      true,
+    );
+    if (!previous?.settled)
+      throw new Error("Expected an already-settled tagged hunt");
+    assertRules(previous, expected);
+    if (process.argv.includes("--probe-settled-credit")) {
+      const beforeHouse = await readHouse(wallet);
+      const beforeBalance = player.balance.toNumber();
+      const transaction = await program(base, walletFor(payer))
+        .methods.settleHuntAttempt(new BN(previous.index))
+        .accountsPartial({
+          house: houseAddress(),
+          player: playerAddress(wallet.publicKey),
+          ticket: ticketAddress(wallet.publicKey, previous.index),
+          wager: previous.address,
+          authority: wallet.publicKey,
+        })
+        .transaction();
+      // Send the actual duplicate instruction, with the original payer sponsoring its fee.
+      const signature = await submit(base, walletFor(payer), transaction, [
+        fresh,
+      ]);
+      const afterPlayer = await readPlayer(wallet),
+        afterHouse = await readHouse(wallet);
+      if (
+        afterPlayer?.balance.toNumber() !== beforeBalance ||
+        !beforeHouse ||
+        !afterHouse ||
+        !afterHouse.balance.eq(beforeHouse.balance) ||
+        !afterHouse.reserved.eq(beforeHouse.reserved)
+      )
+        throw new Error("Duplicate credit changed the ledger");
+      console.log(
+        "DUPLICATE_ON_CHAIN_CREDIT_NOOP",
+        JSON.stringify({
+          signature,
+          wallet: wallet.publicKey.toBase58(),
+          hunt: previous.address.toBase58(),
+          rulesVersion: previous.rulesVersion,
+          balance: beforeBalance,
+          houseBalance: afterHouse.balance.toNumber(),
+          reserved: afterHouse.reserved.toNumber(),
+        }),
+      );
+    }
     console.log(
       "This tagged check is already settled; no new hunt or funding sent.",
     );
@@ -134,9 +180,12 @@ async function main() {
     const get = async () => {
       const state = await readWager(wallet, index!);
       if (!state) throw new Error("Missing hunt");
+      assertRules(state, expected);
       return state;
     };
     let state = await get();
+    const runtime = await resolveEr(state.address);
+    if (runtime.connection) await verifyRuntimeBinary(runtime.connection);
     const observed: { nonce: number; count: number; at: number }[] = [];
     const stop = watchHunt(
       wallet,
@@ -254,6 +303,24 @@ async function main() {
           state.address.toBase58(),
           state.reveals[0],
         );
+        if (process.argv.includes("--pause-after-first-reveal")) {
+          console.log(
+            "PRE_UPGRADE_HUNT_RETAINED",
+            JSON.stringify({
+              wallet: wallet.publicKey.toBase58(),
+              hunt: state.address.toBase58(),
+              rulesVersion: state.rulesVersion,
+              index,
+              revealCount: state.revealCount,
+              payout: state.payout,
+              reveals: state.reveals,
+              nonce: state.nonce,
+              requestNonce: state.requestNonce,
+              recoveryTag: tag,
+            }),
+          );
+          return;
+        }
         activeSession = (await createGameSession(wallet)).session;
       }
       while (!terminal(state)) {
@@ -290,11 +357,18 @@ async function main() {
         player?.balance.toNumber() !== 9800 + settled.payout
       )
         throw new Error("Settlement mismatch");
+      assertRules(settled, expected);
+      // A duplicate base credit must be a no-op.
+      const confirmedBalance = player.balance.toNumber();
+      await settleWager(wallet, settled, console.log);
+      if ((await readPlayer(wallet))?.balance.toNumber() !== confirmedBalance)
+        throw new Error("Duplicate settlement changed balance");
       console.log(
         "SESSION_CHECK_SETTLED",
         JSON.stringify({
           wallet: wallet.publicKey.toBase58(),
           hunt: settled.address.toBase58(),
+          rulesVersion: settled.rulesVersion,
           return: settled.payout,
           balance: player.balance.toNumber(),
           approvals,

@@ -1,6 +1,6 @@
 # V5 preparation, subscriptions and session verification
 
-> This records the deployed V5 release. The subsequent [V6 reward implementation](HUNTS_V6.md) changes the local binary only; V6 deployment and live verification are pending.
+> This records the deployed V5 release. The subsequent [V6 upgrade and live verification](DEVNET_V6_VERIFICATION.md) supersedes the binary hash below; normal V6 activation remains gated on manual Phantom checks.
 
 Verified November 26, 2026, on devnet. All game balances are fictional demo credits. This supplements the [initial V5 verification](DEVNET_V5_VERIFICATION.md).
 
@@ -44,8 +44,8 @@ From `app/`:
 ```bash
 npm run verify:devnet-hunts                         # read-only deployed ELF comparison
 npm run verify:devnet-reservations                  # read-only reservation reconciliation
-npm run verify:devnet-sessions -- --send             # bounded session lifecycle; 0.03 devnet SOL funding
-npm run verify:devnet-hunts-browser -- --send --interrupt --reject-binding
+npm run verify:devnet-sessions -- --send --expect-rules=5             # bounded session lifecycle; 0.03 devnet SOL funding
+npm run verify:devnet-hunts-browser -- --send --expect-rules=5 --interrupt --reject-binding
 ```
 
 The browser checker requires a localhost app with both V5 and session controls enabled (default port 3230). It funds a fresh wallet with 0.05 devnet SOL. Every accepted pending request remains bound to its hunt and is observed rather than rerolled. Failed checks are not reported as passes.

@@ -1299,7 +1299,7 @@ export function HuntGame() {
         <p>
           Balance: {balance === null ? "Loading…" : money(balance)}
           {live
-            ? " · V5 has a separate one-time $100 demo allocation."
+            ? " · V5 and V6 hunts share one one-time $100 demo allocation."
             : " · practice credits"}
         </p>
         <form

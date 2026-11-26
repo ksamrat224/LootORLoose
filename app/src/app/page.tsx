@@ -49,7 +49,20 @@ export default function Home() {
               Stake once. Hunt three of six guardians. Reveal your hidden loot.
             </p>
             <button className="q-button" onClick={() => setPlaying(true)}>
-              Play <span aria-hidden="true">→</span>
+              Play
+              <svg
+                aria-hidden="true"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 12h14m-6-6 6 6-6 6" />
+              </svg>
             </button>
             <span className="q-demo">DEMO CREDITS · NO CASH VALUE</span>
             <Link href="/recovery">Recover an earlier V3 run ↗</Link>

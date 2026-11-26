@@ -1,3 +1,9 @@
+import {
+  enableReleaseReadRetries,
+  expectedRules,
+  assertRules,
+  verifyRuntimeBinary,
+} from "./hunt-release";
 /** Real devnet RPC + fresh Wallet Standard signer; --interrupt drops selected real RPC responses. */
 import { chromium, expect, type Page } from "@playwright/test";
 import { BorshInstructionCoder } from "@coral-xyz/anchor";
@@ -12,13 +18,14 @@ import {
 } from "@solana/web3.js";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { createHash, createHmac, randomUUID } from "node:crypto";
+import { createHmac, randomUUID } from "node:crypto";
 import {
   base,
   PROGRAM_ID,
   submit,
   createGameSession,
   program,
+  resolveEr,
 } from "../src/lib/chain";
 import {
   readPlayer,
@@ -95,27 +102,9 @@ async function main() {
   const url = new URL(process.env.LIVE_HUNT_URL || "http://localhost:3230");
   if (!["localhost", "127.0.0.1"].includes(url.hostname))
     throw new Error("Browser signer is restricted to the local app");
-  const deployed = await base.getAccountInfo(PROGRAM_ID);
-  if (
-    !deployed?.executable ||
-    deployed.data.length !== 36 ||
-    deployed.data.readUInt32LE(0) !== 2
-  )
-    throw new Error("Expected upgradeable program");
-  const data = await base.getAccountInfo(
-    new PublicKey(deployed.data.subarray(4, 36)),
-  );
-  const binary = readFileSync(
-    new URL("../../target/deploy/loot_or_lose.so", import.meta.url),
-  );
-  const hash = (bytes: Uint8Array) =>
-    createHash("sha256").update(bytes).digest("hex");
-  if (
-    !data ||
-    !data.owner.equals(deployed.owner) ||
-    hash(data.data.subarray(45, 45 + binary.length)) !== hash(binary)
-  )
-    throw new Error("Deployed binary does not match; no funding sent");
+  const expected = expectedRules(process.argv);
+  enableReleaseReadRetries();
+  await verifyRuntimeBinary(base);
   const path =
     process.env.SOLANA_KEYPAIR ||
     execFileSync("solana", ["config", "get"], { encoding: "utf8" })
@@ -335,6 +324,7 @@ async function main() {
     if (!p?.active) throw new Error("Expected active hunt");
     const value = await readWager(wallet, p.activeIndex.toNumber());
     if (!value) throw new Error("Expected readable hunt");
+    assertRules(value, expected);
     return value;
   };
   try {
@@ -366,6 +356,10 @@ async function main() {
     );
     if (signatures !== 1)
       throw new Error("Fresh preparation did not use one wallet approval");
+    const initial = await snapshot();
+    const runtime = await resolveEr(initial.address);
+    if (!runtime.connection) throw new Error("Expected delegated hunt runtime");
+    await verifyRuntimeBinary(runtime.connection);
     for (const [step, id] of [5, 3, 4].entries()) {
       const current = await snapshot();
       if (current.phase !== "active" || current.revealCount !== step)
@@ -409,6 +403,7 @@ async function main() {
       console.log(
         "BROWSER_REVEAL",
         JSON.stringify({
+          rulesVersion: resolved.rulesVersion,
           questId: id,
           count: resolved.revealCount,
           payout: resolved.payout,
@@ -520,11 +515,16 @@ async function main() {
       house.balance.lt(house.reserved)
     )
       throw new Error("Browser settlement invariant failed");
+    assertRules(receipt, expected);
+    await settleWager(wallet, receipt, console.log);
+    if (!(await readPlayer(wallet))?.balance.eq(credited.balance))
+      throw new Error("Duplicate settlement changed browser balance");
     console.log(
       "BROWSER_SETTLED",
       JSON.stringify({
         wallet: authority.toBase58(),
         hunt: receipt.address.toBase58(),
+        rulesVersion: receipt.rulesVersion,
         return: receipt.payout,
         balance: credited.balance.toNumber(),
         reveals: receipt.reveals,
@@ -548,6 +548,22 @@ async function main() {
       .click();
     await waitForSettlement(page, "REFUNDED", "Collect refund");
     const final = await readPlayer(wallet);
+    const refund = await readWager(
+      wallet,
+      (final?.nextIndex.toNumber() ?? 1) - 1,
+      true,
+    );
+    if (!refund?.settled || refund.phase !== "cancelled")
+      throw new Error("Missing confirmed refund");
+    assertRules(refund, expected);
+    console.log(
+      "BROWSER_REFUND_RECEIPT",
+      JSON.stringify({
+        hunt: refund.address.toBase58(),
+        rulesVersion: refund.rulesVersion,
+        payout: refund.payout,
+      }),
+    );
     if (!final || final.active || !final.balance.eq(credited.balance))
       throw new Error("Cancellation failed to refund exactly");
     if (process.argv.includes("--interrupt") && interrupted.size !== 2)

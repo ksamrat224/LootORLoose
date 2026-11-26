@@ -1,6 +1,6 @@
 # Current MVP direction: stake once, hunt three
 
-The current implementation uses one stake, three distinct quests chosen from six, independent random rewards and one final collection. New practice hunts use [V6 rewards](docs/HUNTS_V6.md), averaging 95.55% before rounding. Existing V5 hunts and deployed devnet retain [V5 rules](docs/HUNTS_V5.md) and their 86.5% average. V6 devnet creation stays disabled pending deployment and live verification. Earlier versions below remain historical context.
+The current implementation uses one stake, three distinct quests chosen from six, independent random rewards and one final collection. New practice hunts use [V6 rewards](docs/HUNTS_V6.md), averaging 95.55% before rounding. Existing V5 hunts and deployed devnet retain [V5 rules](docs/HUNTS_V5.md) and their 86.5% average. The compatible V6 upgrade and automated live checks passed; V6 creation stays disabled in the normal app pending manual Phantom verification. Earlier versions below remain historical context.
 
 ---
 

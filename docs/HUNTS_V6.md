@@ -1,6 +1,6 @@
 # V6 — smoother loot, practice first
 
-New practice hunts use V6. Existing practice and devnet hunts keep the `rules_version` stored when created. Devnet still creates V5: `NEXT_PUBLIC_HUNT_V6_ENABLED=false` by default. The compatible V6 binary is built locally, **not deployed**. Historical V5 live evidence does not verify this new binary.
+New practice hunts use V6. Existing practice and devnet hunts keep the `rules_version` stored when created. Devnet still creates V5: `NEXT_PUBLIC_HUNT_V6_ENABLED=false` by default. The compatible V6 binary was upgraded on devnet on Nov 26; see [release evidence](DEVNET_V6_VERIFICATION.md). New V6 creation remains disabled in the normal app until automated checks and guided Phantom verification pass.
 
 | Share of original stake | Probability | Buckets |
 | --- | --- | --- |
@@ -25,12 +25,12 @@ Practice keeps the existing `loot-hunt-v5-practice` storage key to retain balanc
 
 ## Practice review
 
-- [ ] Start new hunts and confirm the optional Reward rules dialog shows V6, the four reward buckets and 95.55% before rounding.
-- [ ] Play a varied sample without rerolling losses. Review reward pacing and report actual observed outcomes separately from theoretical statistics.
-- [ ] Confirm quest popups and live HUD reveal no odds or future prizes; results distinguish return and net change.
-- [ ] Reload after a reveal and during the next request: same balance, rewards, hunt version and pending draw.
-- [ ] Confirm an existing V5 practice save still uses its 86.5% table through collection, then a new hunt uses V6.
-- [ ] Review mobile/desktop controls, keyboard focus, reduced motion and result readability.
+- [x] Automated browser checks confirm new hunts show V6, four reward buckets and 95.55% before rounding.
+- [x] Human practice feedback, Nov 26: owner reports “it look good to me” for reward pacing and UI. No empirical win-rate claim is inferred.
+- [x] Automated browser checks confirm hidden future rewards and distinct return/net amounts.
+- [x] Automated V5/V6 reload checks preserve balance, rewards, version and pending draw.
+- [x] Automated saved-V5 test collects using V5, then creates the next hunt with V6.
+- [x] Automated four-viewport, keyboard and reduced-motion checks pass; human general UI feedback is positive.
 
 ## Devnet release gate
 
@@ -38,7 +38,7 @@ Keep `NEXT_PUBLIC_HUNT_V6_ENABLED=false` during practice review. Existing `NEXT_
 
 A later authorized release must deploy the compatible program, verify matching base/ER binary bytes, verify V5 pending-hunt recovery, then use an isolated V6-enabled client for fresh-wallet V6 creation, authenticated VRF reveals and exactly-once settlement. Check reservations, session revoke/recovery, proofs and real approval counts. Only then enable V6 for new devnet hunts. Public flags select client instructions; they are not program access controls.
 
-No deployment, wallet signing, devnet funding or live release claims are part of this practice-first change. Manual Phantom and provider-outage checks remain tracked separately in the existing verification documents.
+The subsequent authorized devnet rollout is recorded in [V6 verification](DEVNET_V6_VERIFICATION.md). Manual Phantom and provider-outage results remain tracked separately; normal-app V6 activation is still gated.
 
 ## Local verification — Nov 26, 2026
 
@@ -47,4 +47,4 @@ No deployment, wallet signing, devnet funding or live release claims are part of
 - `npm --prefix app test -- --workers=4`: 88 passed, including exhaustive V6 probability enumeration, both-version arithmetic for all 9,901 supported cent stakes, V5/V6 practice reload through collection, the V6 creation gate, proof rejection and four viewport sizes.
 - Frontend lint and production build: passed.
 
-These are local and mocked-browser checks. Practice feel review, V6 deployment, authenticated live V6 VRF and fresh-wallet devnet verification remain pending.
+These are local and mocked-browser checks. Subsequent deployment and real devnet results are recorded separately in [V6 verification](DEVNET_V6_VERIFICATION.md); they do not replace manual Phantom observations.

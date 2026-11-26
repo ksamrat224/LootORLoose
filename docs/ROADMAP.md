@@ -1,4 +1,4 @@
-> New practice hunts use [V6 rewards](HUNTS_V6.md); deployed devnet and existing V5 hunts keep [V5 rules](HUNTS_V5.md). Stake once, hunt three different quests from six, then collect their combined loot. V6 deployment and live verification remain pending; V3/V4 recovery is preserved.
+> New practice hunts use [V6 rewards](HUNTS_V6.md); deployed devnet and existing V5 hunts keep [V5 rules](HUNTS_V5.md). Stake once, hunt three different quests from six, then collect their combined loot. The compatible V6 upgrade and automated live checks passed; normal activation awaits Phantom verification. V3/V4 recovery is preserved.
 
 # Loot or Lose — Roadmap, issues and fixes
 
@@ -6,8 +6,8 @@
 
 - [x] New practice hunts use the smoother 95.55% reward table; existing V5 hunts retain their rewards.
 - [x] Implement version-aware program creation, reservations, callbacks, proofs and settlement without account migration or a second allocation.
-- [ ] Complete the [V6 practice review](HUNTS_V6.md#practice-review).
-- [ ] Deploy the compatible binary; verify base and ER bytes, authenticated V6 reveals, V5 recovery and fresh-wallet settlement.
+- [x] Complete the [V6 practice review](HUNTS_V6.md#practice-review): automated checks passed and owner feedback is positive.
+- [x] Deploy compatible binary and verify base/ER bytes, authenticated V6 reveals, pre-upgrade V5 recovery and fresh-wallet browser settlement; see [V6 release evidence](DEVNET_V6_VERIFICATION.md).
 - [ ] Enable `NEXT_PUBLIC_HUNT_V6_ENABLED` only after those live checks. Currently false; existing V5 devnet remains available.
 
 
