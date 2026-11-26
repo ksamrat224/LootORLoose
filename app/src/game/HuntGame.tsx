@@ -977,179 +977,183 @@ export function HuntGame() {
             WASD / arrows · E to interact · walking is safe
           </p>
         </div>
-        <aside className="q-actions">
-          <div className="q-mode" role="group" aria-label="Play mode">
-            <label>
-              <input
-                type="radio"
-                name="quest-mode"
-                checked={!live}
-                disabled={busy || (!canChangeMode && !fallback)}
-                onChange={() => switchMode(false)}
-              />{" "}
-              Practice
-            </label>
-            <label
-              title={
-                !huntEnabled ? "V5 devnet verification is pending" : undefined
-              }
-            >
-              <input
-                type="radio"
-                name="quest-mode"
-                checked={live}
-                disabled={!huntEnabled || busy || !canChangeMode}
-                onChange={() => switchMode(true)}
-              />{" "}
-              Devnet
-            </label>
-          </div>
-          {live && <WalletMultiButton />}
-          <div className="q-objective">
-            <p className="q-eyebrow">
-              {stage
-                ? "Preparing attempt"
-                : recovering
-                ? "Recovery needed"
-                : pendingGate
-                ? "Randomness pending"
-                : frozen
-                ? "Quest result"
-                : active
-                ? "Hunt · open three quests"
-                : "Choose a stake to enter"}
-            </p>
-            <h1>
-              {stage ||
-                (active
-                  ? q.name
-                  : frozen
-                  ? attempt?.phase === "cancelled"
-                    ? "Hunt cancelled"
-                    : "Hunt complete"
-                  : "Ready for the hunt?")}
-            </h1>
-            <p className="q-status" role="status" aria-live="polite">
-              {message}
-            </p>
-          </div>
-          {stage && (
-            <ol className="q-stages">
-              {STEPS.map((step, i) => (
-                <li
-                  key={step}
-                  aria-current={stage === step ? "step" : undefined}
-                >
-                  {i + 1}. {step}
-                </li>
-              ))}
-            </ol>
-          )}
-          {legacy ? (
-            <>
-              <p>
-                Finish your unresolved V{legacy} run before preparing V5
-                credits.
-              </p>
-              <Link
-                className="q-button"
-                href={legacy === 4 ? "/recovery/quests" : "/recovery"}
+        <aside className="q-actions" aria-label="Hunt controls">
+          <div className="q-connection">
+            <div className="q-mode" role="group" aria-label="Play mode">
+              <label>
+                <input
+                  type="radio"
+                  name="quest-mode"
+                  checked={!live}
+                  disabled={busy || (!canChangeMode && !fallback)}
+                  onChange={() => switchMode(false)}
+                />{" "}
+                Practice
+              </label>
+              <label
+                title={
+                  !huntEnabled ? "V5 devnet verification is pending" : undefined
+                }
               >
-                Recover V{legacy} run
-              </Link>
-            </>
-          ) : recovering ? (
-            <button
-              className="q-button"
-              disabled={busy}
-              onClick={() => void recover()}
-            >
-              Recover existing attempt
-            </button>
-          ) : stage ? (
-            <p>Follow the current wallet approval. Keep this tab open.</p>
-          ) : pendingGate ? (
-            <>
+                <input
+                  type="radio"
+                  name="quest-mode"
+                  checked={live}
+                  disabled={!huntEnabled || busy || !canChangeMode}
+                  onChange={() => switchMode(true)}
+                />{" "}
+                Devnet
+              </label>
+            </div>
+            {live && <WalletMultiButton />}
+          </div>
+          <div className="q-hunt-controls">
+            <div className="q-objective">
+              <p className="q-eyebrow">
+                {stage
+                  ? "Preparing attempt"
+                  : recovering
+                  ? "Recovery needed"
+                  : pendingGate
+                  ? "Randomness pending"
+                  : frozen
+                  ? "Quest result"
+                  : active
+                  ? "Hunt · open three quests"
+                  : "Choose a stake to enter"}
+              </p>
+              <h1>
+                {stage ||
+                  (active
+                    ? q.name
+                    : frozen
+                    ? attempt?.phase === "cancelled"
+                      ? "Hunt cancelled"
+                      : "Hunt complete"
+                    : "Ready for the hunt?")}
+              </h1>
+              <p className="q-status" role="status" aria-live="polite">
+                {message}
+              </p>
+            </div>
+            {stage && (
+              <ol className="q-stages">
+                {STEPS.map((step, i) => (
+                  <li
+                    key={step}
+                    aria-current={stage === step ? "step" : undefined}
+                  >
+                    {i + 1}. {step}
+                  </li>
+                ))}
+              </ol>
+            )}
+            {legacy ? (
+              <>
+                <p>
+                  Finish your unresolved V{legacy} run before preparing V5
+                  credits.
+                </p>
+                <Link
+                  className="q-button"
+                  href={legacy === 4 ? "/recovery/quests" : "/recovery"}
+                >
+                  Recover V{legacy} run
+                </Link>
+              </>
+            ) : recovering ? (
               <button
                 className="q-button"
                 disabled={busy}
                 onClick={() => void recover()}
               >
-                Check existing request
+                Recover existing attempt
               </button>
-              <p className="q-small">
-                {now - attempt.requestedAt >= 60
-                  ? "The service is delayed. Your request stays pending; no reroll or automatic refund."
-                  : "Waiting for the same request. No further stake is charged."}
-              </p>
-            </>
-          ) : frozen ? (
-            <button className="q-button" onClick={() => setPanel("result")}>
-              {attempt.settled
-                ? "View result"
-                : attempt.phase === "cancelled"
-                ? "Collect refund"
-                : "Collect loot"}
-            </button>
-          ) : active ? (
-            <>
-              <button
-                className="q-button"
-                disabled={busy}
-                onClick={live && expiry <= now ? resume : interact}
-              >
-                {busy
-                  ? "Confirming…"
-                  : live && expiry <= now
-                  ? "Authorize gameplay session"
-                  : nearby
-                  ? attempt.openedMask & (1 << nearby.id)
-                    ? "Quest already opened"
-                    : "Open quest"
-                  : "Explore"}
-              </button>
-              {attempt.revealCount === 0 && attempt.requestNonce === 0 && (
-                <button className="q-quiet" disabled={busy} onClick={cancel}>
-                  Cancel hunt · full refund
+            ) : stage ? (
+              <p>Follow the current wallet approval. Keep this tab open.</p>
+            ) : pendingGate ? (
+              <>
+                <button
+                  className="q-button"
+                  disabled={busy}
+                  onClick={() => void recover()}
+                >
+                  Check existing request
                 </button>
-              )}
-            </>
-          ) : (
-            <>
-              <p className="q-small q-navigation-hint">
-                {nearby
-                  ? `You are beside ${nearby.name}.`
-                  : `Choose your stake, then hunt three of the six quests.`}
-              </p>
-              <button
-                className="q-button"
-                disabled={busy || !!(live && (!wallet || !loaded))}
-                onClick={openStake}
-              >
-                Choose stake
+                <p className="q-small">
+                  {now - attempt.requestedAt >= 60
+                    ? "The service is delayed. Your request stays pending; no reroll or automatic refund."
+                    : "Waiting for the same request. No further stake is charged."}
+                </p>
+              </>
+            ) : frozen ? (
+              <button className="q-button" onClick={() => setPanel("result")}>
+                {attempt.settled
+                  ? "View result"
+                  : attempt.phase === "cancelled"
+                  ? "Collect refund"
+                  : "Collect loot"}
               </button>
-            </>
-          )}
-          {fallback && (
-            <>
-              <button
-                className="q-quiet"
-                disabled={busy}
-                onClick={() => switchMode(false)}
-              >
-                Switch to practice
+            ) : active ? (
+              <>
+                <button
+                  className="q-button"
+                  disabled={busy}
+                  onClick={live && expiry <= now ? resume : interact}
+                >
+                  {busy
+                    ? "Confirming…"
+                    : live && expiry <= now
+                    ? "Authorize gameplay session"
+                    : nearby
+                    ? attempt.openedMask & (1 << nearby.id)
+                      ? "Quest already opened"
+                      : "Open quest"
+                    : "Explore"}
+                </button>
+                {attempt.revealCount === 0 && attempt.requestNonce === 0 && (
+                  <button className="q-quiet" disabled={busy} onClick={cancel}>
+                    Cancel hunt · full refund
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                <p className="q-small q-navigation-hint">
+                  {nearby
+                    ? `You are beside ${nearby.name}.`
+                    : `Choose your stake, then hunt three of the six quests.`}
+                </p>
+                <button
+                  className="q-button"
+                  disabled={busy || !!(live && (!wallet || !loaded))}
+                  onClick={openStake}
+                >
+                  Choose stake
+                </button>
+              </>
+            )}
+            {fallback && (
+              <>
+                <button
+                  className="q-quiet"
+                  disabled={busy}
+                  onClick={() => switchMode(false)}
+                >
+                  Switch to practice
+                </button>
+                <p className="q-small">
+                  Your devnet attempt remains unresolved. Return to Devnet to
+                  recover it. Practice has a separate balance.
+                </p>
+              </>
+            )}
+            {attempt && live && attempt.revealCount > 0 && (
+              <button className="q-quiet" onClick={() => setPanel("proof")}>
+                Proof of roll
               </button>
-              <p className="q-small">
-                Your devnet attempt remains unresolved. Return to Devnet to
-                recover it. Practice has a separate balance.
-              </p>
-            </>
-          )}
-          {attempt && live && attempt.revealCount > 0 && (
-            <button className="q-quiet" onClick={() => setPanel("proof")}>
-              Proof of roll
-            </button>
-          )}
+            )}
+          </div>
           <Link className="q-recovery" href="/recovery">
             Earlier V3 runs · recovery
           </Link>
