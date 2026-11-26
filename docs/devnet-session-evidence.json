@@ -1,0 +1,1382 @@
+{
+  "capturedAt": "2026-11-26T07:52:41.744Z",
+  "cluster": "devnet",
+  "program": "BenkDp3MuSNQshYqTC7PyiWvpBsCQTT5LX6EGYWCQhvj",
+  "deploymentSignature": "4tER2STqggnR2u3JrKxNjnkGh1MTQ3cQfufMwbvjoFmbhWyjFLJP4bKLC42k7RP8jSSmRdnQJQsVGeEbXRBVSVrQ",
+  "elfSha256": "3a575566d71a83124cf8720863fbcb3f3d1fcd53f0bf356f51515db3f42b6dd7",
+  "house": {
+    "balance": 1000467,
+    "reserved": 999
+  },
+  "checks": {
+    "freshPreparationApprovals": 1,
+    "browserLifecycleApprovals": 11,
+    "controlledResponseDrops": [
+      "riskHunt",
+      "settleHuntAttempt"
+    ],
+    "manualPhantom": "pending",
+    "actualProviderOutage": "not exercised",
+    "rejectedAuthorization": {
+      "requestsIncludingRejected": 12,
+      "deliberatelyRejected": 1,
+      "retryCreatedAnotherSession": false
+    },
+    "sessionRevocation": {
+      "blockedWhileRequestPending": true,
+      "oldKeyRejectedBeforeBaseTokenClosed": true,
+      "acceptedCallbackCompleted": true,
+      "baseTokenClosed": true,
+      "erTokenClosureObserved": true
+    },
+    "automatedTests": {
+      "frontendBrowserAndUnit": 80,
+      "program": 32,
+      "lint": "passed"
+    }
+  },
+  "accounts": [
+    {
+      "label": "fresh session revocation pass",
+      "wallet": "2qqxV6iVaeng6uprHToHs667sb9RB3fgJNb77UK2KHvS",
+      "balance": 10000,
+      "active": false,
+      "hunt": {
+        "sessionSigner": "51bw4BwPg98txS6vvQVNe1bKd7G9HPxRaxYLk29h9Kyc",
+        "address": "EUcGEfCN5vTqD9MXmeuW6HT2rWouAQohFkbUPuqxGRLt",
+        "index": 0,
+        "rulesVersion": 5,
+        "stake": 200,
+        "phase": "complete",
+        "x": 8,
+        "y": 7,
+        "questId": 2,
+        "nonce": 7,
+        "requestNonce": 6,
+        "requestedAt": 1795678486,
+        "fulfilledAt": 1795678486,
+        "payout": 200,
+        "delegated": false,
+        "settled": true,
+        "openedMask": 7,
+        "revealCount": 3,
+        "reveals": [
+          {
+            "questId": 0,
+            "randomness": [
+              219,
+              66,
+              149,
+              29,
+              174,
+              143,
+              7,
+              232,
+              69,
+              113,
+              180,
+              213,
+              20,
+              174,
+              18,
+              135,
+              208,
+              43,
+              158,
+              36,
+              88,
+              149,
+              112,
+              176,
+              189,
+              188,
+              191,
+              42,
+              182,
+              163,
+              108,
+              99
+            ],
+            "bucket": 59,
+            "reward": 50
+          },
+          {
+            "questId": 1,
+            "randomness": [
+              130,
+              90,
+              240,
+              49,
+              42,
+              172,
+              211,
+              99,
+              14,
+              102,
+              215,
+              216,
+              194,
+              165,
+              231,
+              122,
+              133,
+              4,
+              143,
+              139,
+              189,
+              32,
+              198,
+              132,
+              52,
+              137,
+              141,
+              42,
+              144,
+              141,
+              186,
+              120
+            ],
+            "bucket": 78,
+            "reward": 100
+          },
+          {
+            "questId": 2,
+            "randomness": [
+              192,
+              31,
+              44,
+              90,
+              61,
+              130,
+              102,
+              40,
+              24,
+              37,
+              119,
+              191,
+              6,
+              86,
+              83,
+              82,
+              133,
+              177,
+              142,
+              214,
+              66,
+              95,
+              135,
+              26,
+              199,
+              142,
+              175,
+              54,
+              115,
+              132,
+              189,
+              235
+            ],
+            "bucket": 40,
+            "reward": 50
+          }
+        ]
+      }
+    },
+    {
+      "label": "browser interrupted request and collection pass",
+      "wallet": "Dh5qBQp6Sq6uizcLP2HVu1oPcV19wi5DjgRu4Ln3KUWV",
+      "balance": 10100,
+      "active": false,
+      "hunt": {
+        "sessionSigner": "7SbamdLqRMMa4EttQHHbnETfQ1HcBeq7WsSindPm5BG6",
+        "address": "9DFUaJaL4gm29DaamftC6bw7vDrGn8btB32q1UNukPEC",
+        "index": 0,
+        "rulesVersion": 5,
+        "stake": 200,
+        "phase": "complete",
+        "x": 12,
+        "y": 2,
+        "questId": 4,
+        "nonce": 7,
+        "requestNonce": 6,
+        "requestedAt": 1795678644,
+        "fulfilledAt": 1795678644,
+        "payout": 300,
+        "delegated": false,
+        "settled": true,
+        "openedMask": 56,
+        "revealCount": 3,
+        "reveals": [
+          {
+            "questId": 5,
+            "randomness": [
+              142,
+              168,
+              231,
+              141,
+              182,
+              237,
+              3,
+              220,
+              254,
+              241,
+              81,
+              97,
+              200,
+              175,
+              47,
+              181,
+              251,
+              201,
+              121,
+              13,
+              219,
+              120,
+              29,
+              145,
+              182,
+              210,
+              76,
+              223,
+              240,
+              230,
+              222,
+              212
+            ],
+            "bucket": 94,
+            "reward": 200
+          },
+          {
+            "questId": 3,
+            "randomness": [
+              143,
+              97,
+              183,
+              198,
+              7,
+              165,
+              228,
+              136,
+              69,
+              31,
+              142,
+              75,
+              174,
+              102,
+              155,
+              117,
+              86,
+              148,
+              221,
+              251,
+              52,
+              55,
+              193,
+              133,
+              91,
+              179,
+              147,
+              6,
+              147,
+              233,
+              146,
+              167
+            ],
+            "bucket": 7,
+            "reward": 0
+          },
+          {
+            "questId": 4,
+            "randomness": [
+              190,
+              219,
+              235,
+              49,
+              127,
+              118,
+              164,
+              179,
+              243,
+              12,
+              31,
+              159,
+              141,
+              81,
+              165,
+              101,
+              137,
+              52,
+              118,
+              0,
+              197,
+              18,
+              165,
+              98,
+              147,
+              183,
+              97,
+              0,
+              80,
+              127,
+              230,
+              174
+            ],
+            "bucket": 86,
+            "reward": 100
+          }
+        ]
+      }
+    },
+    {
+      "label": "browser separate cancellation",
+      "wallet": "Dh5qBQp6Sq6uizcLP2HVu1oPcV19wi5DjgRu4Ln3KUWV",
+      "balance": 10100,
+      "active": false,
+      "hunt": {
+        "sessionSigner": "57jKGpvpwNVZsXrFBwB31r5RteVaetJf7xj4avZNsDjR",
+        "address": "HR1XdKPFYSk2czjxcpaAPaCNHk4AAeWgAex85Z2vcruT",
+        "index": 1,
+        "rulesVersion": 5,
+        "stake": 200,
+        "phase": "cancelled",
+        "x": 1,
+        "y": 1,
+        "questId": 255,
+        "nonce": 1,
+        "requestNonce": 0,
+        "requestedAt": 0,
+        "fulfilledAt": 0,
+        "payout": 200,
+        "delegated": false,
+        "settled": true,
+        "openedMask": 0,
+        "revealCount": 0,
+        "reveals": []
+      }
+    },
+    {
+      "label": "early ER propagation check recovered",
+      "wallet": "7dgboUngGmVt4fjfjHFT6ZMF3L6UD4mSUufvUzmxq91e",
+      "balance": 10050,
+      "active": false,
+      "hunt": {
+        "sessionSigner": "DR6knRTc18svvDAoewreM2KfL7EAQRNtK5PED3oSR4hF",
+        "address": "4xe1vtQJspo7vMreai59ZVmb2jBvBx3FDwwZsUkD1ht6",
+        "index": 0,
+        "rulesVersion": 5,
+        "stake": 200,
+        "phase": "complete",
+        "x": 8,
+        "y": 7,
+        "questId": 2,
+        "nonce": 7,
+        "requestNonce": 6,
+        "requestedAt": 1795678449,
+        "fulfilledAt": 1795678449,
+        "payout": 250,
+        "delegated": false,
+        "settled": true,
+        "openedMask": 7,
+        "revealCount": 3,
+        "reveals": [
+          {
+            "questId": 0,
+            "randomness": [
+              165,
+              3,
+              190,
+              169,
+              14,
+              240,
+              166,
+              164,
+              206,
+              139,
+              32,
+              246,
+              157,
+              178,
+              211,
+              236,
+              122,
+              219,
+              233,
+              100,
+              15,
+              73,
+              34,
+              141,
+              47,
+              162,
+              225,
+              219,
+              40,
+              191,
+              151,
+              214
+            ],
+            "bucket": 61,
+            "reward": 50
+          },
+          {
+            "questId": 1,
+            "randomness": [
+              68,
+              9,
+              96,
+              164,
+              78,
+              13,
+              77,
+              79,
+              66,
+              249,
+              90,
+              70,
+              8,
+              196,
+              244,
+              81,
+              178,
+              10,
+              49,
+              247,
+              157,
+              107,
+              12,
+              150,
+              189,
+              176,
+              20,
+              154,
+              159,
+              111,
+              128,
+              159
+            ],
+            "bucket": 84,
+            "reward": 100
+          },
+          {
+            "questId": 2,
+            "randomness": [
+              155,
+              192,
+              169,
+              168,
+              183,
+              134,
+              148,
+              146,
+              13,
+              104,
+              28,
+              116,
+              205,
+              97,
+              116,
+              54,
+              229,
+              137,
+              31,
+              56,
+              131,
+              151,
+              22,
+              137,
+              229,
+              255,
+              228,
+              249,
+              214,
+              182,
+              229,
+              148
+            ],
+            "bucket": 75,
+            "reward": 100
+          }
+        ]
+      }
+    },
+    {
+      "label": "early driver final-dialog check excluded",
+      "wallet": "FtHfxVyaEnmzgUuA1zkDiZpChH3Kh6cyFLU1ZmG2jogD",
+      "balance": 9800,
+      "active": false,
+      "hunt": {
+        "sessionSigner": "EPuzdoA7akPcudEs6V8wwBVCK3YpSxGGAECYrgRwTgUA",
+        "address": "7X4adTavs8Ynn2kqwzvVy6EYef53wUK9xVsKaksoE4w1",
+        "index": 0,
+        "rulesVersion": 5,
+        "stake": 200,
+        "phase": "complete",
+        "x": 12,
+        "y": 2,
+        "questId": 4,
+        "nonce": 7,
+        "requestNonce": 6,
+        "requestedAt": 1795678551,
+        "fulfilledAt": 1795678551,
+        "payout": 0,
+        "delegated": false,
+        "settled": true,
+        "openedMask": 56,
+        "revealCount": 3,
+        "reveals": [
+          {
+            "questId": 5,
+            "randomness": [
+              147,
+              111,
+              222,
+              57,
+              76,
+              220,
+              114,
+              185,
+              88,
+              60,
+              176,
+              8,
+              60,
+              188,
+              59,
+              123,
+              21,
+              135,
+              133,
+              58,
+              237,
+              199,
+              248,
+              190,
+              200,
+              96,
+              8,
+              143,
+              199,
+              136,
+              120,
+              221
+            ],
+            "bucket": 27,
+            "reward": 0
+          },
+          {
+            "questId": 3,
+            "randomness": [
+              18,
+              105,
+              150,
+              241,
+              50,
+              101,
+              56,
+              174,
+              106,
+              35,
+              231,
+              58,
+              55,
+              86,
+              174,
+              15,
+              95,
+              26,
+              253,
+              164,
+              19,
+              151,
+              73,
+              17,
+              57,
+              80,
+              232,
+              146,
+              9,
+              4,
+              166,
+              55
+            ],
+            "bucket": 30,
+            "reward": 0
+          },
+          {
+            "questId": 4,
+            "randomness": [
+              231,
+              204,
+              64,
+              35,
+              243,
+              245,
+              170,
+              81,
+              186,
+              183,
+              19,
+              108,
+              14,
+              151,
+              96,
+              223,
+              1,
+              170,
+              249,
+              189,
+              57,
+              125,
+              53,
+              248,
+              44,
+              10,
+              195,
+              195,
+              175,
+              182,
+              123,
+              149
+            ],
+            "bucket": 3,
+            "reward": 0
+          }
+        ]
+      }
+    },
+    {
+      "label": "historical abandoned hunt",
+      "wallet": "7xHAmeQB1wBS7yyLQa8d8bHKZJfvmyDFV52AmXZ6ih3z",
+      "balance": 9800,
+      "active": true,
+      "hunt": {
+        "sessionSigner": "FH62BSNKXfR3hdSHBbJuUKzUKd3p4qim9c7X3rSJA4ar",
+        "address": "GhyF4NgfWrXkxLGGNm2nk1pxghXzysLBor1siApTVEXV",
+        "index": 0,
+        "rulesVersion": 5,
+        "stake": 200,
+        "phase": "active",
+        "x": 12,
+        "y": 7,
+        "questId": 5,
+        "nonce": 2,
+        "requestNonce": 1,
+        "requestedAt": 1795624612,
+        "fulfilledAt": 1795624612,
+        "payout": 100,
+        "delegated": true,
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "settled": false,
+        "openedMask": 32,
+        "revealCount": 1,
+        "reveals": [
+          {
+            "questId": 5,
+            "randomness": [
+              109,
+              66,
+              157,
+              122,
+              244,
+              129,
+              212,
+              52,
+              33,
+              214,
+              174,
+              253,
+              52,
+              228,
+              212,
+              1,
+              253,
+              229,
+              223,
+              35,
+              55,
+              80,
+              220,
+              172,
+              123,
+              200,
+              145,
+              137,
+              174,
+              76,
+              102,
+              154
+            ],
+            "bucket": 81,
+            "reward": 100
+          }
+        ]
+      }
+    },
+    {
+      "label": "browser repeat with final recovery UI",
+      "wallet": "GGiiw3xkJv9sHW8G3yb5CXcgKu9mkHUYnLAgR54g2NCy",
+      "balance": 9850,
+      "active": false,
+      "hunt": {
+        "sessionSigner": "Ds35qXSXV1iP2QdTmyuxPXmk4QnMrFBDJqUNZt92gHwF",
+        "address": "AXf5Yuzzy9iEsrzFQSSCK5RXxUQL5mXkZ4EaMEGzsgK5",
+        "index": 0,
+        "rulesVersion": 5,
+        "stake": 200,
+        "phase": "complete",
+        "x": 12,
+        "y": 2,
+        "questId": 4,
+        "nonce": 7,
+        "requestNonce": 6,
+        "requestedAt": 1795678943,
+        "fulfilledAt": 1795678943,
+        "payout": 50,
+        "delegated": false,
+        "settled": true,
+        "openedMask": 56,
+        "revealCount": 3,
+        "reveals": [
+          {
+            "questId": 5,
+            "randomness": [
+              48,
+              101,
+              119,
+              29,
+              190,
+              70,
+              86,
+              14,
+              6,
+              116,
+              18,
+              90,
+              89,
+              113,
+              123,
+              98,
+              24,
+              209,
+              155,
+              138,
+              4,
+              73,
+              225,
+              156,
+              71,
+              99,
+              93,
+              161,
+              54,
+              248,
+              152,
+              124
+            ],
+            "bucket": 32,
+            "reward": 0
+          },
+          {
+            "questId": 3,
+            "randomness": [
+              84,
+              65,
+              107,
+              30,
+              253,
+              165,
+              77,
+              65,
+              1,
+              197,
+              47,
+              59,
+              248,
+              119,
+              253,
+              23,
+              136,
+              135,
+              85,
+              199,
+              0,
+              118,
+              2,
+              222,
+              73,
+              107,
+              35,
+              238,
+              210,
+              93,
+              23,
+              215
+            ],
+            "bucket": 36,
+            "reward": 0
+          },
+          {
+            "questId": 4,
+            "randomness": [
+              136,
+              108,
+              180,
+              152,
+              222,
+              228,
+              246,
+              68,
+              134,
+              209,
+              107,
+              65,
+              103,
+              156,
+              227,
+              69,
+              84,
+              108,
+              130,
+              130,
+              46,
+              225,
+              43,
+              199,
+              100,
+              35,
+              10,
+              80,
+              179,
+              209,
+              145,
+              238
+            ],
+            "bucket": 60,
+            "reward": 50
+          }
+        ]
+      }
+    },
+    {
+      "label": "browser repeat cancellation",
+      "wallet": "GGiiw3xkJv9sHW8G3yb5CXcgKu9mkHUYnLAgR54g2NCy",
+      "balance": 9850,
+      "active": false,
+      "hunt": {
+        "sessionSigner": "FyR6xrdsWe6mUCoohrfkMj6yKwx4bDdB6kq7dE11MQ4U",
+        "address": "HZDKMGV8Q51dj4TNQ3JjHQqyPZyC5jYkh8EcnJ9zJ3bP",
+        "index": 1,
+        "rulesVersion": 5,
+        "stake": 200,
+        "phase": "cancelled",
+        "x": 1,
+        "y": 1,
+        "questId": 255,
+        "nonce": 1,
+        "requestNonce": 0,
+        "requestedAt": 0,
+        "fulfilledAt": 0,
+        "payout": 200,
+        "delegated": false,
+        "settled": true,
+        "openedMask": 0,
+        "revealCount": 0,
+        "reveals": []
+      }
+    },
+    {
+      "label": "funded session reused after controlled approval rejection",
+      "wallet": "64WnX78cHtXc9yofeWgiZMjduMpcvT5TwtvPgrPR2yjg",
+      "balance": 9800,
+      "active": false,
+      "hunt": {
+        "sessionSigner": "Gr2qqnsnkSgN53xKKK2aASCUwg6umg3Pr63t7kqsStKz",
+        "address": "G4vgNkq8b3vrmxkFT5oNgF7P6kB52dwEP4g1bgbjCJKc",
+        "index": 0,
+        "rulesVersion": 5,
+        "stake": 200,
+        "phase": "complete",
+        "x": 12,
+        "y": 2,
+        "questId": 4,
+        "nonce": 7,
+        "requestNonce": 6,
+        "requestedAt": 1795679473,
+        "fulfilledAt": 1795679473,
+        "payout": 0,
+        "delegated": false,
+        "settled": true,
+        "openedMask": 56,
+        "revealCount": 3,
+        "reveals": [
+          {
+            "questId": 5,
+            "randomness": [
+              65,
+              63,
+              201,
+              218,
+              152,
+              90,
+              160,
+              53,
+              95,
+              153,
+              37,
+              250,
+              195,
+              20,
+              198,
+              187,
+              38,
+              107,
+              73,
+              209,
+              117,
+              2,
+              34,
+              200,
+              25,
+              161,
+              110,
+              100,
+              25,
+              250,
+              16,
+              233
+            ],
+            "bucket": 17,
+            "reward": 0
+          },
+          {
+            "questId": 3,
+            "randomness": [
+              174,
+              250,
+              189,
+              26,
+              239,
+              48,
+              101,
+              94,
+              12,
+              145,
+              226,
+              242,
+              50,
+              54,
+              114,
+              19,
+              225,
+              190,
+              93,
+              181,
+              203,
+              202,
+              242,
+              100,
+              171,
+              196,
+              120,
+              168,
+              42,
+              78,
+              255,
+              219
+            ],
+            "bucket": 26,
+            "reward": 0
+          },
+          {
+            "questId": 4,
+            "randomness": [
+              27,
+              252,
+              237,
+              255,
+              162,
+              116,
+              60,
+              154,
+              100,
+              234,
+              236,
+              86,
+              54,
+              64,
+              72,
+              195,
+              198,
+              30,
+              44,
+              188,
+              8,
+              239,
+              87,
+              251,
+              187,
+              194,
+              8,
+              230,
+              144,
+              98,
+              144,
+              159
+            ],
+            "bucket": 23,
+            "reward": 0
+          }
+        ]
+      }
+    },
+    {
+      "label": "controlled-rejection browser cancellation",
+      "wallet": "64WnX78cHtXc9yofeWgiZMjduMpcvT5TwtvPgrPR2yjg",
+      "balance": 9800,
+      "active": false,
+      "hunt": {
+        "sessionSigner": "Axk5WczwRyh5HP9vLjV4gY1Bz3Ugt2EXH6FJuohhHugy",
+        "address": "Fwhkuendb3UFK4DgPwLc7pTL8NqxQaLiL8uzF9Zuwu1Y",
+        "index": 1,
+        "rulesVersion": 5,
+        "stake": 200,
+        "phase": "cancelled",
+        "x": 1,
+        "y": 1,
+        "questId": 255,
+        "nonce": 1,
+        "requestNonce": 0,
+        "requestedAt": 0,
+        "fulfilledAt": 0,
+        "payout": 200,
+        "delegated": false,
+        "settled": true,
+        "openedMask": 0,
+        "revealCount": 0,
+        "reveals": []
+      }
+    }
+  ],
+  "receipts": {
+    "sessionCheck": [
+      {
+        "signature": "2AL87QccFgTocffVXfggamengnD3F59m8GQaGBMSe6VAVnEfEneY96CYXDFR1Fxhs4wa2wWJHw3x3YGGmiEFuM4m",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "7qWZcBKztad6Udo64S1cWeRLNY9opgWbaREZvr1DfGdUEQTMvHNCZHHjN99PnZLwg9JrTLTFmRFmqj7CCmPLZVM",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "41SgdXHyg7f68hJshzKyPPSyCVohSNHJmKTq3sahM9969qL9eEVjJ6jtcgUdbz9p1EEPTqCSZvGEJzGi8Ly6Rf2Y",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "5FZfKM2AA1aRY3SdctsmacG8F4VyijJB8ohqKWXCweHZkhxQAWzRVAPzpca7SXgKUvK9Fm2EkApbboDVc1k4NnNR",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "2juee5oNKwGZYZR18FxCxdtZRVR59tat9RBynMyN8cXQ6d89QBP4kCtYfnRzDGkgggXsEJrvnwdGggVBEaro64ez",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "4XbvnnTSeDEYrCLP9WjTi9QxonmTiiCwjbdk3BJMY8wg6R7oenP6LkuiZQFfcFJ7VxLSDcr3SXHPWTZwebabQhAB",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "2xaYF6TdgXRrocTf6QhVn1hFR3kqFf3vo76wi7kSwvDKfbdYZa3QJPwEhD1z8edkJmqXHhWG5n5dEo6qciSwwpKf",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "51iMUi4GVu8WrNo3RjxB21nVM1CNWzTegVwp1B5QXr89otwoU9MJJRqBg43iVH1eGx9uLbEuX7ydqpAZKKkCCSb5",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "D2Nd7d8C7iTZP62s9g22DTmHkTVG5ZGxnyXgSRWyU3hsNsQTTdeLgmDxViMvhGbkugrvfcbmmRMtfSASfW5SEqL",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "4tMaJcki69hXupWCfL8RgbQo3W6hmKfP2wUTMciKx4xrYErRhWYhtRiGGW4tngBRm2yAnMu6gJxWWBY1H35zE4qW",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "5Di9oeRnS79VFBJkbNa6iK6DboXk8x5yc54aUUBZoouMBY144rDp2BJJPYsujd8EHJ99Cqr22F1r75RLZV23m63y",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "5xTovx5S4aqBwNQuC1gC7m3428NzG5eJ16uuyjWekoH2JWc1vLmyJ6kztrnpZBr5D5NhXFbjBvUCcz28n2cfomtN",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      }
+    ],
+    "browserCheck": [
+      {
+        "signature": "4qmVqY7MtqoNcndaQzH7YFUcD6mbQmzR9ghTGKsdC712ivWt3gkFzao5UqBXiVDjNWXJpXr2cDqyvLqzZPdHVzMU",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "3uWNUKUhxMg8ZLUDpAraRSu3oadX6RMXAcvXfW2RVzMrbKqEia8gcz9Kbx1kgaKcHJfpANr26Zp54uknXHGp6yTo",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "2fwQebKtuz8S8Qd8dg5HsdhjxY4ZkpSRHfW887837UNysgY6ofSyB2FSVcH5hGdtYHDXdYvN9MoLuA8GAn7yKsms",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "submitting"
+      },
+      {
+        "signature": "26AQHc6qQFai94o4UUZv21akPaszngm1YafyRUqN8vF9nVNtM8ebtBJsbyGdAxPA1G7TJovG3PAWQRzfw31Fo552",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "5XehzHhXHEJAfk8hoVGT4tLhyUoxpKfw2WiwdhfYa77b6v42d8FZbxYLHXp9g2X5PmXzWe94waDoUr9oa69NVwzL",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "47X6Bvk1nbKrFiX5wSTAj55t1LxJZSkgU2GzLnEKZpGvghcwtF5qdu5MJjES1oXWNf42FZL24HSATrui8WDxr1Md",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "5P3e8yvCQhk4PZyJfXYGtgCn9kKGBsRFvtCnQsrpx3oWCScKgQkv5oTMZhg8vnDGWNfUfx2S6mn8KEBYiZBiCeyQ",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "5HVFzfdZbsguCHDMgyiThjTqNiNx4dnyXY9hrfDuRh9QCPBaz1mrz82nwGb7vbQw2Q7sPMJfnh2qXntWPsJKeZLv",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "5d6zFhpMknSPWwvCeWkvMpXkqwdKVeUooBhcHN31eUzd1bPA7xz1VFB7n45pTutuyWh3iRypHtvcFHAorXcyG4NX",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "Pw3LEczWBocchS3Pk39CTQFeFC3aP6JVay4Jb8E2cf2Q5PQHkmRbzKBZGWXSAjPqK4q14dS3ZFzi2bFZx4RSLZT",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "4s1WwK6TvVUFLav5sSFbXQcBLiTvuo4RQHET2N36VD7cVpXy3CXMqg965cxKjuwEcqds5Mz5MrRGJXki1UFP6ioh",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "submitting"
+      },
+      {
+        "signature": "MGjV1mxn3tXzxcfsj7hfYKfLcqDrGiLPZnc4yKjqfQDkhJaDtzWk3EEHiP8gqB7CQzqXxLktUSAVcfucE5JmvLG",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "ak4Vdyg4Vgsmoharq5B8w2FB5yE1hdpnTFgeyKaFaZjwc2H2eVmdFZv8ZDGnfK5tKRq35pnbYsJ1VwSrU8RdDet",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "5hxdGLkGyfPnN5BqPUmceFVjRJgepJfbdCfYdGB4fzPQ2qQqdv5RRdnbz33gs5DuXEhNpeAMbR1DBfY8vBVCdMZc",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "38rAtY11VXBLwTi6XK6mU2dxR1oDCWUF4UXAjoawPHamXa1HAWTaNkDpvRWU2SjiBTs6z9vjAkhnNiKX1NSqH9sv",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "5CTVhpqMXZbCzegEtyXuKTAGF44McXhpqSVQLUj6WCw6MWzAD7a5W7nv6uRtmMB3atdtf1uD8mVduWKXn8JNHqW5",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      }
+    ],
+    "browserRepeat": [
+      {
+        "signature": "3hAw5qEsh5VmSsfvcBd3TDY2pYknuZbX3uBM3VwZYmatKgu4HufB97yHbBbZbhhUdDK8sUs8zeStQVmH2HhTzzTT",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "tV3Jsjgz8dcUtcPmv1cqM99aamnbBE164w1LmQK12xb6DoRoXaigqd9ua1yg9kc6ihpnzo2Bo16N3zaN3A4zdYs",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "4L4qzCLEmPzjoN2bRAjpeCpUdSbdBWZJseWFuRDWyCgRbRUq7rm2636DSFNWJnMoDyBwgH31dkwtGNog2xqvNH9Y",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "submitting"
+      },
+      {
+        "signature": "44TM7Lr16E5us4Z1mE3d6B8DDm4jnJfLhbR14xzbq8X2RvfdkActMYjgHbyAaqvSHbtGkWwqDTcTKzuFvkGpT6ax",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "kcxJS3asLHBc4Nf8kCF4BMCVmnojThDPMeDyCz1L1cp6AYsc3DxTokPWDfnbXTKEmMy1x7x9GumPKqkAjXPLCZW",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "5c9f18a549nrZ2Tdsd8N5E5iLkDaqyT2gy1EkEuMSkV8QC8yoSd4YX2V6zHqkwXaFsV7J143ESnLy7yjfefPbPKo",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "3g1G4own4uCvMh2Q2Xvt9eMXpP8kpbatoYg9QYPpaDhJDSQCVZxEt54i6DyRMzN2FTLr7hvTAiwd84WRvrg1ULcM",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "52xApgApfqAUbkANJeCjUeb6feaMreiXbuaG7jhgZBWSD7zKQdbpGtLwGPGXbMPM2ZJrn392tNvQqZjTXx5nMPfV",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "4ENSPFwbAWaUAFj3hVmkYDrEYAXRDXsejBpmtpsQ8H5PStg65hjN7h5kRoNZBbE5FLwht32xxxWRiJrHf8kwupC",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "2b9yKwXzUHsP2jAU9B8c1p9qPFvupBXMdeUoMiLCNRCAdS8F4fEFLSJ5ERkykMxejrMvpX1d34CorL5o25nNnfSA",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "5QHf6WQxXMAGLRfRXtbi9ZGpuTZGZTYsfVa7TZrxaMHQd8WwmA49nMcudLhBbomgdhfUY6nbtyxNrjvFQZkX17gK",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "submitting"
+      },
+      {
+        "signature": "ARCJErDQUUA68u3XbgvkNL42XtHnuuooRiX2HxNF1jetMzBr4isWbn3hG7shxBmAQk4ivPHK4i55mFEPWgwVjtn",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "p4rrtFn1CdEjK9a4PteSrEyVQsuZMNsnExnhifaWzVvzxLZ4hzsFgLEEPQzraeFVFd78sFFFiZrFmn46D46k4n2",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "43sp2pSoryosnGhqKZ9FK7aiVAKaw9dGzwFR7vHEm4FLZanfw3vb3aq2WHacAfazCWtYc1ccLQp57fvhdErwuNfR",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "Tr1Z458DxNc2astPuUUtY4of93wEUSMLSNe6aJJv97YthD26rkHmqVoXWDrJiRkDZgaA2oNEMyGrP3RNMTQHNsC",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "XJsUB7UwZ1GKp1DZPrx5SGh2jVhqri7n2fwTrYCZ4Hh4AosVmfQLbV1htDJAqnpNFTsFWqHeBVxJuqSzUr7FAQY",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      }
+    ],
+    "browserFundingRejection": [
+      {
+        "signature": "5iKg1SXtL4LZhXpnhN43eeV8QitLdRzDJYS2pkVp72AaGRPZWstreSY1kb9s97SWMrmtevz2AKA6CFTzC6EpconG",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "4hnhmWcnrU6PBFctBL12GbJBRYHNS66EPNfSdUMtdZzssyanhKb1ShZKkKGWY9S4YYN7y8hK7XziN8kBjYch3YAy",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "5LBMa77VUSffjVQWSkxapNUwZBwqTG8ohfNjoq2Zs9drwGR27prP6a12boV6dFnjLAdrMb1cQqBEDwNjnmC8NnjP",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "submitting"
+      },
+      {
+        "signature": "3zJxvU4H7WCC4LRZLQEw2PbD2ASXLoFdbVNNzqx1Tfm5WwMqTqcyrjSvrSAoUzQqeiHmyomWmS1VpSRetVNs3xUR",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "2iC42LLP1q3n1y2gk7sVSDpcEnP4LcmHJJgSGM8R5yzyL3DfNWHaRz72pzVXdjVPqqxmXvjHMJ7P7tQgMDNKcPKV",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "28Pkgo8ZYoWdDiR7uqgUu5RPqTnKhBkW7vwFk9mLvoCFoVbHwK28iaASFAMrRXQqRaWvs6K6bpq28desJa7PYg4a",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "pnek7A7z3cTxnyN2nqAjKtkRVNHAuL6d6ckAfpdYQsC4wBo2T35nrFkm1c8rLsicnevkUyYFyLvaZb6Uoepndyp",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "22Ys6DoXwPaBhLQMw8VDXCDCYzJrpupM7gHNTNcsdDoeXTfj1GAnhb4FYq2AiqiYXCBj2HDF43VWQ5kGXP2TDFLe",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "3oz5gEUwwnyTZLMmBgjBWzMhERCDsRy6WnfaFbJid9cM4ZHhU5hwahd2UGfdu7zsQSg8wWHiF9B9Aqz13ZAQ799W",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "3yHdYWxCwg7AA99fGnPUg11ADhiZ3Fmvwid2hx99SDCUrbH1KoYWd6kQapkHdf12seAeBQmF7uU8qkQ6CGdbTFEk",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "4zS7MvEgXbZd1fhebSMCwcnpaGrHyfz9dpxKfkj6d1hmBPcVWAiDU82P9cnmjLFedkZ3tLJ1usYVjhB77n1schoY",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "submitting"
+      },
+      {
+        "signature": "56xqUXhNmvByeMzYX9gMoqwAhUYV6pCo9hpGJP8Ca2p8GpaA3fdqRzMsngMpuZCkXzsQj5VPPCD1Z6vxievfnJBX",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "3T9samtxob6kCN6izgqC8oyZ2rxb2RFg6udK2Lg6zEb5P8YxiQasooPsVVi1UkF2FLkyYWxb6eyzAKqpsVrSAZXf",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "4W9xhAsAexoiAnMiS4HaKd37JKKxVbPeG54pgqmgjFFiaVdv8s5gFqnBpo7f2o9vqTwVpy8dmLjWads25FZGxe8z",
+        "endpoint": "https://devnet-as.magicblock.app/",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "2vGV6Y9WxLrfhjdZVZVSXTPY3Sn3MwaqwUg8Ns135TovwRHbrvmFbfPtRBHyNwUeGd6UEReBidT9eiWcxTvQwQ8x",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      },
+      {
+        "signature": "LXbw4AVnafPxxqEAzzWV1WfJmBVB683JrQtbjBijK1ULBHoTFsFLG4DgFiqXN2uhgKUYfxuS5gAUFmuq6LoBwJ3",
+        "endpoint": "https://rpc.magicblock.app/devnet",
+        "stage": "confirmed"
+      }
+    ]
+  },
+  "binaryChecks": [
+    {
+      "endpoint": "https://rpc.magicblock.app/devnet",
+      "sha256": "3a575566d71a83124cf8720863fbcb3f3d1fcd53f0bf356f51515db3f42b6dd7",
+      "elfLength": 867160
+    },
+    {
+      "endpoint": "https://devnet-as.magicblock.app/",
+      "sha256": "3a575566d71a83124cf8720863fbcb3f3d1fcd53f0bf356f51515db3f42b6dd7",
+      "elfLength": 867160
+    }
+  ],
+  "deploymentSlot": 526434931
+}

@@ -5,7 +5,10 @@ import { useAnchorWallet } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { PublicKey } from "@solana/web3.js";
 import {
-  createGameSession,
+  buildGameSession,
+  isGameSessionReady,
+  base,
+  submit,
   pendingSubmission,
   submissionStatus,
   clearPendingSubmission,
@@ -15,9 +18,14 @@ import {
 import {
   authorizeWagerSession,
   cancelWager,
-  createWager,
   delegateWager,
-  initializeLedger,
+  prepareHunt,
+  rememberHuntSession,
+  savedHuntSession,
+  huntSessionRecord,
+  endHuntSession,
+  huntSessionControlEnabled,
+  type HuntSessionRecord,
   huntEnabled,
   readPlayer,
   readWager,
@@ -27,6 +35,7 @@ import {
   waitForEr,
   type Wager,
 } from "@/lib/hunt-chain";
+import { watchHunt } from "@/lib/hunt-watch";
 import { readPlayer as readV4Player } from "@/lib/quest-chain";
 import { readPlayer as readV3Player } from "@/lib/wager-chain";
 import { INITIAL_DEMO, isWalkable, distance, type Direction } from "./model";
@@ -45,6 +54,7 @@ import { QuestDialog } from "./QuestDialog";
 import { HuntProof } from "./HuntProof";
 
 type Panel =
+  | "session"
   | "quests"
   | "rules"
   | "reveal"
@@ -83,6 +93,10 @@ export function HuntGame() {
   const [error, setError] = useState("");
   const [now, setNow] = useState(0);
   const [expiry, setExpiry] = useState(0);
+  const [hasSessionKey, setHasSessionKey] = useState(false);
+  const [sessionRecord, setSessionRecord] = useState<HuntSessionRecord | null>(
+    null,
+  );
   const [sound, setSound] = useState(false);
   const practiceCredits = useRef(10000);
   const revealedCount = useRef(0);
@@ -179,8 +193,8 @@ export function HuntGame() {
     const index = player?.active
       ? player.activeIndex.toNumber()
       : saved && /^\d+$/.test(saved)
-        ? Number(saved)
-        : null;
+      ? Number(saved)
+      : null;
     const latest = index === null ? null : await readWager(wallet, index);
     if (stamp !== epoch.current) return;
     setLiveBalance(player?.balance.toNumber() ?? 10000);
@@ -193,10 +207,10 @@ export function HuntGame() {
           latest.settled
             ? "This earlier attempt is settled. Explore for your next quest."
             : terminal(latest)
-              ? "Your result is frozen. Open the result to complete settlement."
-              : latest.phase === "randomnessPending"
-                ? "Your existing VRF request is pending. No new attempt has been created."
-                : "Existing attempt recovered. Authorize gameplay to continue it.",
+            ? "Your result is frozen. Open the result to complete settlement."
+            : latest.phase === "randomnessPending"
+            ? "Your existing VRF request is pending. No new attempt has been created."
+            : "Existing attempt recovered. Authorize gameplay to continue it.",
         );
     }
     setLoaded(true);
@@ -219,6 +233,8 @@ export function HuntGame() {
       setLegacy(0);
       setLoaded(!live);
       setExpiry(0);
+      setSessionRecord(null);
+      setHasSessionKey(false);
       setLiveBalance(null);
       setMessage(
         live
@@ -296,34 +312,46 @@ export function HuntGame() {
     // Wallet identity and mode define a disposable context; refresh reads current public recovery metadata.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live, walletKey]);
+  const watchedIndex = attempt?.index;
+  const watchedSettled = attempt?.settled;
   useEffect(() => {
-    let inFlight = false;
-    const timer = setInterval(() => {
-      setNow(Math.floor(Date.now() / 1000));
-      if (
-        live &&
-        wallet &&
-        state.current &&
-        !locked.current &&
-        !inFlight &&
-        !pending.current
-      ) {
-        inFlight = true;
-        const stamp = epoch.current;
-        void refresh()
-          .catch(() => {
-            if (stamp === epoch.current)
-              setMessage(
-                "Connection delayed. Your existing attempt is retained; use Recover.",
-              );
-          })
-          .finally(() => {
-            inFlight = false;
-          });
-      }
-    }, 1500);
+    if (!live || !wallet || watchedIndex === undefined || watchedSettled)
+      return;
+    const stamp = epoch.current;
+    return watchHunt(
+      wallet,
+      watchedIndex,
+      (value) => {
+        if (epoch.current === stamp) accept(value);
+      },
+      () => {
+        if (epoch.current === stamp)
+          setMessage("Connection delayed. Your hunt is retained; use Recover.");
+      },
+    );
+  }, [live, wallet, watchedIndex, watchedSettled, accept]);
+  useEffect(() => {
+    if (!live || !wallet || !watchedSettled) return;
+    const stamp = epoch.current;
+    void readPlayer(wallet)
+      .then((player) => {
+        if (epoch.current === stamp && player)
+          setLiveBalance(player.balance.toNumber());
+      })
+      .catch(() => {});
+  }, [live, wallet, watchedSettled]);
+  useEffect(() => {
+    if (!live || !watchedSettled || recovering || busy) return;
+    const timer = setTimeout(() => setPanel("result"), 0);
+    return () => clearTimeout(timer);
+  }, [live, watchedSettled, recovering, busy]);
+  useEffect(() => {
+    const timer = setInterval(
+      () => setNow(Math.floor(Date.now() / 1000)),
+      1000,
+    );
     return () => clearInterval(timer);
-  }, [live, wallet, refresh]);
+  }, []);
   useEffect(() => {
     const timer = setTimeout(() => {
       try {
@@ -484,7 +512,7 @@ export function HuntGame() {
     QUESTS[
       attempt?.phase === "randomnessPending" && attempt.questId < 6
         ? attempt.questId
-        : (nearby?.id ?? selected)
+        : nearby?.id ?? selected
     ];
   const openStake = () => {
     if (locked.current || panel || recovering || legacy) return;
@@ -548,38 +576,26 @@ export function HuntGame() {
         return;
       }
       if (!wallet) throw new Error("Connect a devnet wallet");
-      setStage(STEPS[0]);
-      setMessage("Approve demo ledger setup if your wallet requests it.");
-      await initializeLedger(wallet, guard);
-      guard();
-      setStage(STEPS[1]);
-      setMessage(
-        "Approve your stake. Choose which quest to face after entering the dungeon.",
+      const prepared = await prepareHunt(
+        wallet,
+        stake,
+        (text) => {
+          setStage(text);
+          setMessage(text);
+        },
+        guard,
+        (preparedSession) => {
+          session.current = preparedSession;
+          setHasSessionKey(false);
+          setExpiry(0);
+        },
       );
-      const index = await createWager(wallet, stake, guard);
       guard();
-      localStorage.setItem(journal, String(index));
-      const created = await readWager(wallet, index);
-      guard();
-      if (!created) throw new Error("Waiting for the created quest state");
-      accept(created);
-      setStage(STEPS[2]);
-      if (!created.delegated) {
-        await delegateWager(wallet, index, guard);
-        guard();
-      }
-      await waitForEr(wallet, index);
-      guard();
-      setStage(STEPS[3]);
-      setMessage(
-        "Authorize four minutes of gameplay · 0.002 devnet SOL plus fees.",
-      );
-      const authorized = await createGameSession(wallet, guard);
-      guard();
-      session.current = authorized.session;
-      await authorizeWagerSession(wallet, created, authorized.session, guard);
-      guard();
-      setExpiry(authorized.session.expiresAt);
+      localStorage.setItem(journal, String(prepared.index));
+      session.current = prepared.session;
+      setHasSessionKey(true);
+      setSessionRecord(savedHuntSession(wallet, prepared.index));
+      setExpiry(prepared.session.expiresAt);
       await refresh();
       guard();
       setMessage(
@@ -601,7 +617,9 @@ export function HuntGame() {
     }
     if (
       live &&
-      (!session.current || session.current.expiresAt <= Date.now() / 1000)
+      (!hasSessionKey ||
+        !session.current ||
+        session.current.expiresAt <= Date.now() / 1000)
     ) {
       setMessage("Authorize a gameplay session before attempting a quest.");
       return;
@@ -710,6 +728,13 @@ export function HuntGame() {
   const resume = () => {
     const current = state.current;
     if (!wallet || !current) return;
+    if (savedHuntSession(wallet, current.index)?.ending) {
+      setPanel("session");
+      setMessage(
+        "Finish ending the previous session before authorizing another.",
+      );
+      return;
+    }
     void operate(async (guard) => {
       setStage(STEPS[2]);
       if (!current.delegated) {
@@ -719,15 +744,87 @@ export function HuntGame() {
         guard();
       }
       setStage(STEPS[3]);
-      const authorized = await createGameSession(wallet, guard);
+      let candidate = session.current;
+      let createdNow = false;
+      if (!candidate || !(await isGameSessionReady(wallet, candidate))) {
+        guard();
+        const built = await buildGameSession(wallet);
+        candidate = built.session;
+        guard();
+        session.current = candidate;
+        setHasSessionKey(false);
+        setExpiry(0);
+        setSessionRecord(rememberHuntSession(wallet, current.index, candidate));
+        setStage("Authorize session · base approval 1/2");
+        await submit(
+          base,
+          wallet,
+          built.transaction,
+          [candidate.signer],
+          guard,
+        );
+        createdNow = true;
+      }
       guard();
-      session.current = authorized.session;
-      await authorizeWagerSession(wallet, current, authorized.session, guard);
+      const latest = await readWager(wallet, current.index);
       guard();
-      setExpiry(authorized.session.expiresAt);
+      if (!latest?.sessionSigner?.equals(candidate.signer.publicKey)) {
+        setStage(
+          createdNow
+            ? "Bind this funded session · ER approval 2/2"
+            : "Reuse funded session · remaining approval 1/1",
+        );
+        await authorizeWagerSession(wallet, current, candidate, guard);
+      }
+      guard();
+      session.current = candidate;
+      setHasSessionKey(true);
+      setExpiry(candidate.expiresAt);
       await refresh();
       guard();
       setMessage("Session ready. Continue this same quest attempt.");
+    });
+  };
+  const showSession = () => {
+    setPanel("session");
+    if (wallet && state.current) {
+      const guard = guardFor();
+      void huntSessionRecord(wallet, state.current)
+        .then((record) => {
+          guard();
+          setSessionRecord(record);
+        })
+        .catch(() => {});
+    }
+  };
+  const endSession = () => {
+    const current = state.current;
+    if (!wallet || !current) return;
+    // Stop local signing before any RPC or wallet request, including rejected approvals.
+    session.current = null;
+    setHasSessionKey(false);
+    setExpiry(0);
+    void operate(async (guard) => {
+      const existing = pendingSubmission(wallet.publicKey);
+      if (existing && (await submissionStatus(existing)) === "pending")
+        throw existing;
+      guard();
+      await endHuntSession(
+        wallet,
+        current,
+        (text) => {
+          setStage(text);
+          setMessage(text);
+        },
+        guard,
+      );
+      guard();
+      setSessionRecord(null);
+      await refresh();
+      guard();
+      setMessage(
+        "Gameplay session ended. Accepted reveals still finish; authorize again to continue hunting.",
+      );
     });
   };
   const returnToDungeon = () => {
@@ -837,6 +934,11 @@ export function HuntGame() {
           <button className="q-quiet" onClick={() => setPanel("details")}>
             Details
           </button>
+          {live && (
+            <button className="q-quiet" onClick={showSession}>
+              Session
+            </button>
+          )}
         </div>
       </header>
       <div className="q-amounts" aria-label="Demo amounts">
@@ -867,9 +969,7 @@ export function HuntGame() {
               onInteract={interact}
               wagerMode
               questMode
-              gateIndex={
-                pendingGate ? attempt.questId : (nearby?.id ?? selected)
-              }
+              gateIndex={pendingGate ? attempt.questId : nearby?.id ?? selected}
               gatePhase={attempt?.phase ?? "exploring"}
             />
           </div>
@@ -910,24 +1010,24 @@ export function HuntGame() {
               {stage
                 ? "Preparing attempt"
                 : recovering
-                  ? "Recovery needed"
-                  : pendingGate
-                    ? "Randomness pending"
-                    : frozen
-                      ? "Quest result"
-                      : active
-                        ? "Hunt · open three quests"
-                        : "Choose a stake to enter"}
+                ? "Recovery needed"
+                : pendingGate
+                ? "Randomness pending"
+                : frozen
+                ? "Quest result"
+                : active
+                ? "Hunt · open three quests"
+                : "Choose a stake to enter"}
             </p>
             <h1>
               {stage ||
                 (active
                   ? q.name
                   : frozen
-                    ? attempt?.phase === "cancelled"
-                      ? "Hunt cancelled"
-                      : "Hunt complete"
-                    : "Ready for the hunt?")}
+                  ? attempt?.phase === "cancelled"
+                    ? "Hunt cancelled"
+                    : "Hunt complete"
+                  : "Ready for the hunt?")}
             </h1>
             <p className="q-status" role="status" aria-live="polite">
               {message}
@@ -988,8 +1088,8 @@ export function HuntGame() {
               {attempt.settled
                 ? "View result"
                 : attempt.phase === "cancelled"
-                  ? "Collect refund"
-                  : "Collect loot"}
+                ? "Collect refund"
+                : "Collect loot"}
             </button>
           ) : active ? (
             <>
@@ -1001,12 +1101,12 @@ export function HuntGame() {
                 {busy
                   ? "Confirming…"
                   : live && expiry <= now
-                    ? "Authorize gameplay session"
-                    : nearby
-                      ? attempt.openedMask & (1 << nearby.id)
-                        ? "Quest already opened"
-                        : "Open quest"
-                      : "Explore"}
+                  ? "Authorize gameplay session"
+                  : nearby
+                  ? attempt.openedMask & (1 << nearby.id)
+                    ? "Quest already opened"
+                    : "Open quest"
+                  : "Explore"}
               </button>
               {attempt.revealCount === 0 && attempt.requestNonce === 0 && (
                 <button className="q-quiet" disabled={busy} onClick={cancel}>
@@ -1055,6 +1155,78 @@ export function HuntGame() {
           </Link>
         </aside>
       </div>
+      <QuestDialog
+        open={panel === "session"}
+        onClose={() => setPanel(null)}
+        title="Gameplay session"
+      >
+        <p>
+          Status:{" "}
+          {sessionRecord?.ending
+            ? "Hunt block or token closure needs recovery"
+            : hasSessionKey && expiry > now
+            ? "Ready on this device"
+            : sessionRecord
+            ? "No usable key on this device"
+            : "Not authorized"}
+        </p>
+        <p>
+          Expires:{" "}
+          {sessionRecord?.expiresAt || expiry
+            ? new Date(
+                (sessionRecord?.expiresAt || expiry) * 1000,
+              ).toLocaleTimeString()
+            : "No active session"}
+        </p>
+        <p>
+          Permits opening quests on this hunt only. Stakes, cancellation and
+          collection require your wallet.
+        </p>
+        <p>
+          Each new session receives 0.002 devnet SOL, plus transaction fees and
+          account rent. Keys stay in memory; reloading requires authorization
+          again.
+        </p>
+        <button
+          className="q-button"
+          onClick={resume}
+          disabled={
+            busy ||
+            recovering ||
+            !attempt ||
+            attempt.phase !== "active" ||
+            attempt.settled
+          }
+        >
+          Authorize session
+        </button>
+        {huntSessionControlEnabled ? (
+          <button
+            className="q-quiet"
+            onClick={endSession}
+            disabled={
+              busy ||
+              recovering ||
+              !attempt ||
+              (!sessionRecord &&
+                (!attempt.sessionSigner ||
+                  attempt.sessionSigner.equals(PublicKey.default)))
+            }
+          >
+            End gameplay session
+          </button>
+        ) : (
+          <p>
+            Session-ending controls await verified deployment. Existing sessions
+            expire after four minutes.
+          </p>
+        )}
+        <p>
+          Ending a session blocks further actions; an accepted randomness
+          request still completes. Hunt-key removal and Solana-token closure are
+          confirmed separately.
+        </p>
+      </QuestDialog>
       <QuestDialog
         open={panel === "quests"}
         onClose={() => setPanel(null)}
@@ -1163,7 +1335,7 @@ export function HuntGame() {
             Preparing reserves the stake. Explore next, then explicitly choose
             Open quest beside a guardian.{" "}
             {live
-              ? "Wallet approvals include session funding of 0.002 devnet SOL plus fees."
+              ? "Wallet approvals include session funding of 0.002 devnet SOL plus fees and account rent."
               : "Practice uses browser randomness and creates no blockchain receipt."}
           </p>
         </form>
@@ -1239,8 +1411,8 @@ export function HuntGame() {
                 {busy
                   ? "Collecting…"
                   : attempt.phase === "cancelled"
-                    ? "Collect refund"
-                    : "Collect loot"}
+                  ? "Collect refund"
+                  : "Collect loot"}
               </button>
             )}
             {live && (

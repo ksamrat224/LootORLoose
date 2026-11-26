@@ -8,6 +8,14 @@ _Written Nov 25, 2026. Demo target: **Nov 27, 2026**. Audience: the team. Read w
 
 - V5 three-reveal hunts and the fixed-screen UI are implemented locally; see [HUNTS_V5.md](HUNTS_V5.md). V5 is deployed and verified on devnet, including real VRF, settlement and a fresh-wallet browser lifecycle; see [live evidence](DEVNET_V5_VERIFICATION.md). The tasks below originated for V3 and do not verify V5.
 
+Current V5 integration checks (Nov 26):
+
+- [x] Combined preparation, ER subscriptions with fallback, and wallet-only session revocation implemented and verified on devnet.
+- [x] Controlled client connection interruptions after real request/settlement uploads recovered without replacing the hunt.
+- [x] Read-only reservation reconciliation reports retained abandoned hunts; their rules remain unchanged.
+- [ ] Manual Phantom approval checklist in [DEVNET_SESSION_VERIFICATION.md](DEVNET_SESSION_VERIFICATION.md).
+- [ ] Actual provider-outage recovery exercise. Controlled connection failures do not establish provider-outage coverage.
+
 Historical V3 implementation notes:
 
 - V3 (demo-credit risk gates) is deployed on devnet and verified live with real VRF callbacks. See [wager-prototype.md](wager-prototype.md).

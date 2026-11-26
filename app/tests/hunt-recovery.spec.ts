@@ -1,5 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
-import { Program, BN, type Idl, type AnchorProvider } from "@coral-xyz/anchor";
+import {
+  Program,
+  BN,
+  utils,
+  BorshInstructionCoder,
+  type Idl,
+  type AnchorProvider,
+} from "@coral-xyz/anchor";
 import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
 import idl from "../src/lib/loot_or_lose.json";
 import { pda } from "../src/lib/hunt-chain";
@@ -13,7 +20,7 @@ async function connectWallet(page: Page) {
   if (await connect.count()) await connect.click();
 }
 
-async function fixture(page: Page) {
+async function fixture(page: Page, sessionControls = false) {
   // Disposable test-only wallet. All RPC is intercepted; no devnet transaction can be sent.
   const payer = Keypair.generate(),
     authority = payer.publicKey;
@@ -22,6 +29,34 @@ async function fixture(page: Page) {
       { connection: new Connection("http://localhost:8899") } as AnchorProvider,
     ).coder.accounts,
     pid = new PublicKey(idl.address);
+  let sessionSigner = Keypair.generate().publicKey;
+  let boundSigner = sessionSigner,
+    sessionCreations = 0,
+    sessionBindings = 0,
+    rejectBinding = false,
+    dropCreation = false;
+  const sessionProgram = new PublicKey(
+    "KeyspM2ssCJbqUhQ4k7sveSiY4WjnYsrXkC8oDbwde5",
+  );
+  let token = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("session_token_v2"),
+      pid.toBuffer(),
+      sessionSigner.toBuffer(),
+      authority.toBuffer(),
+    ],
+    sessionProgram,
+  )[0];
+  const { SessionTokenManager } = await import("@magicblock-labs/gum-sdk");
+  const sessionCoder = new SessionTokenManager(
+    { publicKey: authority } as never,
+    new Connection("http://localhost:8899"),
+  ).program.coder.accounts;
+  let blocked = false,
+    tokenClosed = false,
+    nonceOffset = 0,
+    failClosure = false;
+  const instructionCoder = new BorshInstructionCoder(idl as Idl);
   let legacyActive = 0;
   let phase = "active",
     reveals: {
@@ -46,6 +81,15 @@ async function fixture(page: Page) {
   const wagerKey = pda("hunt_attempt_v5", authority, 0).toBase58();
   await page.exposeFunction("testWalletSign", (bytes: number[]) => {
     const tx = Transaction.from(Buffer.from(bytes));
+    if (
+      rejectBinding &&
+      tx.instructions.some(
+        (ix) =>
+          ix.programId.equals(pid) &&
+          instructionCoder.decode(ix.data)?.name === "authorize_hunt_session",
+      )
+    )
+      throw new Error("User rejected authorization");
     tx.partialSign(payer);
     return Array.from(tx.serialize({ requireAllSignatures: false }));
   });
@@ -161,7 +205,7 @@ async function fixture(page: Page) {
         if (key === wagerKey && route.request().url().includes("devnet-as"))
           value = await encode("huntAttempt", {
             authority,
-            sessionSigner: PublicKey.default,
+            sessionSigner: sessionControls ? boundSigner : PublicKey.default,
             index: new BN(0),
             rulesVersion: 5,
             stake: new BN(200),
@@ -170,7 +214,9 @@ async function fixture(page: Page) {
             y: 1,
             questId: phase === "randomnessPending" ? 1 : 255,
             nonce: new BN(
-              reveals.length * 2 + (phase === "randomnessPending" ? 1 : 0),
+              reveals.length * 2 +
+                (phase === "randomnessPending" ? 1 : 0) +
+                nonceOffset,
             ),
             requestNonce: new BN(
               reveals.length * 2 + (phase === "randomnessPending" ? 1 : 0),
@@ -179,8 +225,8 @@ async function fixture(page: Page) {
               phase === "randomnessPending"
                 ? Math.floor(Date.now() / 1000) - 120
                 : reveals.length
-                  ? 1
-                  : 0,
+                ? 1
+                : 0,
             ),
             fulfilledAt: new BN(reveals.length ? 3 : 0),
             openedMask: reveals.reduce((m, r) => m | (1 << r.questId), 0),
@@ -236,6 +282,32 @@ async function fixture(page: Page) {
             activeIndex: new BN(0),
             bump: 255,
           });
+        if (
+          key === token.toBase58() &&
+          failClosure &&
+          blocked &&
+          !route.request().url().includes("devnet-as")
+        )
+          return route.abort("failed");
+        if (key === token.toBase58() && sessionControls && !tokenClosed)
+          value = {
+            owner: sessionProgram.toBase58(),
+            executable: false,
+            lamports: 10000000,
+            rentEpoch: 0,
+            data: [
+              (
+                await sessionCoder.encode("sessionTokenV2", {
+                  authority,
+                  targetProgram: pid,
+                  sessionSigner,
+                  feePayer: authority,
+                  validUntil: new BN(Math.floor(Date.now() / 1000) + 240),
+                })
+              ).toString("base64"),
+              "base64",
+            ],
+          };
         result = { context: { slot: 1 }, value };
         break;
       }
@@ -255,6 +327,54 @@ async function fixture(page: Page) {
         };
         break;
       case "sendTransaction":
+        if (sessionControls) {
+          uploads++;
+          const tx = Transaction.from(Buffer.from(rpc.params[0], "base64"));
+          for (const ix of tx.instructions) {
+            if (
+              ix.programId.equals(pid) &&
+              instructionCoder.decode(ix.data)?.name === "revoke_hunt_session"
+            ) {
+              blocked = true;
+              boundSigner = PublicKey.default;
+              nonceOffset++;
+            }
+            if (ix.programId.equals(pid)) {
+              const decoded = instructionCoder.decode(ix.data);
+              if (decoded?.name === "authorize_hunt_session") {
+                boundSigner = (decoded.data as { session_signer: PublicKey })
+                  .session_signer;
+                sessionBindings++;
+                blocked = false;
+              }
+            }
+            if (ix.programId.equals(sessionProgram)) {
+              if (tx.signatures.length > 1) {
+                sessionSigner = tx.signatures.find(
+                  (s) => !s.publicKey.equals(authority),
+                )!.publicKey;
+                token = PublicKey.findProgramAddressSync(
+                  [
+                    Buffer.from("session_token_v2"),
+                    pid.toBuffer(),
+                    sessionSigner.toBuffer(),
+                    authority.toBuffer(),
+                  ],
+                  sessionProgram,
+                )[0];
+                tokenClosed = false;
+                sessionCreations++;
+              } else tokenClosed = true;
+            }
+          }
+          applied = true;
+          if (dropCreation && tx.signatures.length > 1) {
+            dropCreation = false;
+            return route.abort("failed");
+          }
+          result = utils.bytes.bs58.encode(tx.signature!);
+          break;
+        }
         uploads++;
         pending = true;
         return route.abort("failed");
@@ -274,7 +394,7 @@ async function fixture(page: Page) {
         };
         break;
       case "getBlockHeight":
-        result = pending ? 50 : 101;
+        result = sessionControls || pending ? 50 : 101;
         break;
       default:
         throw new Error(`Unexpected mocked RPC ${rpc.method}`);
@@ -294,6 +414,20 @@ async function fixture(page: Page) {
   return {
     connect,
     uploads: () => uploads,
+    sessionState: () => ({ blocked, tokenClosed }),
+    dropCreationResponse: () => {
+      dropCreation = true;
+    },
+    sessionCounts: () => ({
+      creations: sessionCreations,
+      bindings: sessionBindings,
+    }),
+    rejectBinding: (value: boolean) => {
+      rejectBinding = value;
+    },
+    failClosure: (value: boolean) => {
+      failClosure = value;
+    },
     blockWithV3: () => {
       legacyActive = 3;
     },
@@ -361,7 +495,7 @@ test("V5 delayed VRF fallback preserves the unresolved request", async ({
   game.delayRandomness();
   await expect(
     page.getByText("The service is delayed.", { exact: false }),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 10000 }); // Allow the five-second subscription watchdog plus RPC/rendering.
   await expect(
     page.getByRole("button", { name: "Cancel hunt · full refund" }),
   ).toHaveCount(0);
@@ -499,4 +633,199 @@ test("V5 disconnect during approval prevents the old wallet submission", async (
     page.getByRole("button", { name: "Cancel hunt · full refund" }),
   ).toHaveCount(0);
   expect(game.uploads()).toBe(0);
+});
+
+test("session controls block the hunt key and close its base token", async ({
+  page,
+}) => {
+  const f = await fixture(page, true);
+  await f.connect();
+  await page.getByRole("button", { name: "Session", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Gameplay session" });
+  await expect(dialog).toContainText("No usable key on this device");
+  await dialog
+    .getByRole("button", { name: "End gameplay session", exact: true })
+    .click();
+  await expect
+    .poll(() => f.sessionState())
+    .toEqual({ blocked: true, tokenClosed: true });
+  await expect(page.locator(".quest-game")).toHaveAttribute(
+    "aria-busy",
+    "false",
+  );
+  expect(f.uploads()).toBe(2);
+  await expect(dialog).toContainText("Not authorized");
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("button", { name: "Session", exact: true }),
+  ).toBeFocused();
+});
+
+test("ending a session during pending randomness preserves the same request", async ({
+  page,
+}) => {
+  const f = await fixture(page, true);
+  f.delayRandomness();
+  await f.connect();
+  await page.getByRole("button", { name: "Session", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Gameplay session" })
+    .getByRole("button", { name: "End gameplay session", exact: true })
+    .click();
+  await expect
+    .poll(() => f.sessionState())
+    .toEqual({ blocked: true, tokenClosed: true });
+  await page.keyboard.press("Escape");
+  await expect(page.getByLabel("Demo amounts")).toContainText("1/3");
+  expect(f.uploads()).toBe(2);
+  f.resolveGate();
+  await expect(
+    page.getByRole("dialog", { name: "Loot frozen · collect to credit" }),
+  ).toBeVisible({ timeout: 10000 });
+  expect(f.uploads()).toBe(2);
+});
+
+test("reload completes token closure without repeating the hunt block", async ({
+  page,
+}) => {
+  const f = await fixture(page, true);
+  f.failClosure(true);
+  await f.connect();
+  await page.getByRole("button", { name: "Session", exact: true }).click();
+  await page
+    .getByRole("dialog", { name: "Gameplay session" })
+    .getByRole("button", { name: "End gameplay session", exact: true })
+    .click();
+  await expect
+    .poll(() => f.sessionState())
+    .toEqual({ blocked: true, tokenClosed: false });
+  await expect(
+    page.getByRole("button", { name: "Recover existing attempt", exact: true }),
+  ).toBeVisible();
+  f.failClosure(false);
+  await f.connect();
+  await page.getByRole("button", { name: "Session", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Gameplay session" });
+  await expect(dialog).toContainText("needs recovery");
+  await dialog
+    .getByRole("button", { name: "End gameplay session", exact: true })
+    .click();
+  await expect
+    .poll(() => f.sessionState())
+    .toEqual({ blocked: true, tokenClosed: true });
+  expect(f.uploads()).toBe(2);
+});
+
+for (const [width, height] of [
+  [375, 667],
+  [768, 900],
+  [1280, 720],
+  [844, 390],
+]) {
+  test(`session dialog and devnet toolbar fit ${width}×${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    const f = await fixture(page, true);
+    await f.connect();
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth <= innerWidth &&
+          document.documentElement.scrollHeight <= innerHeight,
+      ),
+    ).toBe(true);
+    await page.getByRole("button", { name: "Session", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "Gameplay session" });
+    await expect(dialog).toBeVisible();
+    const box = await dialog.boundingBox();
+    expect(box!.y).toBeGreaterThanOrEqual(0);
+    expect(box!.y + box!.height).toBeLessThanOrEqual(height);
+    await dialog
+      .getByRole("button", { name: "End gameplay session", exact: true })
+      .scrollIntoViewIfNeeded();
+    await page.keyboard.press("Escape");
+    await expect(
+      page.getByRole("button", { name: "Session", exact: true }),
+    ).toBeFocused();
+  });
+}
+
+test("viewing public session expiry after reload does not enable a missing private key", async ({
+  page,
+}) => {
+  const f = await fixture(page, true);
+  await f.connect();
+  await page.getByRole("button", { name: "Session", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Gameplay session" });
+  await expect(dialog).toContainText("No usable key on this device");
+  await expect(dialog).not.toContainText("No active session");
+  await page.keyboard.press("Escape");
+  await expect(
+    page.getByRole("button", {
+      name: "Authorize gameplay session",
+      exact: true,
+    }),
+  ).toBeVisible();
+});
+
+test("rejected ER authorization reuses the already funded in-memory session", async ({
+  page,
+}) => {
+  const f = await fixture(page, true);
+  f.rejectBinding(true);
+  await f.connect();
+  await page
+    .getByRole("button", { name: "Authorize gameplay session", exact: true })
+    .click();
+  const recover = page.getByRole("button", {
+    name: "Recover existing attempt",
+    exact: true,
+  });
+  await expect(recover).toBeVisible();
+  expect(f.sessionCounts()).toEqual({ creations: 1, bindings: 0 });
+  await recover.click();
+  await expect(recover).not.toBeVisible();
+  f.rejectBinding(false);
+  await page
+    .getByRole("button", { name: "Authorize gameplay session", exact: true })
+    .click();
+  await expect
+    .poll(() => f.sessionCounts())
+    .toEqual({ creations: 1, bindings: 1 });
+  await expect(page.locator(".quest-game")).toHaveAttribute(
+    "aria-busy",
+    "false",
+  );
+  expect(f.uploads()).toBe(2);
+});
+
+test("an uncertain session-creation response recovers the same funded key", async ({
+  page,
+}) => {
+  const f = await fixture(page, true);
+  f.dropCreationResponse();
+  await f.connect();
+  await page
+    .getByRole("button", { name: "Authorize gameplay session", exact: true })
+    .click();
+  const recover = page.getByRole("button", {
+    name: "Recover existing attempt",
+    exact: true,
+  });
+  await expect(recover).toBeVisible();
+  expect(f.sessionCounts()).toEqual({ creations: 1, bindings: 0 });
+  await recover.click();
+  await expect(recover).not.toBeVisible();
+  await page
+    .getByRole("button", { name: "Authorize gameplay session", exact: true })
+    .click();
+  await expect
+    .poll(() => f.sessionCounts())
+    .toEqual({ creations: 1, bindings: 1 });
+  await expect(page.locator(".quest-game")).toHaveAttribute(
+    "aria-busy",
+    "false",
+  );
+  expect(f.uploads()).toBe(2);
 });

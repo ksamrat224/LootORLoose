@@ -262,6 +262,12 @@ pub mod loot_or_lose {
     pub fn finalize_hunt_attempt(ctx: Context<FinalizeHuntAttempt>, index: u64) -> Result<()> {
         hunt::hunt_finalize(ctx, index)
     }
+    /// Removes application permission even when the base session token is still ER-cached.
+    /// Accepted VRF requests retain their identity and may finish after revocation.
+    pub fn revoke_hunt_session(ctx: Context<CancelHuntAttempt>, _index: u64) -> Result<()> {
+        ctx.accounts.wager.session_signer = Pubkey::default();
+        ctx.accounts.wager.bump_nonce()
+    }
     pub fn settle_hunt_attempt(ctx: Context<SettleHuntAttempt>, index: u64) -> Result<()> {
         hunt::hunt_settle(ctx, index)
     }

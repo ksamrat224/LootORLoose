@@ -1,7 +1,9 @@
-/** Real devnet RPC + a fresh, in-memory Wallet Standard signer. No RPC interception. */
+/** Real devnet RPC + fresh Wallet Standard signer; --interrupt drops selected real RPC responses. */
 import { chromium, expect, type Page } from "@playwright/test";
+import { BorshInstructionCoder } from "@coral-xyz/anchor";
 import { SessionTokenManager } from "@magicblock-labs/gum-sdk";
 import {
+  ComputeBudgetProgram,
   Keypair,
   PublicKey,
   SystemProgram,
@@ -11,7 +13,13 @@ import {
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { createHash, createHmac, randomUUID } from "node:crypto";
-import { base, PROGRAM_ID, submit, createGameSession } from "../src/lib/chain";
+import {
+  base,
+  PROGRAM_ID,
+  submit,
+  createGameSession,
+  program,
+} from "../src/lib/chain";
 import {
   readPlayer,
   readWager,
@@ -47,6 +55,7 @@ async function waitForSettlement(page: Page, title: string, action: string) {
     });
     if ((await recover.isVisible()) && (await recover.isEnabled())) {
       console.log("BROWSER_RECOVERY_CHECK");
+      await page.keyboard.press("Escape");
       await recover.click();
     } else if (
       (await page.locator(".quest-game").getAttribute("aria-busy")) === "false"
@@ -57,6 +66,14 @@ async function waitForSettlement(page: Page, title: string, action: string) {
         if ((await retry.isVisible()) && (await retry.isEnabled()))
           await retry.click();
       } else {
+        const view = page.getByRole("button", {
+          name: "View result",
+          exact: true,
+        });
+        if (await view.isVisible()) {
+          await view.click();
+          continue;
+        }
         const result = page.getByRole("button", { name: action, exact: true });
         if ((await result.isVisible()) && (await result.isEnabled()))
           await result.click();
@@ -147,13 +164,20 @@ async function main() {
   );
   const sessionProgram = new SessionTokenManager(wallet, base).program
     .programId;
-  const allowed = new Set([PROGRAM_ID.toBase58(), sessionProgram.toBase58()]);
+  const allowed = new Set([
+    PROGRAM_ID.toBase58(),
+    sessionProgram.toBase58(),
+    ComputeBudgetProgram.programId.toBase58(),
+  ]);
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({
     viewport: { width: 1280, height: 720 },
   });
   page.setDefaultTimeout(120_000);
   let signatures = 0;
+  let bindingRejected = false;
+  const walletCoder = program(base, wallet).coder
+    .instruction as BorshInstructionCoder;
   await page.exposeFunction("liveWalletSign", (bytes: number[]) => {
     const tx = Transaction.from(Buffer.from(bytes));
     if (
@@ -168,6 +192,19 @@ async function main() {
       signatures,
       tx.instructions.map((ix) => ix.programId.toBase58()),
     );
+    const names = tx.instructions
+      .filter((ix) => ix.programId.equals(PROGRAM_ID))
+      .map((ix) => walletCoder.decode(ix.data)?.name);
+    if (
+      process.argv.includes("--reject-binding") &&
+      !bindingRejected &&
+      names.includes("authorizeHuntSession") &&
+      !names.includes("createHuntAttempt")
+    ) {
+      bindingRejected = true;
+      console.log("CONTROLLED_APPROVAL_REJECTION", "authorizeHuntSession");
+      throw new Error("User rejected the test session binding");
+    }
     tx.partialSign(fresh);
     return Array.from(tx.serialize({ requireAllSignatures: false }));
   });
@@ -240,10 +277,58 @@ async function main() {
     { address: authority.toBase58(), bytes: Array.from(authority.toBytes()) },
   );
   page.on("console", (message) => {
-    if (message.text().includes("loot:transaction"))
+    if (
+      message.text().includes("loot:transaction") ||
+      message.text().includes("loot:hunt-update")
+    )
       console.log("BROWSER_EVENT", message.text());
   });
   page.on("pageerror", (error) => console.log("BROWSER_ERROR", error.message));
+  const interrupted = new Set<string>();
+  if (process.argv.includes("--interrupt")) {
+    const coder = program(base, wallet).coder
+      .instruction as BorshInstructionCoder;
+    await page.route(/https:\/\/[^/]*magicblock\.app\//, async (route) => {
+      const rpc = route.request().postDataJSON();
+      if (rpc?.method === "sendTransaction") {
+        const tx = Transaction.from(Buffer.from(rpc.params[0], "base64"));
+        const names = tx.instructions
+          .filter((ix) => ix.programId.equals(PROGRAM_ID))
+          .map((ix) => coder.decode(ix.data)?.name);
+        const target = ["riskHunt", "settleHuntAttempt"].find(
+          (name) => names.includes(name) && !interrupted.has(name),
+        );
+        if (target) {
+          interrupted.add(target);
+          const response = await route.fetch(); // Actual transaction reaches devnet; discard only its response.
+          console.log(
+            "CONTROLLED_CONNECTION_INTERRUPTION",
+            target,
+            response.status(),
+          );
+          return route.abort("failed");
+        }
+      }
+      return route.continue();
+    });
+  }
+  const recoverInterrupted = async () => {
+    const recover = page.getByRole("button", {
+      name: "Recover existing attempt",
+      exact: true,
+    });
+    if (await recover.isVisible()) {
+      await page.keyboard.press("Escape");
+      if (await recover.isEnabled()) {
+        await recover.click();
+        await expect(page.locator(".quest-game")).toHaveAttribute(
+          "aria-busy",
+          "false",
+          { timeout: 120_000 },
+        );
+      }
+    }
+  };
   const snapshot = async () => {
     const p = await readPlayer(wallet);
     if (!p?.active) throw new Error("Expected active hunt");
@@ -273,7 +358,13 @@ async function main() {
       .click();
     await page.getByRole("button", { name: "Start hunt", exact: true }).click();
     await page.getByRole("button", { name: "Explore", exact: true }).waitFor();
-    console.log("BROWSER_PREPARATION_COMPLETE");
+    console.log(
+      "BROWSER_PREPARATION_COMPLETE",
+      "wallet approvals:",
+      signatures,
+    );
+    if (signatures !== 1)
+      throw new Error("Fresh preparation did not use one wallet approval");
     for (const [step, id] of [5, 3, 4].entries()) {
       const current = await snapshot();
       if (current.phase !== "active" || current.revealCount !== step)
@@ -295,7 +386,22 @@ async function main() {
       const dialog = page.getByRole("dialog", {
         name: step === 2 ? "Loot frozen · collect to credit" : "Quest revealed",
       });
-      await dialog.waitFor({ timeout: 180_000 });
+      const revealDeadline = Date.now() + 180_000;
+      while (Date.now() < revealDeadline) {
+        await recoverInterrupted();
+        if (await dialog.isVisible()) break;
+        const currentState = await snapshot();
+        if (currentState.revealCount === step + 1) {
+          // Recovery may have dismissed a reveal dialog; reopen only the existing UI result.
+          if (step === 2)
+            await page
+              .getByRole("button", { name: "Collect loot", exact: true })
+              .click();
+          else break;
+        }
+        await new Promise((r) => setTimeout(r, 1000));
+      }
+      if (step === 2) await dialog.waitFor({ timeout: 30_000 });
       const resolved = await snapshot();
       if (resolved.revealCount !== step + 1 || !(await verifyHunt(resolved)))
         throw new Error("Browser reveal proof mismatch");
@@ -308,11 +414,29 @@ async function main() {
           address: resolved.address.toBase58(),
         }),
       );
-      if (step < 2)
+      if (step < 2 && (await dialog.isVisible()))
         await dialog
           .getByRole("button", { name: "Continue hunt", exact: true })
           .click();
       if (step === 0) {
+        await page
+          .getByRole("button", { name: "Session", exact: true })
+          .click();
+        const sessionDialog = page.getByRole("dialog", {
+          name: "Gameplay session",
+        });
+        await sessionDialog
+          .getByRole("button", { name: "End gameplay session", exact: true })
+          .click();
+        await expect(page.locator(".quest-game")).toHaveAttribute(
+          "aria-busy",
+          "false",
+          { timeout: 120_000 },
+        );
+        const blocked = await snapshot();
+        if (!blocked.sessionSigner?.equals(PublicKey.default))
+          throw new Error("UI did not remove hunt session authority");
+        console.log("BROWSER_SESSION_END_VERIFIED");
         await page.reload();
         await page.getByRole("button", { name: "Play", exact: true }).click();
         await page.getByRole("radio", { name: "Devnet", exact: true }).check();
@@ -333,6 +457,28 @@ async function main() {
           "false",
           { timeout: 120_000 },
         );
+        if (process.argv.includes("--reject-binding")) {
+          if (!bindingRejected)
+            throw new Error("Expected the session-binding rejection");
+          const beforeRetry: number = signatures;
+          await recoverInterrupted();
+          await page
+            .getByRole("button", {
+              name: "Authorize gameplay session",
+              exact: true,
+            })
+            .click();
+          await expect(page.locator(".quest-game")).toHaveAttribute(
+            "aria-busy",
+            "false",
+            { timeout: 120_000 },
+          );
+          if (signatures !== beforeRetry + 1)
+            throw new Error(
+              "Session retry funded another key instead of reusing it",
+            );
+          console.log("FUNDED_SESSION_REUSED_AFTER_REJECTION");
+        }
         console.log("BROWSER_RELOAD_RECOVERY_VERIFIED");
       }
     }
@@ -403,6 +549,10 @@ async function main() {
     const final = await readPlayer(wallet);
     if (!final || final.active || !final.balance.eq(credited.balance))
       throw new Error("Cancellation failed to refund exactly");
+    if (process.argv.includes("--interrupt") && interrupted.size !== 2)
+      throw new Error(
+        "Expected both request and settlement connection interruptions",
+      );
     console.log(
       "BROWSER_CANCELLATION_VERIFIED",
       final.balance.toString(),

@@ -1,5 +1,7 @@
 # V5 devnet deployment and live verification
 
+This page records the initial release. The [Nov 26 session upgrade and verification](DEVNET_SESSION_VERIFICATION.md) supersedes its deployed binary hash.
+
 Verified Nov 25, 2026. V5 is enabled in the example and local app environments. Practice remains the initial mode. All game balances are fictional credits.
 
 ## Deployment

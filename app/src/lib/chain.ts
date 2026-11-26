@@ -73,8 +73,8 @@ export type GameSession = {
   expiresAt: number;
   authority: PublicKey;
 };
-const SESSION_TOP_UP_LAMPORTS = 2_000_000;
-const SESSION_LIFETIME_SECONDS = 240;
+export const SESSION_TOP_UP_LAMPORTS = 2_000_000;
+export const SESSION_LIFETIME_SECONDS = 240;
 export async function rpcDeadline<T>(
   operation: Promise<T>,
   milliseconds = 15000
@@ -277,6 +277,7 @@ async function sendSigned(
     transactionEvent(authority, signature, connection.rpcEndpoint, "confirmed");
     return signature;
   } catch (error) {
+    console.warn("loot:transaction-uncertain", String(error));
     throw new PendingSubmission(
       signature,
       block.lastValidBlockHeight,
@@ -295,6 +296,11 @@ export async function submit(
   transaction.feePayer = wallet.publicKey;
   const latest = await rpcDeadline(connection.getLatestBlockhash("confirmed"));
   transaction.recentBlockhash = latest.blockhash;
+  // Measure the complete wire transaction, including all required signatures.
+  transaction.serialize({
+    requireAllSignatures: false,
+    verifySignatures: false,
+  });
   const simulation = await rpcDeadline(
     connection.simulateTransaction(transaction)
   );
@@ -332,10 +338,11 @@ export async function submitSession(
   guard();
   return sendSigned(connection, transaction, latest, session.authority);
 }
-export async function createGameSession(
-  wallet: AnchorWallet,
-  guard: () => void = () => {}
-): Promise<{ session: GameSession; signature: string }> {
+export async function buildGameSession(wallet: AnchorWallet): Promise<{
+  session: GameSession;
+  transaction: Transaction;
+  sessionProgram: PublicKey;
+}> {
   if (
     DEPLOYED_ID !== PROGRAM_ID.toBase58() ||
     !(
@@ -371,16 +378,34 @@ export async function createGameSession(
       authority: wallet.publicKey,
     })
     .transaction();
-  const signature = await submit(base, wallet, transaction, [signer], guard);
-  const info = await base.getAccountInfo(token, "confirmed");
-  if (!info?.owner.equals(manager.program.programId))
-    throw new Error(
-      "Session creation confirmed, but the session token is not readable yet. Refresh before retrying."
-    );
   return {
     session: { signer, token, expiresAt, authority: wallet.publicKey },
-    signature,
+    transaction,
+    sessionProgram: manager.program.programId,
   };
+}
+export async function createGameSession(
+  wallet: AnchorWallet,
+  guard: () => void = () => {}
+): Promise<{ session: GameSession; signature: string }> {
+  const { session, transaction, sessionProgram } = await buildGameSession(
+    wallet
+  );
+  const signature = await submit(
+    base,
+    wallet,
+    transaction,
+    [session.signer],
+    guard
+  );
+  const info = await rpcDeadline(
+    base.getAccountInfo(session.token, "confirmed")
+  );
+  if (!info?.owner.equals(sessionProgram))
+    throw new Error(
+      "Session creation confirmed but its token is not readable. Recover before retrying."
+    );
+  return { session, signature };
 }
 export async function revokeGameSession(
   wallet: AnchorWallet,
@@ -397,6 +422,33 @@ export async function revokeGameSession(
     })
     .transaction();
   return submit(base, wallet, transaction);
+}
+/** A retained in-memory key may be reused after an ambiguous creation or rejected binding. */
+export async function isGameSessionReady(
+  wallet: AnchorWallet,
+  session: GameSession
+): Promise<boolean> {
+  if (
+    !session.authority.equals(wallet.publicKey) ||
+    session.expiresAt <= Date.now() / 1000
+  )
+    return false;
+  const { SessionTokenManager } = await import("@magicblock-labs/gum-sdk");
+  const manager = new SessionTokenManager(wallet, base);
+  const info = await rpcDeadline(
+    base.getAccountInfo(session.token, "confirmed")
+  );
+  if (!info?.owner.equals(manager.program.programId)) return false;
+  const token = manager.program.coder.accounts.decode(
+    "sessionTokenV2",
+    info.data
+  );
+  return (
+    token.authority.equals(wallet.publicKey) &&
+    token.targetProgram.equals(PROGRAM_ID) &&
+    token.sessionSigner.equals(session.signer.publicKey) &&
+    token.validUntil.toNumber() > Date.now() / 1000
+  );
 }
 export async function createRun(
   wallet: AnchorWallet

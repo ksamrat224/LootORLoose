@@ -3184,6 +3184,74 @@
       ]
     },
     {
+      "name": "revoke_hunt_session",
+      "docs": [
+        "Removes application permission even when the base session token is still ER-cached.",
+        "Accepted VRF requests retain their identity and may finish after revocation."
+      ],
+      "discriminator": [
+        185,
+        191,
+        133,
+        82,
+        27,
+        67,
+        8,
+        167
+      ],
+      "accounts": [
+        {
+          "name": "wager",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  104,
+                  117,
+                  110,
+                  116,
+                  95,
+                  97,
+                  116,
+                  116,
+                  101,
+                  109,
+                  112,
+                  116,
+                  95,
+                  118,
+                  53
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "authority"
+              },
+              {
+                "kind": "arg",
+                "path": "index"
+              }
+            ]
+          }
+        },
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "wager"
+          ]
+        }
+      ],
+      "args": [
+        {
+          "name": "_index",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "risk_gate",
       "discriminator": [
         222,

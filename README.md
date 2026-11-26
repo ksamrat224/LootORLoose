@@ -1,6 +1,6 @@
 # Loot or Lose
 
-**Current UI: V5 three-reveal hunts in practice and verified devnet.** Stake once, explore six guardians, open three different quests and collect their combined random loot. The listed reward table averages 86.5% before cent rounding. V5 is deployed and verified on devnet; see [live verification](docs/DEVNET_V5_VERIFICATION.md). See [V5 architecture and rollout](docs/HUNTS_V5.md). Earlier V3/V4 recovery remains at `/recovery` and `/recovery/quests`; historical deployment evidence does not verify V5.
+**Current UI: V5 three-reveal hunts in practice and verified devnet.** Stake once, explore six guardians, open three different quests and collect their combined random loot. The listed reward table averages 86.5% before cent rounding. V5 is deployed and verified on devnet; see [live verification](docs/DEVNET_V5_VERIFICATION.md). See [V5 architecture and rollout](docs/HUNTS_V5.md) and [Nov 26 session/connection verification and Phantom checklist](docs/DEVNET_SESSION_VERIFICATION.md). Earlier V3/V4 recovery remains at `/recovery` and `/recovery/quests`; historical deployment evidence does not verify V5.
 
 A dungeon extraction game with a three-gate, simulated-stake prototype. The original free game and its session-key upgrade were verified on Solana devnet through a MagicBlock Ephemeral Rollup and back to base-layer receipts. **The V3 wager program was upgraded on devnet on Nov 23, 2026.** All wager credits are nonredeemable demo units; there are no real deposits or cash prizes.
 

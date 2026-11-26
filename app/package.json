@@ -12,7 +12,9 @@
     "verify:devnet-wager": "NEXT_PUBLIC_WAGER_V3_ENABLED=true node --env-file=.env.local --import tsx scripts/devnet-wager.ts",
     "verify:devnet-quests": "NEXT_PUBLIC_QUEST_V4_ENABLED=true node --env-file=.env.local --import tsx scripts/devnet-quests.ts",
     "verify:devnet-hunts": "NEXT_PUBLIC_HUNT_V5_ENABLED=true node --env-file=.env.local --import tsx scripts/devnet-hunts.ts",
-    "verify:devnet-hunts-browser": "NEXT_PUBLIC_HUNT_V5_ENABLED=true node --env-file=.env.local --import tsx scripts/devnet-hunts-browser.ts"
+    "verify:devnet-hunts-browser": "NEXT_PUBLIC_HUNT_V5_ENABLED=true node --env-file=.env.local --import tsx scripts/devnet-hunts-browser.ts",
+    "verify:devnet-reservations": "node --env-file=.env.local --import tsx scripts/devnet-reservations.ts",
+    "verify:devnet-sessions": "NEXT_PUBLIC_HUNT_V5_ENABLED=true node --env-file=.env.local --import tsx scripts/devnet-session-check.ts"
   },
   "dependencies": {
     "@coral-xyz/anchor": "0.32.1",
