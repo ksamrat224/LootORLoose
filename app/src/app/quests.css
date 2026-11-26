@@ -974,3 +974,109 @@
   line-height: 1.5;
   text-align: center;
 }
+
+.q-session-content {
+  display: grid;
+  gap: 16px;
+}
+.q-session-content p {
+  margin: 0;
+}
+.q-session-status {
+  display: grid;
+  gap: 4px;
+}
+.q-dialog-actions {
+  display: grid;
+  gap: 12px;
+  margin: 4px 0;
+}
+.q-dialog-actions > button {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 16px;
+  line-height: 1.5;
+}
+
+.q-reward-rules {
+  display: grid;
+  gap: 20px;
+}
+.q-reward-rules p {
+  margin: 0;
+}
+.q-reward-rules .q-eyebrow {
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+.q-reward-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+.q-reward-table caption {
+  text-align: left;
+  font-size: 13px;
+  color: var(--muted);
+  padding-bottom: 10px;
+}
+.q-reward-table th,
+.q-reward-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+.q-reward-table th {
+  background: var(--background);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.q-reward-table th:last-child,
+.q-reward-table td:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.q-reward-table td:first-child {
+  font-weight: 600;
+}
+.q-reward-table td span {
+  font-weight: 400;
+  color: var(--muted);
+}
+.q-reward-average {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  background: var(--background);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.q-reward-average > span {
+  color: var(--muted);
+  font-size: 13px;
+}
+.q-reward-average strong {
+  color: var(--primary);
+  font-size: 28px;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+}
+.q-reward-average p {
+  color: var(--muted);
+  font-size: 13px;
+}
+.q-reward-notes {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 10px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.q-reward-disclaimer {
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+  color: var(--muted);
+  font-size: 13px;
+}

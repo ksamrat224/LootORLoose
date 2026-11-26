@@ -1172,72 +1172,78 @@ export function HuntGame() {
         onClose={() => setPanel(null)}
         title="Gameplay session"
       >
-        <p>
-          Status:{" "}
-          {sessionRecord?.ending
-            ? "Hunt block or token closure needs recovery"
-            : hasSessionKey && expiry > now
-            ? "Ready on this device"
-            : sessionRecord
-            ? "No usable key on this device"
-            : "Not authorized"}
-        </p>
-        <p>
-          Expires:{" "}
-          {sessionRecord?.expiresAt || expiry
-            ? new Date(
-                (sessionRecord?.expiresAt || expiry) * 1000,
-              ).toLocaleTimeString()
-            : "No active session"}
-        </p>
-        <p>
-          Permits opening quests on this hunt only. Stakes, cancellation and
-          collection require your wallet.
-        </p>
-        <p>
-          Each new session receives 0.002 devnet SOL, plus transaction fees and
-          account rent. Keys stay in memory; reloading requires authorization
-          again.
-        </p>
-        <button
-          className="q-button"
-          onClick={resume}
-          disabled={
-            busy ||
-            recovering ||
-            !attempt ||
-            attempt.phase !== "active" ||
-            attempt.settled
-          }
-        >
-          Authorize session
-        </button>
-        {huntSessionControlEnabled ? (
-          <button
-            className="q-quiet"
-            onClick={endSession}
-            disabled={
-              busy ||
-              recovering ||
-              !attempt ||
-              (!sessionRecord &&
-                (!attempt.sessionSigner ||
-                  attempt.sessionSigner.equals(PublicKey.default)))
-            }
-          >
-            End gameplay session
-          </button>
-        ) : (
+        <div className="q-session-content">
+          <div className="q-session-status">
+            <p>
+              Status:{" "}
+              {sessionRecord?.ending
+                ? "Hunt block or token closure needs recovery"
+                : hasSessionKey && expiry > now
+                ? "Ready on this device"
+                : sessionRecord
+                ? "No usable key on this device"
+                : "Not authorized"}
+            </p>
+            <p>
+              Expires:{" "}
+              {sessionRecord?.expiresAt || expiry
+                ? new Date(
+                    (sessionRecord?.expiresAt || expiry) * 1000,
+                  ).toLocaleTimeString()
+                : "No active session"}
+            </p>
+          </div>
           <p>
-            Session-ending controls await verified deployment. Existing sessions
-            expire after four minutes.
+            Permits opening quests on this hunt only. Stakes, cancellation and
+            collection require your wallet.
           </p>
-        )}
-        <p>
-          Ending a session blocks further actions; an accepted randomness
-          request still completes. Hunt-key removal and Solana-token closure are
-          confirmed separately.
-        </p>
+          <p>
+            Each new session receives 0.002 devnet SOL, plus transaction fees
+            and account rent. Keys stay in memory; reloading requires
+            authorization again.
+          </p>
+          <div className="q-dialog-actions">
+            <button
+              className="q-button"
+              onClick={resume}
+              disabled={
+                busy ||
+                recovering ||
+                !attempt ||
+                attempt.phase !== "active" ||
+                attempt.settled
+              }
+            >
+              Authorize session
+            </button>
+            {huntSessionControlEnabled ? (
+              <button
+                className="q-quiet"
+                onClick={endSession}
+                disabled={
+                  busy ||
+                  recovering ||
+                  !attempt ||
+                  (!sessionRecord &&
+                    (!attempt.sessionSigner ||
+                      attempt.sessionSigner.equals(PublicKey.default)))
+                }
+              >
+                End gameplay session
+              </button>
+            ) : (
+              <p>
+                Session-ending controls await verified deployment. Existing
+                sessions expire after four minutes.
+              </p>
+            )}
+          </div>
+          <p>
+            Ending a session blocks further actions; an accepted randomness
+            request still completes. Hunt-key removal and Solana-token closure
+            are confirmed separately.
+          </p>
+        </div>
       </QuestDialog>
       <QuestDialog
         open={panel === "quests"}
@@ -1455,36 +1461,65 @@ export function HuntGame() {
         onClose={() => setPanel(null)}
         title="Reward rules"
       >
-        <p>
-          Rules V{rulesVersion}. All six quests share this prize pool. Each of
-          your three reveals is an independent draw, based on your original
-          stake.
-        </p>
-        <table>
-          <thead>
-            <tr>
-              <th>Reward</th>
-              <th>Probability</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rules.rewards.map((r) => (
-              <tr key={r.limit}>
-                <td>{r.label} of stake</td>
-                <td>{r.chance}</td>
+        <div className="q-reward-rules">
+          <div>
+            <p className="q-eyebrow">
+              Rules V{rulesVersion} · All six quests share one pool
+            </p>
+            <p>
+              Open three different quests. Each reveal is an independent draw,
+              with its reward based on your original stake.
+            </p>
+          </div>
+          <table className="q-reward-table">
+            <caption>Possible rewards for each reveal</caption>
+            <thead>
+              <tr>
+                <th scope="col">Reward</th>
+                <th scope="col">Probability</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        <p>
-          Rewards are rounded down to cents and added together. Three reveals
-          average {rules.averageReturn} of the stake before rounding. Rewards
-          include the stake contribution. Collect after all three; zero rewards
-          do not remove earlier loot. Cancel for a full refund only before the
-          first request. These are theoretical averages, not guarantees.
-          Repeated play can reduce your demo credits. Demo credits have no cash
-          value.
-        </p>
+            </thead>
+            <tbody>
+              {rules.rewards.map((r) => (
+                <tr key={r.limit}>
+                  <td>
+                    {r.label} <span>of stake</span>
+                  </td>
+                  <td>{r.chance}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="q-reward-average">
+            <span>Average total return · Three reveals</span>
+            <strong>{rules.averageReturn}</strong>
+            <p>
+              Of your original stake, before cent rounding. A theoretical
+              average, not a guarantee.
+            </p>
+          </div>
+          <ul className="q-reward-notes">
+            <li>
+              Each reward is rounded down to cents. All three rewards are added
+              together.
+            </li>
+            <li>
+              Collect after all three reveals. Zero rewards do not remove
+              earlier loot.
+            </li>
+            <li>
+              Rewards include the stake contribution. Your stake is not returned
+              a second time.
+            </li>
+            <li>
+              Cancel for a full refund only before the first randomness request.
+            </li>
+          </ul>
+          <p className="q-reward-disclaimer">
+            Repeated play can reduce your demo credits. Demo credits have no
+            cash value.
+          </p>
+        </div>
       </QuestDialog>
       <QuestDialog
         open={panel === "reveal"}
