@@ -1,3 +1,4 @@
+import { openDashboardPanel } from "./dashboard-helpers";
 import { test, expect } from "@playwright/test";
 import { huntReward, huntReserve, rewardRules } from "../src/game/hunt-rules";
 import { QUESTS, approachPath } from "../src/game/hunt-rules";
@@ -169,9 +170,7 @@ for (const version of [5, 6])
     await page
       .getByRole("button", { name: "Continue hunt", exact: true })
       .click();
-    await page
-      .getByRole("button", { name: "Reward rules", exact: true })
-      .click();
+    await openDashboardPanel(page, "Reward rules");
     const rules = page.getByRole("dialog", { name: "Reward rules" });
     await expect(rules).toContainText(`Rules V${version}`);
     await expect(rules).toContainText(version === 5 ? "86.5%" : "95.55%");
@@ -220,7 +219,7 @@ test("new practice hunts show V6 rules without changing quest popup copy", async
 }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  await page.getByRole("button", { name: "Reward rules", exact: true }).click();
+  await openDashboardPanel(page, "Reward rules");
   const dialog = page.getByRole("dialog", { name: "Reward rules" });
   await expect(dialog).toContainText("Rules V6");
   await expect(dialog).toContainText("95.55%");

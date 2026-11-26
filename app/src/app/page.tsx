@@ -8,24 +8,28 @@ export default function Home() {
   return (
     <main
       className={`quest-shell ${
-        playing ? "quest-shell-playing" : "quest-shell-welcome"
+        playing
+          ? "quest-shell-playing hunt-dashboard-shell"
+          : "quest-shell-welcome"
       }`}
     >
-      <header className="quest-brand">
-        <span>
-          <Image
-            src="/brand/brand-logo.png"
-            alt=""
-            width={36}
-            height={36}
-            priority
-          />
-          <b>
-            LOOT <em>OR</em> LOSE
-          </b>
-        </span>
-        <span className="q-brand-note">SIX QUESTS. THREE REVEALS.</span>
-      </header>
+      {!playing && (
+        <header className="quest-brand">
+          <span>
+            <Image
+              src="/brand/brand-logo.png"
+              alt=""
+              width={36}
+              height={36}
+              priority
+            />
+            <b>
+              LOOT <em>OR</em> LOSE
+            </b>
+          </span>
+          <span className="q-brand-note">SIX QUESTS. THREE REVEALS.</span>
+        </header>
+      )}
       {playing ? (
         <HuntGame />
       ) : (

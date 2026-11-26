@@ -1,3 +1,4 @@
+import { openDashboardPanel, expectDashboardFocus } from "./dashboard-helpers";
 import { test, expect, type Page } from "@playwright/test";
 import {
   Program,
@@ -58,6 +59,7 @@ async function fixture(page: Page, sessionControls = false) {
     failClosure = false;
   const instructionCoder = new BorshInstructionCoder(idl as Idl);
   let legacyActive = 0;
+  let playerActive = true;
   let phase = "active",
     reveals: {
       questId: number;
@@ -233,7 +235,7 @@ async function fixture(page: Page, sessionControls = false) {
             authority,
             balance: new BN(9800),
             nextIndex: new BN(1),
-            active: true,
+            active: playerActive,
             activeIndex: new BN(0),
             bump: 255,
           });
@@ -448,6 +450,9 @@ async function fixture(page: Page, sessionControls = false) {
   };
   return {
     connect,
+    readyState: () => {
+      playerActive = false;
+    },
     uploads: () => uploads,
     sessionState: () => ({ blocked, tokenClosed }),
     dropCreationResponse: () => {
@@ -675,7 +680,7 @@ test("session controls block the hunt key and close its base token", async ({
 }) => {
   const f = await fixture(page, true);
   await f.connect();
-  await page.getByRole("button", { name: "Session", exact: true }).click();
+  await openDashboardPanel(page, "Session");
   const dialog = page.getByRole("dialog", { name: "Gameplay session" });
   await expect(dialog).toContainText("No usable key on this device");
   await dialog
@@ -691,9 +696,7 @@ test("session controls block the hunt key and close its base token", async ({
   expect(f.uploads()).toBe(2);
   await expect(dialog).toContainText("Not authorized");
   await page.keyboard.press("Escape");
-  await expect(
-    page.getByRole("button", { name: "Session", exact: true }),
-  ).toBeFocused();
+  await expectDashboardFocus(page, "Session");
 });
 
 test("ending a session during pending randomness preserves the same request", async ({
@@ -702,7 +705,7 @@ test("ending a session during pending randomness preserves the same request", as
   const f = await fixture(page, true);
   f.delayRandomness();
   await f.connect();
-  await page.getByRole("button", { name: "Session", exact: true }).click();
+  await openDashboardPanel(page, "Session");
   await page
     .getByRole("dialog", { name: "Gameplay session" })
     .getByRole("button", { name: "End gameplay session", exact: true })
@@ -726,7 +729,7 @@ test("reload completes token closure without repeating the hunt block", async ({
   const f = await fixture(page, true);
   f.failClosure(true);
   await f.connect();
-  await page.getByRole("button", { name: "Session", exact: true }).click();
+  await openDashboardPanel(page, "Session");
   await page
     .getByRole("dialog", { name: "Gameplay session" })
     .getByRole("button", { name: "End gameplay session", exact: true })
@@ -739,7 +742,7 @@ test("reload completes token closure without repeating the hunt block", async ({
   ).toBeVisible();
   f.failClosure(false);
   await f.connect();
-  await page.getByRole("button", { name: "Session", exact: true }).click();
+  await openDashboardPanel(page, "Session");
   const dialog = page.getByRole("dialog", { name: "Gameplay session" });
   await expect(dialog).toContainText("needs recovery");
   await dialog
@@ -770,7 +773,61 @@ for (const [width, height] of [
           document.documentElement.scrollHeight <= innerHeight,
       ),
     ).toBe(true);
-    await page.getByRole("button", { name: "Session", exact: true }).click();
+    const walletTrigger = page.getByRole("button", {
+      name: /Fixture Wallet icon/,
+    });
+    await walletTrigger.focus();
+    await page.keyboard.press("Enter");
+    const accountMenu = page.locator(".wallet-adapter-dropdown-list-active");
+    await expect(
+      accountMenu.getByRole("menuitem", { name: "Copy address", exact: true }),
+    ).toBeFocused();
+    const menuBounds = await accountMenu.boundingBox();
+    expect(menuBounds!.y).toBeGreaterThanOrEqual(0);
+    expect(menuBounds!.y + menuBounds!.height).toBeLessThanOrEqual(height);
+
+    const objective = await page.locator(".q-objective").innerText();
+    await page.keyboard.down("ArrowRight");
+    await page.waitForTimeout(150);
+    await page.keyboard.up("ArrowRight");
+    await expect(page.locator(".q-objective")).toHaveText(objective, {
+      useInnerText: true,
+    });
+    await page.keyboard.press("End");
+    const disconnect = accountMenu.getByRole("menuitem", {
+      name: "Disconnect",
+      exact: true,
+    });
+    await expect(disconnect).toBeFocused();
+    await expect(disconnect).toBeInViewport();
+    expect(
+      await disconnect.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return el.contains(
+          document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2),
+        );
+      }),
+    ).toBe(true);
+    await page.keyboard.press("Escape");
+    await expect(walletTrigger).toBeFocused();
+    await expect(accountMenu).toHaveCount(0);
+    await walletTrigger.click();
+    await page.keyboard.press("ArrowUp");
+    await expect(
+      page
+        .locator(".wallet-adapter-dropdown-list-active")
+        .getByRole("menuitem", { name: "Disconnect", exact: true }),
+    ).toBeFocused();
+    await page.keyboard.press("Escape");
+    await page.keyboard.press("Space");
+    await expect(
+      page
+        .locator(".wallet-adapter-dropdown-list-active")
+        .getByRole("menuitem", { name: "Copy address", exact: true }),
+    ).toBeFocused();
+    await page.keyboard.press("Escape");
+    await expect(walletTrigger).toBeFocused();
+    await openDashboardPanel(page, "Session");
     const dialog = page.getByRole("dialog", { name: "Gameplay session" });
     await expect(dialog).toBeVisible();
     const box = await dialog.boundingBox();
@@ -780,9 +837,7 @@ for (const [width, height] of [
       .getByRole("button", { name: "End gameplay session", exact: true })
       .scrollIntoViewIfNeeded();
     await page.keyboard.press("Escape");
-    await expect(
-      page.getByRole("button", { name: "Session", exact: true }),
-    ).toBeFocused();
+    await expectDashboardFocus(page, "Session");
   });
 }
 
@@ -791,7 +846,7 @@ test("viewing public session expiry after reload does not enable a missing priva
 }) => {
   const f = await fixture(page, true);
   await f.connect();
-  await page.getByRole("button", { name: "Session", exact: true }).click();
+  await openDashboardPanel(page, "Session");
   const dialog = page.getByRole("dialog", { name: "Gameplay session" });
   await expect(dialog).toContainText("No usable key on this device");
   await expect(dialog).not.toContainText("No active session");
@@ -882,7 +937,7 @@ test("journal separates practice, connected wallet and disconnected contexts", a
     ),
   );
   await f.connect();
-  await page.getByRole("button", { name: "Journal", exact: true }).click();
+  await openDashboardPanel(page, "Journal");
   await expect(page.getByRole("dialog")).toContainText("1/6");
   await expect(
     page.getByRole("dialog").getByText("Earned", { exact: true }),
@@ -890,11 +945,50 @@ test("journal separates practice, connected wallet and disconnected contexts", a
   await page.keyboard.press("Escape");
   await page.getByRole("button", { name: /Fixture Wallet icon/ }).click();
   await page.getByText("Disconnect", { exact: true }).click();
-  await page.getByRole("button", { name: "Journal", exact: true }).click();
+  await openDashboardPanel(page, "Journal");
   await expect(page.getByRole("dialog")).toContainText("0/6");
   await page.keyboard.press("Escape");
   await page.getByRole("radio", { name: "Practice", exact: true }).check();
-  await page.getByRole("button", { name: "Journal", exact: true }).click();
+  await openDashboardPanel(page, "Journal");
   await expect(page.getByRole("dialog")).toContainText("6/6");
   expect(f.uploads()).toBe(0);
 });
+
+for (const [width, height] of [
+  [375, 667],
+  [768, 900],
+  [1280, 720],
+  [844, 390],
+  [1920, 1080],
+]) {
+  test(`connected wallet can choose a stake without scrolling at ${width}x${height}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    const f = await fixture(page, true);
+    f.readyState();
+    await f.connect();
+    await expect(
+      page.getByRole("button", { name: "Choose stake", exact: true }),
+    ).toBeEnabled();
+    await expect(
+      page.getByRole("button", { name: "Choose stake", exact: true }),
+    ).toBeInViewport();
+    expect(
+      await page
+        .locator(".q-actions")
+        .evaluate((el) => el.scrollHeight <= el.clientHeight + 1),
+    ).toBe(true);
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth <= innerWidth &&
+          document.documentElement.scrollHeight <= innerHeight,
+      ),
+    ).toBe(true);
+    await page.screenshot({
+      path: `/tmp/loot-dashboard/after-wallet-ready-${width}.png`,
+    });
+    expect(f.uploads()).toBe(0);
+  });
+}

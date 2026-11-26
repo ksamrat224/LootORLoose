@@ -1,3 +1,4 @@
+import { openDashboardPanel, expectDashboardFocus } from "./dashboard-helpers";
 import { test, expect, type Page } from "@playwright/test";
 import {
   QUESTS,
@@ -66,7 +67,7 @@ for (const first of QUESTS)
         await expect(
           page.getByRole("button", { name: "Collect loot", exact: true }),
         ).toHaveCount(0);
-        await page.getByRole("button", { name: "Quests", exact: true }).click();
+        await openDashboardPanel(page, "Quests");
         await expect(
           page.getByRole("button", {
             name: new RegExp(`${choices[i] + 1} · ${QUESTS[choices[i]].name}`),
@@ -154,17 +155,13 @@ for (const [width, height] of [
       )
       .toBeGreaterThan(width === 375 ? 300 : 200);
     expect(await overflow()).toBe(false);
-    await page
-      .getByRole("button", { name: "Reward rules", exact: true })
-      .click();
+    await openDashboardPanel(page, "Reward rules");
     await expect(
       page.getByRole("dialog", { name: "Reward rules" }),
     ).toContainText("All six quests");
     expect(await overflow()).toBe(false);
     await page.keyboard.press("Escape");
-    await expect(
-      page.getByRole("button", { name: "Reward rules", exact: true }),
-    ).toBeFocused();
+    await expectDashboardFocus(page, "Reward rules");
   });
 test("reward boundaries, rounding and complete proof totals", async () => {
   for (const [b, value] of [
@@ -247,6 +244,8 @@ test("phone hunt keeps both actions and all four amounts fully inside their pane
     .locator(".q-amounts > span")
     .evaluateAll((elements) =>
       elements.map((el) => ({
+        top: el.getBoundingClientRect().top,
+        bottom: el.getBoundingClientRect().bottom,
         left: el.getBoundingClientRect().left,
         right: el.getBoundingClientRect().right,
         childRight: el.querySelector("strong")!.getBoundingClientRect().right,
@@ -254,7 +253,9 @@ test("phone hunt keeps both actions and all four amounts fully inside their pane
     );
   for (let i = 0; i < amounts.length; i++) {
     expect(amounts[i].childRight).toBeLessThanOrEqual(amounts[i].right + 1);
-    if (i) expect(amounts[i].left).toBeGreaterThan(amounts[i - 1].right);
+    if (i && amounts[i].top === amounts[i - 1].top)
+      expect(amounts[i].left).toBeGreaterThan(amounts[i - 1].right);
+    else if (i) expect(amounts[i].top).toBeGreaterThan(amounts[i - 1].bottom);
   }
   await expect(
     page.getByRole("button", { name: "Cancel hunt · full refund" }),

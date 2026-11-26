@@ -2,7 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   distDir: process.env.NEXT_TEST_DIST || ".next",
-  /* config options here */
+  // The floating development badge overlaps the dungeon movement controls.
+  devIndicators: false,
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

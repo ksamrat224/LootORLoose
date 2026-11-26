@@ -9,3 +9,10 @@ The pixel-art SVGs in `app/public/art/` were created for this repository and may
 ## Discovery journal
 
 The six guardian lore entries and cosmetic route badges were written for this repository. Discovery lighting uses the existing original tiles and programmatic tinting. This polish adds no third-party visual or sound assets.
+
+## Dashboard fonts
+
+- **Manrope**, Copyright 2018 The Manrope Project Authors. Source: [Google Fonts / Manrope](https://github.com/google/fonts/tree/main/ofl/manrope). SIL Open Font License 1.1; full notice ships at `app/public/licenses/manrope-OFL.txt`.
+- **Silkscreen**, Copyright 2001 The Silkscreen Project Authors. Source: [Google Fonts / Silkscreen](https://github.com/google/fonts/tree/main/ofl/silkscreen). SIL Open Font License 1.1; full notice ships at `app/public/licenses/silkscreen-OFL.txt`.
+
+Both fonts are self-hosted through Next.js font optimization. The dashboard adopts the supplied `design.md` and reference's layout direction without copying replacement dungeon artwork. Existing door, player, floor and wall SVGs remain unchanged.

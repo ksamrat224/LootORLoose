@@ -1,8 +1,9 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
+import { HuntWalletCard } from "./HuntWalletCard";
 import { PublicKey } from "@solana/web3.js";
 import {
   PROGRAM_ID,
@@ -68,6 +69,7 @@ import { useHuntDiscovery } from "./useHuntDiscovery";
 import { HuntJournal } from "./HuntJournal";
 
 type Panel =
+  | "menu"
   | "journal"
   | "session"
   | "quests"
@@ -937,6 +939,44 @@ export function HuntGame() {
         ? ("active" as const)
         : ("escaped" as const),
   };
+  const navigation = (
+    <nav className="q-tools" aria-label="Game navigation">
+      <button className="q-quiet" onClick={() => setPanel("journal")}>
+        Journal
+      </button>
+      <button className="q-quiet" onClick={() => setPanel("quests")}>
+        Quests
+      </button>
+      <button
+        className="q-quiet"
+        onClick={() => setPanel("rules")}
+        aria-label="Reward rules"
+      >
+        Rules
+      </button>
+      <button className="q-quiet" onClick={() => setPanel("details")}>
+        Details
+      </button>
+      {live && (
+        <button className="q-quiet" onClick={showSession}>
+          Session
+        </button>
+      )}
+      <button
+        className="q-quiet"
+        onClick={() => {
+          const next = !sound;
+          setSound(next);
+          try {
+            localStorage.setItem("loot-sound", next ? "on" : "off");
+          } catch {}
+        }}
+        aria-pressed={sound}
+      >
+        Sound {sound ? "on" : "off"}
+      </button>
+    </nav>
+  );
   return (
     <section
       className="quest-game hunt-game"
@@ -944,61 +984,67 @@ export function HuntGame() {
       aria-busy={busy}
     >
       <header className="q-toolbar">
-        <span className="q-demo">DEMO CREDITS · NO CASH VALUE</span>
-        <div className="q-tools">
-          <button
-            className="q-quiet"
-            onClick={() => {
-              const next = !sound;
-              setSound(next);
-              try {
-                localStorage.setItem("loot-sound", next ? "on" : "off");
-              } catch {}
-            }}
-            aria-pressed={sound}
-          >
-            Sound {sound ? "on" : "off"}
-          </button>
-          <button className="q-quiet" onClick={() => setPanel("journal")}>
-            Journal
-          </button>
-          <button className="q-quiet" onClick={() => setPanel("quests")}>
-            Quests
-          </button>
-          <button
-            className="q-quiet"
-            onClick={() => setPanel("rules")}
-            aria-label="Reward rules"
-          >
-            Rules
-          </button>
-          <button className="q-quiet" onClick={() => setPanel("details")}>
-            Details
-          </button>
-          {live && (
-            <button className="q-quiet" onClick={showSession}>
-              Session
-            </button>
-          )}
+        <div className="hunt-brand">
+          <Image
+            src="/brand/brand-logo.png"
+            alt=""
+            width={40}
+            height={40}
+            priority
+          />
+          <div>
+            <b>
+              LOOT <em>OR</em> LOSE
+            </b>
+            <span className="hunt-header-sub">
+              <span className="hunt-tagline">Six quests · Three reveals</span>
+              <span className="hunt-separator"> · </span>
+              <span className="hunt-header-demo">
+                Demo credits · no cash value
+              </span>
+            </span>
+          </div>
         </div>
+        <div className="hunt-desktop-navigation">{navigation}</div>
+        <button
+          className="q-quiet hunt-menu-toggle"
+          onClick={() => setPanel("menu")}
+          aria-haspopup="dialog"
+        >
+          Game menu <span aria-hidden="true">☰</span>
+        </button>
       </header>
       <div className="q-amounts" aria-label="Demo amounts">
         <span>
-          Balance <strong>{balance === null ? "—" : money(balance)}</strong>
+          <span className="q-stat-label">Balance</span>
+          <strong>{balance === null ? "—" : money(balance)}</strong>
         </span>
         <span>
-          Stake <strong>{attempt ? money(attempt.stake) : "—"}</strong>
+          <span className="q-stat-label">Stake</span>
+          <strong>{attempt ? money(attempt.stake) : "—"}</strong>
         </span>
         <span>
-          Loot found
-          <strong>
+          <span className="q-stat-label">Loot found</span>
+          <strong
+            className={
+              !attempt || (!attempt.revealCount && !frozen)
+                ? "q-unrevealed"
+                : undefined
+            }
+          >
             {attempt && (attempt.revealCount > 0 || frozen)
               ? money(attempt.payout)
               : "Unrevealed"}
           </strong>
         </span>
         <span>
-          Quests opened <strong>{attempt?.revealCount ?? 0}/3</strong>
+          <span className="q-stat-label">Quests opened</span>
+          <strong>{attempt?.revealCount ?? 0}/3</strong>
+          <span className="hunt-progress-pips" aria-hidden="true">
+            {[0, 1, 2].map((i) => (
+              <i key={i} data-complete={i < (attempt?.revealCount ?? 0)} />
+            ))}
+          </span>
         </span>
       </div>
       <div className="q-workspace">
@@ -1015,9 +1061,6 @@ export function HuntGame() {
               gatePhase={attempt?.phase ?? "exploring"}
             />
           </div>
-          <p className="q-help">
-            WASD / arrows · E to interact · walking is safe
-          </p>
         </div>
         <aside className="q-actions" aria-label="Hunt controls">
           <div className="q-connection">
@@ -1047,10 +1090,23 @@ export function HuntGame() {
                 Devnet
               </label>
             </div>
-            {live && <WalletMultiButton />}
+            {live && <HuntWalletCard />}
           </div>
           <div className="q-hunt-controls">
-            <div className="q-objective">
+            <div
+              className="q-objective"
+              data-state={
+                stage
+                  ? "preparing"
+                  : pendingGate
+                  ? "pending"
+                  : frozen
+                  ? "frozen"
+                  : active
+                  ? "active"
+                  : "ready"
+              }
+            >
               <p className="q-eyebrow">
                 {stage
                   ? "Transaction progress"
@@ -1066,7 +1122,9 @@ export function HuntGame() {
               </p>
               <h1>
                 {stage ||
-                  (active
+                  (pendingGate
+                    ? "Revealing quest"
+                    : active
                     ? nearby?.name || "Choose your path"
                     : frozen
                     ? attempt?.phase === "cancelled"
@@ -1204,7 +1262,25 @@ export function HuntGame() {
               </>
             ) : (
               <>
-                <p className="q-small q-navigation-hint">
+                <div
+                  className="hunt-stake-shortcuts"
+                  aria-label="Quick stake amounts"
+                >
+                  {["1.00", "5.00", "10.00"].map((value) => (
+                    <button
+                      key={value}
+                      className="q-quiet"
+                      disabled={busy || !!(live && (!wallet || !loaded))}
+                      onClick={() => {
+                        setAmount(value);
+                        openStake();
+                      }}
+                    >
+                      ${Number(value)}
+                    </button>
+                  ))}
+                </div>
+                <p className="q-small q-navigation-hint" data-nearby={!!nearby}>
                   {nearby
                     ? `You are beside ${nearby.name}.`
                     : `Choose your stake, then hunt three of the six quests.`}
@@ -1239,11 +1315,27 @@ export function HuntGame() {
               </button>
             )}
           </div>
-          <Link className="q-recovery" href="/recovery">
-            Earlier V3 runs · recovery
-          </Link>
+          <footer className="hunt-sidebar-footer">
+            <span className="q-demo">Demo credits · no cash value</span>
+            <Link className="q-recovery" href="/recovery">
+              Earlier V3 runs · recovery <span aria-hidden="true">↗</span>
+            </Link>
+          </footer>
         </aside>
       </div>
+      <QuestDialog
+        open={panel === "menu"}
+        onClose={() => setPanel(null)}
+        title="Game menu"
+      >
+        {navigation}
+        <p className="q-small">
+          Demo credits · no cash value. Mode and wallet controls are beside the
+          hunt actions.
+        </p>
+        <Link href="/recovery">Recover an earlier V3 run ↗</Link>
+        <Link href="/recovery/quests">Recover an earlier V4 quest ↗</Link>
+      </QuestDialog>
       <QuestDialog
         open={panel === "journal"}
         onClose={() => setPanel(null)}
@@ -1409,7 +1501,7 @@ export function HuntGame() {
           }}
         >
           <div className="q-presets">
-            {["2.00", "5.00"].map((value) => (
+            {["1.00", "5.00", "10.00"].map((value) => (
               <button
                 key={value}
                 type="button"

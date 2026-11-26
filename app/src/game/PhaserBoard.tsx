@@ -292,6 +292,8 @@ export function PhaserBoard({
           });
           if (
             document.querySelector("dialog[open]") ||
+            (explorationRef.current &&
+              document.querySelector(".wallet-adapter-dropdown-list-active")) ||
             current.outcome !== "active" ||
             time - this.lastStep < 115
           )
@@ -369,8 +371,19 @@ export function PhaserBoard({
             </button>
           </div>
         </div>
-        <button className="touch-interact" onClick={onInteract}>
+        {exploration && (
+          <p className="hunt-key-hints">
+            <kbd>WASD</kbd> move <span>·</span> <kbd>E</kbd> interact{" "}
+            <span>· walking is safe</span>
+          </p>
+        )}
+        <button
+          className="touch-interact"
+          aria-label={exploration ? "Interact" : undefined}
+          onClick={onInteract}
+        >
           {questMode ? "Interact" : wagerMode ? "Risk gate" : "Open chest"}
+          {exploration && <span aria-hidden="true"> · E</span>}
         </button>
       </div>
     </>

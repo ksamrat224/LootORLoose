@@ -11,6 +11,10 @@ Updated Nov 26, 2026. Current loop: stake once → explore six guardians → ope
 - Optional North Trail, South Trail and Across the Vault badges, earned only after confirmed collection. No reward changes or additional transactions.
 - Contextual, dismissible guide; shared dialog spacing and internally scrolling secondary information. [Polish verification](HUNT_POLISH.md): lint/build and 103 browser tests passed.
 
+## Dashboard presentation
+
+The dungeon now follows the supplied `design.md`: unified header, four stat cards, structured wallet/actions, grouped movement controls and Manrope/Silkscreen typography. The landing, original SVGs, map and transaction rules are preserved. See [dashboard verification](DASHBOARD_REDESIGN.md) for the 117-test result and before/after review artifacts.
+
 ## Required before normal V6 activation
 
 - [ ] Complete the actual-user [Phantom checklist](DEVNET_V6_VERIFICATION.md#manual-phantom--pending): rejection/retry, preparation, session reveals, reload/renewal, revocation recovery, collection, cancellation and wallet switching.

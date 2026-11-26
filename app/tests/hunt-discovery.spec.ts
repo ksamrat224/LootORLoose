@@ -1,3 +1,4 @@
+import { openDashboardPanel, expectDashboardFocus } from "./dashboard-helpers";
 import { test, expect, type Page } from "@playwright/test";
 import {
   confirmedMask,
@@ -15,7 +16,7 @@ async function enter(page: Page) {
   await page.getByRole("button", { name: "Play", exact: true }).click();
 }
 async function journal(page: Page) {
-  await page.getByRole("button", { name: "Journal", exact: true }).click();
+  await openDashboardPanel(page, "Journal");
   return page.getByRole("dialog", { name: "Discovery journal" });
 }
 async function begin(page: Page) {
@@ -164,9 +165,7 @@ for (const [name, ids] of [
         .filter({ has: page.getByRole("heading", { name }) }),
     ).toContainText("Earned");
     await page.keyboard.press("Escape");
-    await expect(
-      page.getByRole("button", { name: "Journal", exact: true }),
-    ).toBeFocused();
+    await expectDashboardFocus(page, "Journal");
     await page.reload();
     await page.getByRole("button", { name: "Play", exact: true }).click();
     await expect(await journal(page)).toContainText("3/6");
@@ -265,9 +264,7 @@ for (const [width, height] of [
       await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth),
     ).toBe(true);
     await page.keyboard.press("Escape");
-    await expect(
-      page.getByRole("button", { name: "Journal", exact: true }),
-    ).toBeFocused();
+    await expectDashboardFocus(page, "Journal");
     await expect(
       page.getByRole("button", { name: "Choose stake", exact: true }),
     ).toBeInViewport();
@@ -277,7 +274,7 @@ for (const [width, height] of [
       ["Details", "Technical details"],
       ["Choose stake", "Stake for the hunt"],
     ]) {
-      await page.getByRole("button", { name: button, exact: true }).click();
+      await openDashboardPanel(page, button);
       const current = page.getByRole("dialog", { name: title, exact: true });
       await expect(current).toBeVisible();
       expect(
@@ -291,8 +288,6 @@ for (const [width, height] of [
         ),
       ).toBe(true);
       await page.keyboard.press("Escape");
-      await expect(
-        page.getByRole("button", { name: button, exact: true }),
-      ).toBeFocused();
+      await expectDashboardFocus(page, button);
     }
   });
